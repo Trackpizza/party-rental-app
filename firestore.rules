@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Orders.
+    // - A customer with the share link can READ a single order (to review + sign).
+    //   IDs are random/unguessable; the order doc holds no images (DL photos live
+    //   in Storage, locked separately).
+    // - Only the authenticated owner can LIST or modify orders directly.
+    // - Customer signature + DL uploads go through server API routes (Admin SDK),
+    //   which bypass these rules, so no public WRITE is ever allowed here.
+    match /orders/{orderId} {
+      allow get: if true;
+      allow list: if request.auth != null;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // Everything else: owner only.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
