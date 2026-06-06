@@ -1,0 +1,272 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '@/lib/firebase/client'
+import { Order, STATUS_LABELS } from '@/lib/types'
+import { money, applyOrderAction, customerLink } from '@/lib/orders'
+
+const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
+const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
+
+export default function OrderDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const [order, setOrder] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      doc(db, 'orders', id),
+      (snap) => {
+        setOrder(snap.exists() ? ({ id: snap.id, ...(snap.data() as Omit<Order, 'id'>) }) : null)
+        setLoading(false)
+      },
+      () => setLoading(false),
+    )
+    return () => unsub()
+  }, [id])
+
+  if (loading) return <p className="text-gray-400">Loading order…</p>
+  if (!order)
+    return (
+      <div className="text-center">
+        <p className="text-gray-500">Order not found.</p>
+        <button onClick={() => router.push('/admin')} className="mt-4 text-brand underline">
+          Back to orders
+        </button>
+      </div>
+    )
+
+  const link = customerLink(order.id)
+
+  async function share() {
+    if (!order) return
+    const text = `Hi ${order.customer.name}, here's your rental order from ${business}. Please review and sign: ${link}`
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: business, text, url: link })
+      } catch {
+        /* user cancelled */
+      }
+    } else {
+      const subject = encodeURIComponent(`Your rental order — ${business}`)
+      const body = encodeURIComponent(text)
+      window.location.href = `mailto:${order.customer.email}?subject=${subject}&body=${body}`
+    }
+    if (!order.sentAt) await applyOrderAction(order, { sentAt: new Date().toISOString() })
+  }
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
+
+  const act = (patch: Partial<Order>) => order && applyOrderAction(order, patch)
+  const activeItems = order.items.filter((i) => i.qty || i.amount || (i.options && i.options.length))
+
+  return (
+    <div className="space-y-5 pb-10">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <button onClick={() => router.push('/admin')} className="no-print text-sm text-gray-400 hover:text-gray-600">
+            ← Orders
+          </button>
+          <h1 className="text-xl font-bold">{order.customer.name || 'Unnamed customer'}</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-white">
+            {STATUS_LABELS[order.status]}
+          </span>
+          <button onClick={() => window.print()} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
+            Print / PDF
+          </button>
+        </div>
+      </div>
+
+      {/* Share */}
+      <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Send to customer</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={share} className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:opacity-90">
+            Share signing link
+          </button>
+          <button onClick={copyLink} className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand">
+            {copied ? 'Copied!' : 'Copy link'}
+          </button>
+          <a href={link} target="_blank" rel="noreferrer" className="text-sm text-gray-400 underline">
+            Preview customer view
+          </a>
+        </div>
+        <p className="mt-2 break-all text-xs text-gray-400">{link}</p>
+      </section>
+
+      {/* Order summary */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Order</h2>
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <Info label="Event date" value={order.event.eventDate || '—'} />
+          <Info label="Delivery" value={order.event.deliveryTime || '—'} />
+          <Info label="Pick up" value={order.event.pickupTime || '—'} />
+          <Info label="Miles" value={order.totals.miles != null ? String(order.totals.miles) : '—'} />
+        </div>
+
+        <table className="mt-4 w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 text-left text-gray-400">
+              <th className="py-1">Item</th>
+              <th className="py-1">Qty</th>
+              <th className="py-1">Details</th>
+              <th className="py-1 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeItems.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="py-3 text-gray-400">
+                  No items added.
+                </td>
+              </tr>
+            ) : (
+              activeItems.map((i) => (
+                <tr key={i.key} className="border-b border-gray-100">
+                  <td className="py-1.5 font-medium">{i.label}</td>
+                  <td className="py-1.5">{i.qty ?? '—'}</td>
+                  <td className="py-1.5 text-gray-500">{i.options?.join(', ') || '—'}</td>
+                  <td className="py-1.5 text-right">{money(i.amount)}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {(order.event.surfaces.length > 0 || order.event.stairs) && (
+          <p className="mt-3 text-sm text-gray-500">
+            Surface: {order.event.surfaces.join(', ') || '—'}
+            {order.event.stairs && ' · Stairs (extra charge)'}
+          </p>
+        )}
+        {order.event.notes && <p className="mt-2 text-sm text-gray-500">Notes: {order.event.notes}</p>}
+
+        <div className="mt-4 ml-auto max-w-xs space-y-1 text-sm">
+          <Total label="Subtotal" value={money(order.totals.subtotal)} />
+          <Total label="Delivery" value={money(order.totals.deliveryFee)} />
+          <Total label="Tax" value={money(order.totals.tax)} />
+          <Total label="Total" value={money(order.totals.total)} bold />
+          <Total label="Deposit" value={money(order.totals.deposit)} />
+          <Total label="Balance" value={money(order.totals.balance)} />
+        </div>
+      </section>
+
+      {/* Payment */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Payment</h2>
+        <p className="text-sm text-gray-500">
+          Method: <span className="font-medium capitalize text-gray-700">{order.paymentMethod || '—'}</span>
+          {order.paymentMethod === 'zelle' && zelle && <> · Zelle: <span className="font-medium text-gray-700">{zelle}</span></>}
+        </p>
+        {order.paymentMethod === 'square' && order.squareLink && (
+          <a href={order.squareLink} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-brand underline">
+            Square payment link
+          </a>
+        )}
+        <div className="no-print mt-4 flex flex-wrap gap-3">
+          <ActionButton
+            done={order.depositPaid}
+            label="Mark deposit paid"
+            doneLabel={`Deposit paid (${money(order.totals.deposit)})`}
+            onClick={() => act({ depositPaid: true, depositPaidAt: new Date().toISOString() })}
+          />
+          <ActionButton
+            done={order.balancePaid}
+            label="Mark balance paid"
+            doneLabel={`Balance paid (${money(order.totals.balance)})`}
+            onClick={() => act({ balancePaid: true, balancePaidAt: new Date().toISOString() })}
+          />
+        </div>
+      </section>
+
+      {/* Signature */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Signature</h2>
+        {order.signature ? (
+          <div>
+            <img src={order.signature.signatureDataUrl} alt="signature" className="h-24 border-b border-gray-300" />
+            <p className="mt-2 text-xs text-gray-400">
+              Signed {new Date(order.signature.signedAt).toLocaleString()} · IP {order.signature.ipAddress}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400">Not signed yet — share the link above to collect the signature.</p>
+        )}
+      </section>
+
+      {/* Driver's license */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Driver&apos;s license</h2>
+        {order.dlPhotos.length > 0 ? (
+          <p className="text-sm text-gray-500">{order.dlPhotos.length} photo(s) on file (owner-only).</p>
+        ) : (
+          <p className="text-sm text-gray-400">No license photos yet.</p>
+        )}
+      </section>
+
+      {/* Lifecycle */}
+      <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Fulfillment</h2>
+        <div className="flex flex-wrap gap-3">
+          <ActionButton done={!!order.deliveredAt} label="Mark delivered" doneLabel="Delivered" onClick={() => act({ deliveredAt: new Date().toISOString() })} />
+          <ActionButton done={!!order.pickedUpAt} label="Mark picked up" doneLabel="Picked up" onClick={() => act({ pickedUpAt: new Date().toISOString() })} />
+          <ActionButton done={!!order.completedAt} label="Mark completed" doneLabel="Completed" onClick={() => act({ completedAt: new Date().toISOString() })} />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-400">{label}</p>
+      <p className="font-medium text-gray-700">{value}</p>
+    </div>
+  )
+}
+
+function Total({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-gray-500">{label}</span>
+      <span className={bold ? 'font-bold' : 'text-gray-700'}>{value}</span>
+    </div>
+  )
+}
+
+function ActionButton({
+  done,
+  label,
+  doneLabel,
+  onClick,
+}: {
+  done: boolean
+  label: string
+  doneLabel: string
+  onClick: () => void
+}) {
+  if (done) {
+    return (
+      <span className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+        ✓ {doneLabel}
+      </span>
+    )
+  }
+  return (
+    <button onClick={onClick} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand">
+      {label}
+    </button>
+  )
+}

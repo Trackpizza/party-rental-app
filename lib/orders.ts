@@ -58,6 +58,7 @@ export function buildEmptyOrder(): OrderDraft {
     depositPaidAt: null,
     balancePaid: false,
     balancePaidAt: null,
+    sentAt: null,
     deliveredAt: null,
     pickedUpAt: null,
     completedAt: null,
@@ -130,4 +131,32 @@ export async function getOrder(id: string): Promise<Order | null> {
 export function money(n: number | null | undefined): string {
   if (n == null) return '—'
   return `$${n.toFixed(2)}`
+}
+
+// Derive the furthest-along lifecycle status purely from flags/timestamps.
+// signed + deposit auto-advances to "confirmed"; everything else is linear.
+export function deriveStatus(o: Order): Order['status'] {
+  if (o.completedAt) return 'completed'
+  if (o.balancePaid) return 'balance_paid'
+  if (o.pickedUpAt) return 'picked_up'
+  if (o.deliveredAt) return 'delivered'
+  if (o.signature && o.depositPaid) return 'confirmed'
+  if (o.depositPaid) return 'deposit_paid'
+  if (o.signature) return 'signed'
+  if (o.sentAt) return 'sent'
+  return 'draft'
+}
+
+// Apply a patch, recompute status from the merged result, and persist.
+export async function applyOrderAction(
+  order: Order,
+  patch: Partial<Order>,
+): Promise<void> {
+  const merged = { ...order, ...patch }
+  await updateOrder(order.id, { ...patch, status: deriveStatus(merged) })
+}
+
+export function customerLink(orderId: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  return `${base.replace(/\/$/, '')}/order/${orderId}`
 }

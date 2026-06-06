@@ -126,6 +126,7 @@ export interface Order {
   balancePaidAt: string | null
 
   // fulfillment
+  sentAt: string | null
   deliveredAt: string | null
   pickedUpAt: string | null
   completedAt: string | null
