@@ -97,6 +97,7 @@ export interface EventInfo {
 
 export interface Totals {
   subtotal: number | null
+  deliveryFee: number | null
   tax: number | null
   total: number | null
   deposit: number | null

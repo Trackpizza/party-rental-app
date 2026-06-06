@@ -1,7 +1,7 @@
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage } from 'firebase/storage'
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,9 +12,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
+function getClientApp(): FirebaseApp {
+  return getApps().length ? getApp() : initializeApp(firebaseConfig)
+}
 
-export const auth = getAuth(app)
-export const db = getFirestore(app)
-export const storage = getStorage(app)
-export default app
+// Initialize services in the browser only. During Next's server prerender
+// there's no window, so we skip init (every consumer calls these from event
+// handlers / useEffect, which run client-side). This keeps `next build` from
+// trying to construct Firebase Auth on the server with no/invalid keys.
+const isBrowser = typeof window !== 'undefined'
+
+export const auth: Auth = isBrowser
+  ? getAuth(getClientApp())
+  : (undefined as unknown as Auth)
+export const db: Firestore = isBrowser
+  ? getFirestore(getClientApp())
+  : (undefined as unknown as Firestore)
+export const storage: FirebaseStorage = isBrowser
+  ? getStorage(getClientApp())
+  : (undefined as unknown as FirebaseStorage)
+
+export default getClientApp
