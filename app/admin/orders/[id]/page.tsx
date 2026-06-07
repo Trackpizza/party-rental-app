@@ -6,6 +6,7 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS } from '@/lib/types'
 import { money, applyOrderAction, customerLink } from '@/lib/orders'
+import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -208,10 +209,11 @@ export default function OrderDetailPage() {
       {/* Driver's license */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Driver&apos;s license</h2>
-        {order.dlPhotos.length > 0 ? (
-          <p className="text-sm text-gray-500">{order.dlPhotos.length} photo(s) on file (owner-only).</p>
-        ) : (
-          <p className="text-sm text-gray-400">No license photos yet.</p>
+        <OwnerDLPhotos orderId={order.id} photos={order.dlPhotos || []} />
+        {order.dlPurgeAfter && (order.dlPhotos?.length || 0) > 0 && (
+          <p className="mt-3 text-xs text-gray-400">
+            Auto-deletes {new Date(order.dlPurgeAfter).toLocaleDateString()} (30 days after event).
+          </p>
         )}
       </section>
 

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import SignaturePad from './SignaturePad'
+import CameraCapture from './CameraCapture'
 
 export interface SignFlowData {
   orderId: string
@@ -27,6 +28,32 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const waiverRef = useRef<HTMLDivElement>(null)
+
+  // Driver's license capture
+  const [showCamera, setShowCamera] = useState(false)
+  const [dlThumb, setDlThumb] = useState<string | null>(null)
+  const [dlUploading, setDlUploading] = useState(false)
+  const [dlError, setDlError] = useState('')
+
+  async function uploadDl(dataUrl: string) {
+    setShowCamera(false)
+    setDlUploading(true)
+    setDlError('')
+    try {
+      const res = await fetch(`/api/orders/${data.orderId}/dl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageDataUrl: dataUrl, source: 'customer' }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Upload failed')
+      setDlThumb(dataUrl)
+    } catch (e: any) {
+      setDlError(e.message || 'Could not upload photo.')
+    } finally {
+      setDlUploading(false)
+    }
+  }
 
   function onWaiverScroll() {
     const el = waiverRef.current
@@ -138,6 +165,37 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
         )}
       </section>
 
+      {/* Driver's license */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Driver&apos;s license</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Take a photo of your driver&apos;s license for the rental record. The
+          photo uploads directly and is not saved to your phone.
+        </p>
+        {dlThumb ? (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={dlThumb} alt="license" className="h-16 rounded-lg border border-gray-200" />
+            <span className="text-sm font-medium text-green-600">✓ Photo added</span>
+            <button
+              onClick={() => setShowCamera(true)}
+              className="text-sm text-gray-400 underline hover:text-gray-600"
+            >
+              Retake
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowCamera(true)}
+            disabled={dlUploading}
+            className="rounded-lg border border-brand px-4 py-2.5 font-semibold text-brand hover:bg-brand hover:text-white disabled:opacity-50"
+          >
+            {dlUploading ? 'Uploading…' : '📷 Take license photo'}
+          </button>
+        )}
+        {dlError && <p className="mt-2 text-sm text-red-600">{dlError}</p>}
+      </section>
+
       {/* Waiver */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-2 font-semibold text-gray-800">Rental agreement</h2>
@@ -185,10 +243,18 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
             disabled={!agreed || !signature || submitting}
             className="w-full rounded-lg bg-brand py-3 font-semibold text-white hover:opacity-90 disabled:opacity-40"
           >
-            {submitting ? 'Submitting…' : 'Sign &amp; Submit'}
+            {submitting ? 'Submitting…' : 'Sign & Submit'}
           </button>
         </div>
       </div>
+
+      {showCamera && (
+        <CameraCapture
+          label="Driver's license"
+          onConfirm={uploadDl}
+          onCancel={() => setShowCamera(false)}
+        />
+      )}
     </div>
   )
 }
