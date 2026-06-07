@@ -10,3 +10,5 @@ firebase-debug.log
 functions/node_modules
 functions/lib
 serviceAccountKey.json
+*-firebase-adminsdk-*.json
+*serviceaccount*.json
