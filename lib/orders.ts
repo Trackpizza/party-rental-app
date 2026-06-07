@@ -157,6 +157,11 @@ export async function applyOrderAction(
 }
 
 export function customerLink(orderId: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  // Prefer the actual origin the owner is on (client-side) so links always
+  // match wherever the app is hosted; fall back to env for any server use.
+  const base =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${base.replace(/\/$/, '')}/order/${orderId}`
 }
