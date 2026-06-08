@@ -8,6 +8,8 @@ import {
   recalcTotals,
   createOrder,
   money,
+  newOtherItem,
+  isOtherItem,
 } from '@/lib/orders'
 import {
   ITEM_CATALOG,
@@ -60,6 +62,14 @@ export default function NewOrderPage() {
       ...d,
       items: d.items.map((i) => (i.key === key ? { ...i, ...p } : i)),
     }))
+  }
+
+  function addOther() {
+    patch((d) => ({ ...d, items: [...d.items, newOtherItem()] }))
+  }
+
+  function removeItem(key: string) {
+    patch((d) => ({ ...d, items: d.items.filter((i) => i.key !== key) }))
   }
 
   function toggleOption(key: string, opt: string) {
@@ -124,7 +134,7 @@ export default function NewOrderPage() {
       {/* Dates & times */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 font-semibold text-gray-800">Dates</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mb-4 max-w-xs">
           <Field label="Today's date">
             <input
               type="date"
@@ -133,7 +143,9 @@ export default function NewOrderPage() {
               className={`${inputCls} w-full`}
             />
           </Field>
-          <Field label="Event date">
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Event Start Date">
             <input
               type="date"
               value={draft.event.eventDate}
@@ -143,9 +155,10 @@ export default function NewOrderPage() {
               className={`${inputCls} w-full`}
             />
           </Field>
-          <Field label="Delivery time">
+          <Field label="Delivery Time">
             <input
               type="time"
+              step={900}
               value={draft.event.deliveryTime}
               onChange={(e) =>
                 patch((d) => ({ ...d, event: { ...d.event, deliveryTime: e.target.value } }))
@@ -153,9 +166,20 @@ export default function NewOrderPage() {
               className={`${inputCls} w-full`}
             />
           </Field>
-          <Field label="Pick up time">
+          <Field label="Pickup Date">
+            <input
+              type="date"
+              value={draft.event.pickupDate}
+              onChange={(e) =>
+                patch((d) => ({ ...d, event: { ...d.event, pickupDate: e.target.value } }))
+              }
+              className={`${inputCls} w-full`}
+            />
+          </Field>
+          <Field label="Pickup Time">
             <input
               type="time"
+              step={900}
               value={draft.event.pickupTime}
               onChange={(e) =>
                 patch((d) => ({ ...d, event: { ...d.event, pickupTime: e.target.value } }))
@@ -233,7 +257,7 @@ export default function NewOrderPage() {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 font-semibold text-gray-800">Items</h2>
         <div className="space-y-3">
-          {draft.items.map((item) => {
+          {draft.items.filter((i) => !isOtherItem(i)).map((item) => {
             const catalog = ITEM_CATALOG.find((c) => c.key === item.key)!
             return (
               <div
@@ -287,6 +311,68 @@ export default function NewOrderPage() {
               </div>
             )
           })}
+        </div>
+
+        {/* Other (custom) items */}
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-medium text-gray-700">Other</span>
+            <button
+              type="button"
+              onClick={addOther}
+              className="text-sm font-semibold text-brand hover:underline"
+            >
+              + Add other
+            </button>
+          </div>
+          <div className="space-y-3">
+            {draft.items.filter(isOtherItem).map((item) => (
+              <div key={item.key} className="grid grid-cols-12 items-center gap-2">
+                <div className="col-span-12 sm:col-span-6">
+                  <input
+                    placeholder="Description"
+                    value={item.description ?? ''}
+                    onChange={(e) => updateItem(item.key, { description: e.target.value })}
+                    className={`${inputCls} w-full`}
+                  />
+                </div>
+                <div className="col-span-4 sm:col-span-2">
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Qty"
+                    value={item.qty ?? ''}
+                    onChange={(e) => updateItem(item.key, { qty: num(e.target.value) })}
+                    className={`${inputCls} w-full`}
+                  />
+                </div>
+                <div className="col-span-6 sm:col-span-3">
+                  <div className="flex items-center rounded-lg border border-gray-300 px-2">
+                    <span className="text-gray-400">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Amount"
+                      value={item.amount ?? ''}
+                      onChange={(e) => updateItem(item.key, { amount: num(e.target.value) })}
+                      className="w-full px-1 py-2 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-2 text-right sm:col-span-1">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.key)}
+                    className="text-gray-300 hover:text-red-500"
+                    aria-label="Remove other item"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Delivery & miles */}

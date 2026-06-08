@@ -20,7 +20,24 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-// Fresh blank order with one empty LineItem per catalog entry.
+let otherCounter = 0
+export function newOtherItem(): LineItem {
+  otherCounter += 1
+  return {
+    key: `other-${Date.now()}-${otherCounter}`,
+    label: 'Other',
+    qty: null,
+    options: [],
+    amount: null,
+    description: '',
+  }
+}
+
+export function isOtherItem(i: LineItem): boolean {
+  return i.key.startsWith('other')
+}
+
+// Fresh blank order with one empty LineItem per catalog entry + one custom "Other".
 export function buildEmptyOrder(): OrderDraft {
   const items: LineItem[] = ITEM_CATALOG.map((c) => ({
     key: c.key,
@@ -29,6 +46,7 @@ export function buildEmptyOrder(): OrderDraft {
     options: [],
     amount: null,
   }))
+  items.push(newOtherItem())
 
   return {
     status: 'draft',
@@ -37,6 +55,7 @@ export function buildEmptyOrder(): OrderDraft {
     event: {
       eventDate: '',
       deliveryTime: '',
+      pickupDate: '',
       pickupTime: '',
       surfaces: [],
       stairs: false,

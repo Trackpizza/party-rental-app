@@ -8,9 +8,15 @@ export interface SignFlowData {
   orderId: string
   business: string
   customerName: string
-  items: { label: string; qty: number | null; options: string[]; amount: number | null }[]
+  items: {
+    label: string
+    qty: number | null
+    options: string[]
+    amount: number | null
+    description?: string
+  }[]
   totals: { total: number | null; deposit: number | null; balance: number | null }
-  event: { eventDate: string; deliveryTime: string; pickupTime: string }
+  event: { eventDate: string; deliveryTime: string; pickupDate: string; pickupTime: string }
   payment: { method: string | null; zelle: string; squareLink: string | null }
   waiverText: string
   waiverVersion: string
@@ -99,7 +105,7 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
   }
 
   const activeItems = data.items.filter(
-    (i) => i.qty || i.amount || (i.options && i.options.length),
+    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
   )
 
   return (
@@ -113,15 +119,15 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="font-semibold">{data.customerName}</p>
         <p className="text-sm text-gray-500">
-          Event: {data.event.eventDate || '—'} · Delivery {data.event.deliveryTime || '—'} · Pickup{' '}
-          {data.event.pickupTime || '—'}
+          Event {data.event.eventDate || '—'} {data.event.deliveryTime} → Pickup{' '}
+          {data.event.pickupDate || data.event.eventDate || '—'} {data.event.pickupTime}
         </p>
         <table className="mt-3 w-full text-sm">
           <tbody>
             {activeItems.map((i, idx) => (
               <tr key={idx} className="border-b border-gray-100">
                 <td className="py-1.5">
-                  {i.label}
+                  {i.description || i.label}
                   {i.options.length > 0 && (
                     <span className="text-gray-400"> ({i.options.join(', ')})</span>
                   )}

@@ -67,7 +67,9 @@ export default function OrderDetailPage() {
   }
 
   const act = (patch: Partial<Order>) => order && applyOrderAction(order, patch)
-  const activeItems = order.items.filter((i) => i.qty || i.amount || (i.options && i.options.length))
+  const activeItems = order.items.filter(
+    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
+  )
 
   return (
     <div className="space-y-5 pb-10">
@@ -110,9 +112,10 @@ export default function OrderDetailPage() {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Order</h2>
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-          <Info label="Event date" value={order.event.eventDate || '—'} />
-          <Info label="Delivery" value={order.event.deliveryTime || '—'} />
-          <Info label="Pick up" value={order.event.pickupTime || '—'} />
+          <Info label="Event start" value={order.event.eventDate || '—'} />
+          <Info label="Delivery time" value={order.event.deliveryTime || '—'} />
+          <Info label="Pickup date" value={order.event.pickupDate || '—'} />
+          <Info label="Pickup time" value={order.event.pickupTime || '—'} />
           <Info label="Miles" value={order.totals.miles != null ? String(order.totals.miles) : '—'} />
         </div>
 
@@ -135,7 +138,7 @@ export default function OrderDetailPage() {
             ) : (
               activeItems.map((i) => (
                 <tr key={i.key} className="border-b border-gray-100">
-                  <td className="py-1.5 font-medium">{i.label}</td>
+                  <td className="py-1.5 font-medium">{i.description || i.label}</td>
                   <td className="py-1.5">{i.qty ?? '—'}</td>
                   <td className="py-1.5 text-gray-500">{i.options?.join(', ') || '—'}</td>
                   <td className="py-1.5 text-right">{money(i.amount)}</td>

@@ -30,11 +30,12 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 // ---- Line items (the rental table on the card) ----
 // Each row may carry sub-type checkboxes (e.g. tables: round/square/folding).
 export interface LineItem {
-  key: string          // e.g. "tables", "chairs", "jumpers"
+  key: string          // e.g. "tables", "chairs", "jumpers", "other-<id>"
   label: string        // "TABLES"
   qty: number | null
   options?: string[]   // selected sub-types, e.g. ["round","folding"]
   amount: number | null
+  description?: string // free-text, used for custom "Other" rows
 }
 
 // Canonical catalog used to render a fresh order form.
@@ -49,7 +50,6 @@ export const ITEM_CATALOG: { key: string; label: string; options?: string[] }[] 
   { key: 'balloons', label: 'Balloons' },
   { key: 'tents', label: 'Tents' },
   { key: 'heaters', label: 'Heaters' },
-  { key: 'other', label: 'Other' },
 ]
 
 export type SurfaceType = 'grass' | 'cement' | 'dirt' | 'house' | 'park'
@@ -87,8 +87,9 @@ export interface CustomerInfo {
 }
 
 export interface EventInfo {
-  eventDate: string      // ISO date
+  eventDate: string      // ISO date — event start date
   deliveryTime: string
+  pickupDate: string     // ISO date — pickup date
   pickupTime: string
   surfaces: SurfaceType[]
   stairs: boolean

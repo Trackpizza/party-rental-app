@@ -80,6 +80,7 @@ export default async function OrderSignPage({
       qty: i.qty,
       options: i.options || [],
       amount: i.amount,
+      description: i.description || '',
     })),
     totals: {
       total: order.totals.total,
@@ -89,6 +90,7 @@ export default async function OrderSignPage({
     event: {
       eventDate: order.event.eventDate,
       deliveryTime: order.event.deliveryTime,
+      pickupDate: order.event.pickupDate || '',
       pickupTime: order.event.pickupTime,
     },
     payment: {
