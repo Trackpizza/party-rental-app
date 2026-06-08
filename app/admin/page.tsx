@@ -19,9 +19,21 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   completed: 'bg-gray-800 text-white',
 }
 
+function matchesSearch(o: Order, ql: string): boolean {
+  if (!ql) return true
+  const c = o.customer
+  const hay = [c.firstName, c.lastName, customerName(c), c.email]
+    .map((x) => (x || '').toLowerCase())
+  if (hay.some((h) => h.includes(ql))) return true
+  const qd = ql.replace(/\D/g, '')
+  if (qd && (c.phone || '').replace(/\D/g, '').includes(qd)) return true
+  return false
+}
+
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
@@ -37,6 +49,9 @@ export default function Dashboard() {
     )
     return () => unsub()
   }, [])
+
+  const ql = search.toLowerCase().trim()
+  const filtered = orders.filter((o) => matchesSearch(o, ql))
 
   return (
     <div>
@@ -55,29 +70,49 @@ export default function Dashboard() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-2">
-          {orders.map((o) => (
-            <Link
-              key={o.id}
-              href={`/admin/orders/${o.id}`}
-              className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 hover:border-brand"
-            >
-              <div>
-                <p className="font-semibold">
-                  {customerName(o.customer) || 'Unnamed customer'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Event: {o.event.eventDate || '—'} · {money(o.totals.total)}
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status]}`}
-              >
-                {STATUS_LABELS[o.status]}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <>
+          <div className="relative mb-4">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, phone, or email…"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 focus:border-brand focus:outline-none"
+            />
+            <span className="pointer-events-none absolute left-3 top-3 text-gray-400">🔍</span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-gray-400">
+              No orders match &ldquo;{search}&rdquo;.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((o) => (
+                <Link
+                  key={o.id}
+                  href={`/admin/orders/${o.id}`}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 hover:border-brand"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold">
+                      {customerName(o.customer) || 'Unnamed customer'}
+                    </p>
+                    <p className="truncate text-sm text-gray-500">
+                      {o.customer.phone && <span>{o.customer.phone} · </span>}
+                      Event: {o.event.eventDate || '—'} · {money(o.totals.total)}
+                    </p>
+                  </div>
+                  <span
+                    className={`ml-2 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status]}`}
+                  >
+                    {STATUS_LABELS[o.status]}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
