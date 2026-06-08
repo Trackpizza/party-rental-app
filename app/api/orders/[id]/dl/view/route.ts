@@ -24,12 +24,17 @@ export async function GET(
       return NextResponse.json({ error: 'Bad path' }, { status: 400 })
     }
 
+    const download = req.nextUrl.searchParams.get('download') === '1'
+    const fileName = path.split('/').pop() || 'photo.jpg'
     const [url] = await adminStorage
       .bucket()
       .file(path)
       .getSignedUrl({
         action: 'read',
         expires: Date.now() + 10 * 60 * 1000, // 10 minutes
+        ...(download
+          ? { responseDisposition: `attachment; filename="${fileName}"` }
+          : {}),
       })
 
     return NextResponse.json({ url })

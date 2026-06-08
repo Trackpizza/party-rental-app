@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { auth } from '@/lib/firebase/client'
+import { ref as storageRef, deleteObject } from 'firebase/storage'
+import { auth, storage } from '@/lib/firebase/client'
 import { updateOrder } from '@/lib/orders'
 import PhotoCapture from './PhotoCapture'
 import { SetupPhoto } from '@/lib/types'
@@ -78,6 +79,29 @@ export default function OwnerSetupPhotos({
     await updateOrder(orderId, { setupPhotos: next })
   }
 
+  async function downloadPhoto(path: string) {
+    const token = await auth.currentUser?.getIdToken()
+    if (!token) return
+    const res = await fetch(
+      `/api/orders/${orderId}/dl/view?path=${encodeURIComponent(path)}&download=1`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    const json = await res.json()
+    if (res.ok && json.url) window.location.href = json.url
+  }
+
+  async function deletePhoto(path: string) {
+    if (!window.confirm('Delete this photo? This cannot be undone.')) return
+    try {
+      await deleteObject(storageRef(storage, path))
+    } catch {
+      /* file may already be gone — still remove from the order */
+    }
+    await updateOrder(orderId, {
+      setupPhotos: photos.filter((p) => p.storagePath !== path),
+    })
+  }
+
   async function copyCrewLink() {
     const link = `${window.location.origin}/setup/${orderId}`
     await navigator.clipboard.writeText(link)
@@ -107,31 +131,52 @@ export default function OwnerSetupPhotos({
       {photos.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.map((p) => (
-            <button
+            <div
               key={p.storagePath}
-              onClick={() => toggleSelect(p.storagePath)}
               className={`relative overflow-hidden rounded-lg border-2 ${
-                p.selected ? 'border-brand' : 'border-transparent'
+                p.selected ? 'border-brand' : 'border-gray-200'
               }`}
             >
-              {urls[p.storagePath] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={urls[p.storagePath]}
-                  alt="setup"
-                  className="aspect-square w-full object-cover"
-                />
-              ) : (
-                <div className="flex aspect-square w-full items-center justify-center bg-gray-50 text-xs text-gray-400">
-                  …
-                </div>
-              )}
-              {p.selected && (
-                <span className="absolute right-1 top-1 rounded-full bg-brand px-1.5 text-xs text-white">
-                  ✓
-                </span>
-              )}
-            </button>
+              <div
+                role="button"
+                onClick={() => toggleSelect(p.storagePath)}
+                className="cursor-pointer"
+              >
+                {urls[p.storagePath] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={urls[p.storagePath]}
+                    alt="setup"
+                    className="aspect-square w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-square w-full items-center justify-center bg-gray-50 text-xs text-gray-400">
+                    …
+                  </div>
+                )}
+                {p.selected && (
+                  <span className="absolute left-1 top-1 rounded-full bg-brand px-1.5 text-xs text-white">
+                    ✓
+                  </span>
+                )}
+              </div>
+              <div className="no-print absolute bottom-1 right-1 flex gap-1">
+                <button
+                  onClick={() => downloadPhoto(p.storagePath)}
+                  title="Download"
+                  className="rounded bg-black/55 px-1.5 py-0.5 text-xs text-white hover:bg-black/75"
+                >
+                  ⬇
+                </button>
+                <button
+                  onClick={() => deletePhoto(p.storagePath)}
+                  title="Delete"
+                  className="rounded bg-black/55 px-1.5 py-0.5 text-xs text-white hover:bg-red-600"
+                >
+                  🗑
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
