@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { auth } from '@/lib/firebase/client'
+import { ref as storageRef, deleteObject } from 'firebase/storage'
+import { auth, storage } from '@/lib/firebase/client'
+import { updateOrder } from '@/lib/orders'
 import PhotoCapture from './PhotoCapture'
 import { DLPhoto } from '@/lib/types'
 
@@ -67,27 +69,70 @@ export default function OwnerDLPhotos({
     }
   }
 
+  async function downloadPhoto(path: string) {
+    const token = await auth.currentUser?.getIdToken()
+    if (!token) return
+    const res = await fetch(
+      `/api/orders/${orderId}/dl/view?path=${encodeURIComponent(path)}&download=1`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    const json = await res.json()
+    if (res.ok && json.url) window.location.href = json.url
+  }
+
+  async function deletePhoto(path: string) {
+    if (!window.confirm('Delete this license photo? This cannot be undone.')) return
+    try {
+      await deleteObject(storageRef(storage, path))
+    } catch {
+      /* file may already be gone — still remove from the order */
+    }
+    await updateOrder(orderId, {
+      dlPhotos: photos.filter((p) => p.storagePath !== path),
+    })
+  }
+
   return (
     <div>
       {photos.length > 0 ? (
         <div className="flex flex-wrap gap-3">
           {photos.map((p) => (
             <div key={p.storagePath} className="text-center">
-              {urls[p.storagePath] ? (
-                <a href={urls[p.storagePath]} target="_blank" rel="noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={urls[p.storagePath]}
-                    alt="driver's license"
-                    className="h-28 rounded-lg border border-gray-200 object-cover"
-                  />
-                </a>
-              ) : (
-                <div className="flex h-28 w-44 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-400">
-                  Loading…
+              <div className="relative inline-block">
+                {urls[p.storagePath] ? (
+                  <a href={urls[p.storagePath]} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={urls[p.storagePath]}
+                      alt="driver's license"
+                      className="h-28 rounded-lg border border-gray-200 object-cover"
+                    />
+                  </a>
+                ) : (
+                  <div className="flex h-28 w-44 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                    Loading…
+                  </div>
+                )}
+                <div className="no-print absolute bottom-1 right-1 flex gap-1">
+                  <button
+                    onClick={() => downloadPhoto(p.storagePath)}
+                    title="Download"
+                    className="rounded bg-black/55 px-1.5 py-0.5 text-xs text-white hover:bg-black/75"
+                  >
+                    ⬇
+                  </button>
+                  <button
+                    onClick={() => deletePhoto(p.storagePath)}
+                    title="Delete"
+                    className="rounded bg-black/55 px-1.5 py-0.5 text-xs text-white hover:bg-red-600"
+                  >
+                    🗑
+                  </button>
                 </div>
-              )}
-              <span className="text-[11px] text-gray-400">{p.source}</span>
+              </div>
+              <div>
+                <span className="text-[11px] text-gray-400">{p.source}</span>
+              </div>
             </div>
           ))}
         </div>
