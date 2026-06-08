@@ -102,23 +102,29 @@ export function buildEmptyOrder(): OrderDraft {
   }
 }
 
-// Recompute derived totals from line-item amounts + delivery + tax.
-// subtotal & total are always derived; tax & deposit can be overridden by staff.
+const r2 = (n: number) => Math.round(n * 100) / 100
+
+// Recompute derived totals. Tax auto-calculates from taxRate (% of the items
+// subtotal) unless taxManual; deposit defaults to 50% unless depositManual.
 export function recalcTotals(
   items: LineItem[],
   t: Totals,
+  opts: { taxRate?: number; taxManual?: boolean; depositManual?: boolean } = {},
 ): Totals {
   const itemsSum = items.reduce((sum, i) => sum + (i.amount || 0), 0)
   const subtotal = itemsSum + (t.deliveryFee || 0)
-  const tax = t.tax || 0
+  const tax = opts.taxManual
+    ? t.tax || 0
+    : r2(itemsSum * ((opts.taxRate || 0) / 100))
   const total = subtotal + tax
-  // Default deposit = 50% of total, rounded to the cent, unless staff set one.
-  const deposit = t.deposit != null ? t.deposit : Math.round((total / 2) * 100) / 100
-  const balance = Math.round((total - deposit) * 100) / 100
+  const deposit =
+    opts.depositManual && t.deposit != null ? t.deposit : r2(total / 2)
+  const balance = r2(total - deposit)
   return {
     ...t,
-    subtotal: Math.round(subtotal * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    subtotal: r2(subtotal),
+    tax: r2(tax),
+    total: r2(total),
     deposit,
     balance,
   }

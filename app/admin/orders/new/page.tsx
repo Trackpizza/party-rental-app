@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   OrderDraft,
@@ -11,6 +11,7 @@ import {
   newOtherItem,
   isOtherItem,
 } from '@/lib/orders'
+import { getBusinessSettings } from '@/lib/settings'
 import TimeSelect from '@/components/TimeSelect'
 import {
   ITEM_CATALOG,
@@ -42,20 +43,62 @@ export default function NewOrderPage() {
   const router = useRouter()
   const [draft, setDraft] = useState<OrderDraft>(buildEmptyOrder())
   const [depositManual, setDepositManual] = useState(false)
+  const [taxManual, setTaxManual] = useState(false)
+  const [taxRate, setTaxRate] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // Recompute totals, honoring a manual deposit override.
+  // Load the saved tax rate and apply it to the (empty) order's totals.
+  useEffect(() => {
+    getBusinessSettings().then((b) => {
+      setTaxRate(b.taxRate)
+      setDraft((d) => ({
+        ...d,
+        totals: recalcTotals(d.items, d.totals, {
+          taxRate: b.taxRate,
+          taxManual: false,
+          depositManual: false,
+        }),
+      }))
+    })
+  }, [])
+
+  // Recompute totals, honoring manual tax / deposit overrides + tax rate.
   function withTotals(next: OrderDraft): OrderDraft {
-    const totals = recalcTotals(next.items, {
-      ...next.totals,
-      deposit: depositManual ? next.totals.deposit : null,
+    const totals = recalcTotals(next.items, next.totals, {
+      taxRate,
+      taxManual,
+      depositManual,
     })
     return { ...next, totals }
   }
 
   function patch(updater: (d: OrderDraft) => OrderDraft) {
     setDraft((d) => withTotals(updater(d)))
+  }
+
+  function changeTax(v: number | null) {
+    setTaxManual(true)
+    setDraft((d) => ({
+      ...d,
+      totals: recalcTotals(
+        d.items,
+        { ...d.totals, tax: v },
+        { taxRate, taxManual: true, depositManual },
+      ),
+    }))
+  }
+
+  function changeDeposit(v: number | null) {
+    setDepositManual(true)
+    setDraft((d) => ({
+      ...d,
+      totals: recalcTotals(
+        d.items,
+        { ...d.totals, deposit: v },
+        { taxRate, taxManual, depositManual: true },
+      ),
+    }))
   }
 
   function updateItem(key: string, p: Partial<LineItem>) {
@@ -482,7 +525,12 @@ export default function NewOrderPage() {
         <div className="space-y-2 text-sm">
           <Row label="Subtotal" value={money(t.subtotal)} />
           <div className="flex items-center justify-between">
-            <span className="text-gray-600">Tax</span>
+            <span className="text-gray-600">
+              Tax{' '}
+              <span className="text-xs text-gray-400">
+                {taxManual ? '(manual)' : `(${taxRate}% auto)`}
+              </span>
+            </span>
             <div className="flex items-center rounded-lg border border-gray-300 px-2">
               <span className="text-gray-400">$</span>
               <input
@@ -490,9 +538,7 @@ export default function NewOrderPage() {
                 min="0"
                 step="0.01"
                 value={t.tax ?? ''}
-                onChange={(e) =>
-                  patch((d) => ({ ...d, totals: { ...d.totals, tax: num(e.target.value) } }))
-                }
+                onChange={(e) => changeTax(num(e.target.value))}
                 className="w-24 px-1 py-1.5 text-right focus:outline-none"
               />
             </div>
@@ -512,12 +558,7 @@ export default function NewOrderPage() {
                 min="0"
                 step="0.01"
                 value={t.deposit ?? ''}
-                onChange={(e) => {
-                  setDepositManual(true)
-                  setDraft((d) =>
-                    recalcWithManualDeposit(d, num(e.target.value)),
-                  )
-                }}
+                onChange={(e) => changeDeposit(num(e.target.value))}
                 className="w-24 px-1 py-1.5 text-right focus:outline-none"
               />
             </div>
@@ -567,8 +608,3 @@ function Row({
   )
 }
 
-// Apply a manual deposit and recompute balance only (keeps the override sticky).
-function recalcWithManualDeposit(d: OrderDraft, deposit: number | null): OrderDraft {
-  const totals = recalcTotals(d.items, { ...d.totals, deposit })
-  return { ...d, totals }
-}

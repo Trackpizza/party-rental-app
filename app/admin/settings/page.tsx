@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
 
   const [reviewUrl, setReviewUrl] = useState('')
+  const [taxRate, setTaxRate] = useState('')
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
 
@@ -21,13 +22,19 @@ export default function SettingsPage() {
       setVersion(w.version)
       setLoading(false)
     })
-    getBusinessSettings().then((b) => setReviewUrl(b.googleReviewUrl))
+    getBusinessSettings().then((b) => {
+      setReviewUrl(b.googleReviewUrl)
+      setTaxRate(b.taxRate ? String(b.taxRate) : '')
+    })
   }, [])
 
   async function saveBiz() {
     setBizSaving(true)
     setBizSaved(false)
-    await saveBusinessSettings({ googleReviewUrl: reviewUrl.trim() })
+    await saveBusinessSettings({
+      googleReviewUrl: reviewUrl.trim(),
+      taxRate: parseFloat(taxRate) || 0,
+    })
     setBizSaving(false)
     setBizSaved(true)
     setTimeout(() => setBizSaved(false), 2000)
@@ -47,6 +54,36 @@ export default function SettingsPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-bold">Settings</h1>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Sales tax rate</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Tax is auto-calculated on each order from this rate (e.g. 9.5 for
+          North Hollywood). You can still override the tax on any single order.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center rounded-lg border border-gray-300 px-3">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="9.5"
+              value={taxRate}
+              onChange={(e) => setTaxRate(e.target.value)}
+              className="w-24 py-2 focus:outline-none"
+            />
+            <span className="text-gray-400">%</span>
+          </div>
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
 
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-1 font-semibold text-gray-800">Google review link</h2>
