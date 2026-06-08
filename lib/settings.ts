@@ -4,6 +4,7 @@ import { db } from './firebase/client'
 export interface BusinessSettings {
   googleReviewUrl: string
   taxRate: number // percent, e.g. 9.5
+  dlPurgeDays: number // days after event to auto-delete DL photos
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
@@ -12,6 +13,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
   return {
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
+    dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
   }
 }
 

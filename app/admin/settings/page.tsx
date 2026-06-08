@@ -13,6 +13,7 @@ export default function SettingsPage() {
 
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
+  const [purgeDays, setPurgeDays] = useState('')
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
 
@@ -25,6 +26,7 @@ export default function SettingsPage() {
     getBusinessSettings().then((b) => {
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
+      setPurgeDays(String(b.dlPurgeDays))
     })
   }, [])
 
@@ -34,6 +36,7 @@ export default function SettingsPage() {
     await saveBusinessSettings({
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
+      dlPurgeDays: parseInt(purgeDays) || 30,
     })
     setBizSaving(false)
     setBizSaved(true)
@@ -73,6 +76,39 @@ export default function SettingsPage() {
               className="w-24 py-2 focus:outline-none"
             />
             <span className="text-gray-400">%</span>
+          </div>
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">
+          Driver&apos;s license auto-delete
+        </h2>
+        <p className="mb-3 text-sm text-gray-500">
+          License photos are automatically deleted this many days after the
+          event date (keeps sensitive ID data from piling up). Applies to new
+          orders.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center rounded-lg border border-gray-300 px-3">
+            <input
+              type="number"
+              min="1"
+              step="1"
+              placeholder="30"
+              value={purgeDays}
+              onChange={(e) => setPurgeDays(e.target.value)}
+              className="w-20 py-2 focus:outline-none"
+            />
+            <span className="text-gray-400">days</span>
           </div>
           <button
             onClick={saveBiz}

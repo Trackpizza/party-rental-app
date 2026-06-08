@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic'
 const MAX_PHOTOS = 4
 const MAX_BYTES = 6 * 1024 * 1024 // ~6MB per image
 
-function purgeDateFromEvent(eventDate: string): string | null {
+function purgeDateFromEvent(eventDate: string, days: number): string | null {
   if (!eventDate) return null
   const d = new Date(eventDate)
   if (isNaN(d.getTime())) return null
-  d.setDate(d.getDate() + 30)
+  d.setDate(d.getDate() + days)
   return d.toISOString()
 }
 
@@ -67,9 +67,14 @@ export async function POST(
       dlPhotos: admin.firestore.FieldValue.arrayUnion(photo),
       updatedAt: new Date().toISOString(),
     }
-    // Ensure the 30-day purge clock is set (from the event date).
+    // Ensure the purge clock is set (event date + configured window).
     if (!order.dlPurgeAfter && order.event?.eventDate) {
-      patch.dlPurgeAfter = purgeDateFromEvent(order.event.eventDate)
+      const biz = await adminDb.collection('settings').doc('business').get()
+      const days =
+        biz.exists && typeof (biz.data() as any).dlPurgeDays === 'number'
+          ? (biz.data() as any).dlPurgeDays
+          : 30
+      patch.dlPurgeAfter = purgeDateFromEvent(order.event.eventDate, days)
     }
     await ref.update(patch)
 

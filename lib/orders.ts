@@ -130,21 +130,21 @@ export function recalcTotals(
   }
 }
 
-// 30 days after the event date (for DL photo auto-purge).
-export function purgeDateFromEvent(eventDate: string): string | null {
+// N days after the event date (for DL photo auto-purge).
+export function purgeDateFromEvent(eventDate: string, days = 30): string | null {
   if (!eventDate) return null
   const d = new Date(eventDate)
   if (isNaN(d.getTime())) return null
-  d.setDate(d.getDate() + 30)
+  d.setDate(d.getDate() + days)
   return d.toISOString()
 }
 
 // Create a new order document; returns the new id.
-export async function createOrder(draft: OrderDraft): Promise<string> {
+export async function createOrder(draft: OrderDraft, purgeDays = 30): Promise<string> {
   const now = new Date().toISOString()
   const payload = {
     ...draft,
-    dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate),
+    dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, purgeDays),
     createdAt: now,
     updatedAt: now,
   }

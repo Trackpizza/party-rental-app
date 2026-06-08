@@ -45,13 +45,15 @@ export default function NewOrderPage() {
   const [depositManual, setDepositManual] = useState(false)
   const [taxManual, setTaxManual] = useState(false)
   const [taxRate, setTaxRate] = useState(0)
+  const [purgeDays, setPurgeDays] = useState(30)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // Load the saved tax rate and apply it to the (empty) order's totals.
+  // Load the saved tax rate + DL purge window; apply tax to the empty order.
   useEffect(() => {
     getBusinessSettings().then((b) => {
       setTaxRate(b.taxRate)
+      setPurgeDays(b.dlPurgeDays)
       setDraft((d) => ({
         ...d,
         totals: recalcTotals(d.items, d.totals, {
@@ -161,7 +163,7 @@ export default function NewOrderPage() {
     }
     setSaving(true)
     try {
-      const id = await createOrder(draft)
+      const id = await createOrder(draft, purgeDays)
       router.push(`/admin/orders/${id}`)
     } catch (err: any) {
       setError(err?.message || 'Failed to save order.')
