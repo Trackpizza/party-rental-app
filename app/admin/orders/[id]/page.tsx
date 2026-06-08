@@ -20,6 +20,10 @@ export default function OrderDetailPage() {
   const [copied, setCopied] = useState(false)
   const [completeMsg, setCompleteMsg] = useState('')
   const [completing, setCompleting] = useState(false)
+  const [note, setNote] = useState('')
+  const [cc, setCc] = useState('')
+  const [sendingLink, setSendingLink] = useState(false)
+  const [sendMsg, setSendMsg] = useState('')
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -46,21 +50,25 @@ export default function OrderDetailPage() {
 
   const link = customerLink(order.id)
 
-  async function share() {
+  async function sendSigningLink() {
     if (!order) return
-    const text = `Hi ${order.customer.name}, here's your rental order from ${business}. Please review and sign: ${link}`
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      try {
-        await navigator.share({ title: business, text, url: link })
-      } catch {
-        /* user cancelled */
-      }
-    } else {
-      const subject = encodeURIComponent(`Your rental order — ${business}`)
-      const body = encodeURIComponent(text)
-      window.location.href = `mailto:${order.customer.email}?subject=${subject}&body=${body}`
+    setSendingLink(true)
+    setSendMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/send-signing-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note, cc }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setSendMsg(`✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
+      setNote('')
+    } catch (e: any) {
+      setSendMsg(`Error: ${e.message}`)
+    } finally {
+      setSendingLink(false)
     }
-    if (!order.sentAt) await applyOrderAction(order, { sentAt: new Date().toISOString() })
   }
 
   async function copyLink() {
@@ -114,12 +122,37 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Share */}
+      {/* Send signing link */}
       <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-gray-800">Send to customer</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={share} className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:opacity-90">
-            Share signing link
+        <h2 className="mb-1 font-semibold text-gray-800">Send signing link to customer</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          {order.customer.email
+            ? <>Sends to <span className="font-medium text-gray-700">{order.customer.email}</span></>
+            : 'No email on file — add one to the order, or use Copy link below.'}
+        </p>
+
+        <textarea
+          rows={2}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Add a personal note (optional) — appears in a green box at the top of the email…"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+        />
+        <input
+          type="email"
+          value={cc}
+          onChange={(e) => setCc(e.target.value)}
+          placeholder="CC (optional) — e.g. spouse's email"
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+        />
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            onClick={sendSigningLink}
+            disabled={!order.customer.email || sendingLink}
+            className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {sendingLink ? 'Sending…' : '✉️ Send signing link'}
           </button>
           <button onClick={copyLink} className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand">
             {copied ? 'Copied!' : 'Copy link'}
@@ -128,6 +161,7 @@ export default function OrderDetailPage() {
             Preview customer view
           </a>
         </div>
+        {sendMsg && <p className="mt-2 text-sm text-gray-600">{sendMsg}</p>}
         <p className="mt-2 break-all text-xs text-gray-400">{link}</p>
       </section>
 

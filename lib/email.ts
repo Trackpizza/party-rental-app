@@ -29,6 +29,7 @@ export async function sendMail(opts: {
   subject: string
   html: string
   text?: string
+  cc?: string
 }): Promise<void> {
   if (!isEmailConfigured()) {
     throw new Error('Email not configured (GMAIL_USER / GMAIL_APP_PASSWORD missing)')
@@ -41,6 +42,7 @@ export async function sendMail(opts: {
   await transport.sendMail({
     from: `"${fromName}" <${process.env.GMAIL_USER}>`,
     to: opts.to,
+    cc: opts.cc || undefined,
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
