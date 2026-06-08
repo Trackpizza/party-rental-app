@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { auth } from '@/lib/firebase/client'
-import CameraCapture from './CameraCapture'
+import PhotoCapture from './PhotoCapture'
 import { DLPhoto } from '@/lib/types'
 
 export default function OwnerDLPhotos({
@@ -13,7 +13,6 @@ export default function OwnerDLPhotos({
   photos: DLPhoto[]
 }) {
   const [urls, setUrls] = useState<Record<string, string>>({})
-  const [showCamera, setShowCamera] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
@@ -50,7 +49,6 @@ export default function OwnerDLPhotos({
   }, [orderId, photos.map((p) => p.storagePath).join(',')])
 
   async function upload(dataUrl: string) {
-    setShowCamera(false)
     setUploading(true)
     setError('')
     try {
@@ -97,22 +95,13 @@ export default function OwnerDLPhotos({
         <p className="text-sm text-gray-400">No license photos yet.</p>
       )}
 
-      <button
-        onClick={() => setShowCamera(true)}
-        disabled={uploading || photos.length >= 4}
-        className="no-print mt-3 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
-      >
-        {uploading ? 'Uploading…' : '📷 Add license photo'}
-      </button>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-
-      {showCamera && (
-        <CameraCapture
-          label="Driver's license"
-          onConfirm={upload}
-          onCancel={() => setShowCamera(false)}
-        />
+      {photos.length < 4 && (
+        <div className="no-print mt-3">
+          <PhotoCapture onConfirm={upload} label="Add license photo" />
+        </div>
       )}
+      {uploading && <p className="mt-2 text-sm text-gray-500">Uploading…</p>}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )
 }

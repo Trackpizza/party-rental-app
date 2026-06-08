@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import SignaturePad from './SignaturePad'
-import CameraCapture from './CameraCapture'
+import PhotoCapture from './PhotoCapture'
 
 export interface SignFlowData {
   orderId: string
@@ -30,13 +30,11 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
   const waiverRef = useRef<HTMLDivElement>(null)
 
   // Driver's license capture
-  const [showCamera, setShowCamera] = useState(false)
   const [dlThumb, setDlThumb] = useState<string | null>(null)
   const [dlUploading, setDlUploading] = useState(false)
   const [dlError, setDlError] = useState('')
 
   async function uploadDl(dataUrl: string) {
-    setShowCamera(false)
     setDlUploading(true)
     setDlError('')
     try {
@@ -173,26 +171,18 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
           photo uploads directly and is not saved to your phone.
         </p>
         {dlThumb ? (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={dlThumb} alt="license" className="h-16 rounded-lg border border-gray-200" />
-            <span className="text-sm font-medium text-green-600">✓ Photo added</span>
-            <button
-              onClick={() => setShowCamera(true)}
-              className="text-sm text-gray-400 underline hover:text-gray-600"
-            >
-              Retake
-            </button>
+            <span className="text-sm font-medium text-green-600">
+              {dlUploading ? 'Uploading…' : '✓ Photo added'}
+            </span>
+            <PhotoCapture onConfirm={uploadDl} label="Replace" />
           </div>
         ) : (
-          <button
-            onClick={() => setShowCamera(true)}
-            disabled={dlUploading}
-            className="rounded-lg border border-brand px-4 py-2.5 font-semibold text-brand hover:bg-brand hover:text-white disabled:opacity-50"
-          >
-            {dlUploading ? 'Uploading…' : '📷 Take license photo'}
-          </button>
+          <PhotoCapture onConfirm={uploadDl} label="Take license photo" />
         )}
+        {dlUploading && !dlThumb && <p className="mt-2 text-sm text-gray-500">Uploading…</p>}
         {dlError && <p className="mt-2 text-sm text-red-600">{dlError}</p>}
       </section>
 
@@ -247,14 +237,6 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
           </button>
         </div>
       </div>
-
-      {showCamera && (
-        <CameraCapture
-          label="Driver's license"
-          onConfirm={uploadDl}
-          onCancel={() => setShowCamera(false)}
-        />
-      )}
     </div>
   )
 }
