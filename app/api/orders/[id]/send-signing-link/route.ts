@@ -79,7 +79,7 @@ export async function POST(
     if (order.status === 'draft') patch.status = 'sent'
     await ref.update(patch)
 
-    return NextResponse.json({ ok: true, emailed: true, to, cc: ccClean || null })
+    return NextResponse.json({ ok: true, emailed: true, to, cc: ccClean || null, signingUrl })
   } catch (e: any) {
     console.error('send-signing-link error', e)
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
