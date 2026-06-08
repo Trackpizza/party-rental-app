@@ -43,7 +43,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
       <div className="mx-auto max-w-xl p-4 pb-16">
         <header className="py-4 text-center">
           <h1 className="text-lg font-bold text-brand">{business}</h1>
-          <p className="text-sm text-gray-500">Photos from your event 🎉</p>
+          <p className="text-sm text-gray-500">Photos from your event · Fotos de su evento 🎉</p>
         </header>
 
         {urls.length === 0 ? (
@@ -66,14 +66,18 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         {urls.length > 0 && (
           <p className="mt-3 text-center text-xs text-gray-400">
             Tap any photo to open it full size, then save it to your phone.
+            <br />
+            Toque cualquier foto para verla en grande y guardarla en su teléfono.
           </p>
         )}
 
         {reviewUrl && (
           <div className="mt-8 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="font-semibold text-gray-800">Enjoyed your event?</p>
+            <p className="font-semibold text-gray-800">
+              Thank you for choosing us for your event!
+            </p>
             <p className="mt-1 text-sm text-gray-500">
-              A quick review means the world to us. Thank you! 💜
+              A quick review means others can find us. Thank you!
             </p>
             <a
               href={reviewUrl}
@@ -82,6 +86,21 @@ export default async function GalleryPage({ params }: { params: { id: string } }
               className="mt-4 inline-block rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:opacity-90"
             >
               ⭐ Leave a Google Review
+            </a>
+
+            <p className="mt-6 border-t border-gray-100 pt-5 font-semibold text-gray-800">
+              ¡Gracias por elegirnos para su evento!
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Una reseña rápida ayuda a que otros nos encuentren. ¡Gracias!
+            </p>
+            <a
+              href={reviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-block rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:opacity-90"
+            >
+              ⭐ Deja una reseña en Google
             </a>
           </div>
         )}

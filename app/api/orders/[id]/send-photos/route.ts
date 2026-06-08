@@ -42,23 +42,30 @@ export async function POST(
     }
 
     const galleryUrl = `${baseUrl(req)}/gallery/${order.id}`
+    const name = order.customer.name?.trim()
+    const enGreet = name ? `Hi ${name},` : 'Hi there,'
+    const esGreet = name ? `Hola ${name},` : 'Hola,'
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
       <h1 style="color:#7c2d91;font-size:20px;">${business}</h1>
-      <p>Hi ${order.customer.name || 'there'},</p>
-      <p>Thank you for letting us be part of your event! We took some photos of the
-      setup — view and download them here:</p>
+      <p>${enGreet} &nbsp;/&nbsp; ${esGreet}</p>
+      <p>Thank you for choosing us for your event! We took some photos of your setup — view and download them below.</p>
+      <p>¡Gracias por elegirnos para su evento! Tomamos algunas fotos de su montaje — véalas y descárguelas abajo.</p>
       <p style="text-align:center;margin:24px 0;">
         <a href="${galleryUrl}" style="background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;">
-          View your event photos 📸
+          📸 View your event photos · Ver sus fotos
         </a>
       </p>
-      <p style="color:#555;">We hope you had a great time — if you did, a quick Google review
-      means the world to a small business like ours. There's a button right on the photo page. 💜</p>
+      <p style="color:#555;">A quick review means others can find us — there's a button right on the photo page. Thank you!</p>
+      <p style="color:#555;">Una reseña rápida ayuda a que otros nos encuentren — hay un botón en la página de fotos. ¡Gracias!</p>
       <p style="color:#999;font-size:12px;margin-top:20px;">${business}<br/>${process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''}</p>
     </div>`
 
-    await sendMail({ to, subject: `📸 Photos from your event — ${business}`, html })
+    await sendMail({
+      to,
+      subject: `📸 Photos from your event · Fotos de su evento — ${business}`,
+      html,
+    })
     await ref.update({ photosSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
 
     return NextResponse.json({ ok: true, emailed: true, to, count, galleryUrl })
