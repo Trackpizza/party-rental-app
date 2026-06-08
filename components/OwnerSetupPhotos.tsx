@@ -30,6 +30,11 @@ export default function OwnerSetupPhotos({
   const [crewNote, setCrewNote] = useState('')
   const [sendingCrew, setSendingCrew] = useState(false)
   const [crewMsg, setCrewMsg] = useState('')
+  const [photoTo, setPhotoTo] = useState(customerEmail)
+  const [photoCc, setPhotoCc] = useState('')
+  const [photoBcc, setPhotoBcc] = useState('')
+  const [photoNote, setPhotoNote] = useState('')
+  const [photoMsg, setPhotoMsg] = useState('')
 
   useEffect(() => {
     getBusinessSettings().then((b) => setStaff(b.staff))
@@ -141,14 +146,20 @@ export default function OwnerSetupPhotos({
 
   async function sendPhotos() {
     setSending(true)
-    setMsg('')
+    setPhotoMsg('')
     try {
-      const res = await fetch(`/api/orders/${orderId}/send-photos`, { method: 'POST' })
+      const res = await fetch(`/api/orders/${orderId}/send-photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: photoTo, cc: photoCc, bcc: photoBcc, note: photoNote }),
+      })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setMsg(`✓ Sent ${json.count} photo(s) to ${json.to}`)
+      setPhotoMsg(
+        `✓ Sent ${json.count} photo(s) to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`,
+      )
     } catch (e: any) {
-      setMsg(`Error: ${e.message}`)
+      setPhotoMsg(`Error: ${e.message}`)
     } finally {
       setSending(false)
     }
@@ -220,20 +231,61 @@ export default function OwnerSetupPhotos({
         </p>
       )}
 
-      {/* Photo actions */}
-      <div className="no-print mt-3 flex flex-wrap items-center gap-3">
+      {/* Add photo */}
+      <div className="no-print mt-3">
         <PhotoCapture onConfirm={addPhoto} label={uploading ? 'Uploading…' : 'Add photo'} />
-        {photos.length > 0 && (
+      </div>
+
+      {/* Send photos + review request */}
+      {photos.length > 0 && (
+        <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">
+          <p className="text-sm font-medium text-gray-700">Send photos + review request</p>
+          <p className="mb-2 text-xs text-gray-500">
+            {selectedCount === 0
+              ? `All ${photos.length} photos will be sent.`
+              : `${selectedCount} selected photo${selectedCount === 1 ? '' : 's'} will be sent.`}
+            {photosSentAt ? ` · Last sent ${new Date(photosSentAt).toLocaleString()}` : ''}
+          </p>
+          <input
+            type="email"
+            value={photoTo}
+            onChange={(e) => setPhotoTo(e.target.value)}
+            placeholder="Send to email"
+            className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+          />
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={photoCc}
+              onChange={(e) => setPhotoCc(e.target.value)}
+              placeholder="CC (optional)"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+            />
+            <input
+              type="text"
+              value={photoBcc}
+              onChange={(e) => setPhotoBcc(e.target.value)}
+              placeholder="BCC (optional)"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+            />
+          </div>
+          <textarea
+            rows={2}
+            value={photoNote}
+            onChange={(e) => setPhotoNote(e.target.value)}
+            placeholder="Add a personal note (optional) — appears in a green box in the email…"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+          />
           <button
             onClick={sendPhotos}
-            disabled={sending || !customerEmail}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-            title={!customerEmail ? 'No customer email on file' : ''}
+            disabled={!photoTo.trim() || sending}
+            className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {sending ? 'Sending…' : 'Send photos + review request'}
+            {sending ? 'Sending…' : '✉️ Send photos + review request'}
           </button>
-        )}
-      </div>
+          {photoMsg && <p className="mt-2 text-sm text-gray-600">{photoMsg}</p>}
+        </div>
+      )}
 
       {/* Crew upload link — text it or email a team member */}
       <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">
@@ -295,11 +347,6 @@ export default function OwnerSetupPhotos({
         {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
 
-      {photosSentAt && (
-        <p className="mt-2 text-xs text-gray-400">
-          Sent {new Date(photosSentAt).toLocaleString()}
-        </p>
-      )}
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
     </div>
   )
