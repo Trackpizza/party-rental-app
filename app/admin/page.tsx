@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
-import { Order, STATUS_LABELS, OrderStatus } from '@/lib/types'
+import { Order, STATUS_LABELS, OrderStatus, customerName } from '@/lib/types'
 import { money } from '@/lib/orders'
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -64,7 +64,7 @@ export default function Dashboard() {
             >
               <div>
                 <p className="font-semibold">
-                  {o.customer.name || 'Unnamed customer'}
+                  {customerName(o.customer) || 'Unnamed customer'}
                 </p>
                 <p className="text-sm text-gray-500">
                   Event: {o.event.eventDate || '—'} · {money(o.totals.total)}

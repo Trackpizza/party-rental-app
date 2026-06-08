@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
-import { Order, STATUS_LABELS } from '@/lib/types'
+import { Order, STATUS_LABELS, customerName } from '@/lib/types'
 import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
@@ -110,7 +110,7 @@ export default function OrderDetailPage() {
           <button onClick={() => router.push('/admin')} className="no-print text-sm text-gray-400 hover:text-gray-600">
             ← Orders
           </button>
-          <h1 className="text-xl font-bold">{order.customer.name || 'Unnamed customer'}</h1>
+          <h1 className="text-xl font-bold">{customerName(order.customer) || 'Unnamed customer'}</h1>
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-white">

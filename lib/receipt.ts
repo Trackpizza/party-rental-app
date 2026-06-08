@@ -1,4 +1,4 @@
-import { Order } from './types'
+import { Order, customerName } from './types'
 
 function money(n: number | null | undefined): string {
   if (n == null) return '$0.00'
@@ -42,7 +42,7 @@ export function buildReceiptHtml(order: Order, business: string): string {
     <h1 style="color:#7c2d91;font-size:20px;margin-bottom:2px;">${business}</h1>
     <p style="color:#888;margin-top:0;">Rental Receipt</p>
 
-    <p style="margin:16px 0 4px;"><strong>${order.customer.name || 'Customer'}</strong></p>
+    <p style="margin:16px 0 4px;"><strong>${customerName(order.customer) || 'Customer'}</strong></p>
     <p style="color:#555;margin:0;font-size:14px;">
       Event ${fmtDate(order.event.eventDate)} ${fmtTime(order.event.deliveryTime)}
       &nbsp;→&nbsp; Pickup ${fmtDate(order.event.pickupDate || order.event.eventDate)} ${fmtTime(order.event.pickupTime)}

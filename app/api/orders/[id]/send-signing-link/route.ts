@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { sendMail, isEmailConfigured } from '@/lib/email'
-import { Order } from '@/lib/types'
+import { Order, customerName } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +43,7 @@ export async function POST(
 
     const ccClean = (cc || '').trim()
     const signingUrl = `${baseUrl(req)}/order/${order.id}`
-    const name = order.customer.name?.trim()
+    const name = customerName(order.customer).trim()
     const enGreet = name ? `Hi ${name},` : 'Hi there,'
     const esGreet = name ? `Hola ${name},` : 'Hola,'
     const noteBlock = (note || '').trim()

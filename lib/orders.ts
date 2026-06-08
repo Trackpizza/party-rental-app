@@ -64,7 +64,7 @@ export function buildEmptyOrder(): OrderDraft {
   return {
     status: 'draft',
     todaysDate: todayISO(),
-    customer: { name: '', phone: '', email: '', address: '', city: '', zip: '' },
+    customer: { firstName: '', lastName: '', phone: '', email: '', address: '', city: '', zip: '' },
     event: {
       eventDate: '',
       deliveryTime: '',

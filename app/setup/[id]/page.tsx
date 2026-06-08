@@ -1,5 +1,5 @@
 import { adminDb } from '@/lib/firebase/admin'
-import type { Order } from '@/lib/types'
+import { customerName, type Order } from '@/lib/types'
 import CrewSetupUpload from '@/components/CrewSetupUpload'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +18,7 @@ export default async function SetupUploadPage({
     )
   }
   const order = snap.data() as Order
-  const name = `${order.customer?.name || ''}${order.event?.eventDate ? ' · ' + order.event.eventDate : ''}`
+  const name = `${customerName(order.customer)}${order.event?.eventDate ? ' · ' + order.event.eventDate : ''}`
 
   return <CrewSetupUpload orderId={params.id} customerName={name} />
 }

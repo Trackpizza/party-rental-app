@@ -1,7 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { DEFAULT_WAIVER } from '@/lib/waiver'
 import SignFlow, { SignFlowData } from '@/components/SignFlow'
-import type { Order } from '@/lib/types'
+import { customerName, type Order } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,7 +74,7 @@ export default async function OrderSignPage({
   const data: SignFlowData = {
     orderId: order.id,
     business,
-    customerName: order.customer.name,
+    customerName: customerName(order.customer),
     items: order.items.map((i) => ({
       label: i.label,
       qty: i.qty,

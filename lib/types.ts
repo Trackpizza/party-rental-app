@@ -85,12 +85,24 @@ export interface SignatureRecord {
 
 // ---- Customer contact + event details ----
 export interface CustomerInfo {
-  name: string
+  firstName: string
+  lastName: string
   phone: string
   email: string
   address: string
   city: string
   zip: string
+}
+
+// Full display name from first/last; falls back to a legacy `name` field
+// so orders created before the split still render correctly.
+export function customerName(c: {
+  firstName?: string
+  lastName?: string
+  name?: string
+}): string {
+  const full = [c.firstName, c.lastName].filter(Boolean).join(' ').trim()
+  return full || c.name || ''
 }
 
 export interface EventInfo {

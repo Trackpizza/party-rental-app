@@ -157,7 +157,7 @@ export default function NewOrderPage() {
 
   async function handleSave() {
     setError('')
-    if (!draft.customer.name.trim()) {
+    if (!draft.customer.firstName.trim() && !draft.customer.lastName.trim()) {
       setError('Customer name is required.')
       return
     }
@@ -236,11 +236,20 @@ export default function NewOrderPage() {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 font-semibold text-gray-800">Customer</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Name *">
+          <Field label="First Name *">
             <input
-              value={draft.customer.name}
+              value={draft.customer.firstName}
               onChange={(e) =>
-                patch((d) => ({ ...d, customer: { ...d.customer, name: e.target.value } }))
+                patch((d) => ({ ...d, customer: { ...d.customer, firstName: e.target.value } }))
+              }
+              className={`${inputCls} w-full`}
+            />
+          </Field>
+          <Field label="Last Name">
+            <input
+              value={draft.customer.lastName}
+              onChange={(e) =>
+                patch((d) => ({ ...d, customer: { ...d.customer, lastName: e.target.value } }))
               }
               className={`${inputCls} w-full`}
             />
