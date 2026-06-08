@@ -25,7 +25,7 @@ export default function OwnerSetupPhotos({
   const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(false)
   const [staff, setStaff] = useState<StaffMember[]>([])
-  const [crewTo, setCrewTo] = useState('')
+  const [crewTos, setCrewTos] = useState<string[]>([''])
   const [crewBcc, setCrewBcc] = useState('')
   const [crewNote, setCrewNote] = useState('')
   const [sendingCrew, setSendingCrew] = useState(false)
@@ -40,14 +40,28 @@ export default function OwnerSetupPhotos({
     getBusinessSettings().then((b) => setStaff(b.staff))
   }, [])
 
+  function pickStaff(email: string) {
+    setCrewTos((prev) => {
+      if (prev.includes(email)) return prev
+      const idx = prev.findIndex((x) => !x.trim())
+      if (idx >= 0) {
+        const c = [...prev]
+        c[idx] = email
+        return c
+      }
+      return [...prev, email]
+    })
+  }
+
   async function sendCrewLink() {
+    const to = crewTos.map((s) => s.trim()).filter(Boolean).join(', ')
     setSendingCrew(true)
     setCrewMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/send-crew-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: crewTo, bcc: crewBcc, note: crewNote }),
+        body: JSON.stringify({ to, bcc: crewBcc, note: crewNote }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
@@ -300,12 +314,12 @@ export default function OwnerSetupPhotos({
           {copied ? 'Copied!' : '📋 Copy link'}
         </button>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3">
           {staff.length > 0 && (
             <select
               value=""
-              onChange={(e) => e.target.value && setCrewTo(e.target.value)}
-              className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand focus:outline-none"
+              onChange={(e) => e.target.value && pickStaff(e.target.value)}
+              className="mb-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand focus:outline-none"
             >
               <option value="">Pick team member…</option>
               {staff.map((s, i) => (
@@ -315,13 +329,34 @@ export default function OwnerSetupPhotos({
               ))}
             </select>
           )}
-          <input
-            type="email"
-            value={crewTo}
-            onChange={(e) => setCrewTo(e.target.value)}
-            placeholder="Send to email"
-            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
-          />
+          {crewTos.map((t, i) => (
+            <div key={i} className="mb-2 flex items-center gap-2">
+              <input
+                type="email"
+                value={t}
+                onChange={(e) =>
+                  setCrewTos((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))
+                }
+                placeholder="Send to email"
+                className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+              />
+              {crewTos.length > 1 && (
+                <button
+                  onClick={() => setCrewTos((prev) => prev.filter((_, j) => j !== i))}
+                  className="px-2 text-gray-300 hover:text-red-500"
+                  aria-label="Remove recipient"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            onClick={() => setCrewTos((prev) => [...prev, ''])}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            + Add recipient
+          </button>
         </div>
         <input
           type="text"
@@ -339,7 +374,7 @@ export default function OwnerSetupPhotos({
         />
         <button
           onClick={sendCrewLink}
-          disabled={!crewTo.trim() || sendingCrew}
+          disabled={!crewTos.some((t) => t.trim()) || sendingCrew}
           className="mt-2 rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           {sendingCrew ? 'Sending…' : '✉️ Email crew link'}
