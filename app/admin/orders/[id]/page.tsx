@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS } from '@/lib/types'
-import { money, applyOrderAction, customerLink } from '@/lib/orders'
+import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 
@@ -136,9 +136,9 @@ export default function OrderDetailPage() {
         <h2 className="mb-3 font-semibold text-gray-800">Order</h2>
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Info label="Event start" value={order.event.eventDate || '—'} />
-          <Info label="Delivery time" value={order.event.deliveryTime || '—'} />
+          <Info label="Delivery time" value={formatTime(order.event.deliveryTime) || '—'} />
           <Info label="Pickup date" value={order.event.pickupDate || '—'} />
-          <Info label="Pickup time" value={order.event.pickupTime || '—'} />
+          <Info label="Pickup time" value={formatTime(order.event.pickupTime) || '—'} />
           <Info label="Miles" value={order.totals.miles != null ? String(order.totals.miles) : '—'} />
         </div>
 

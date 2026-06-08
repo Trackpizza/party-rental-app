@@ -17,7 +17,20 @@ import {
 export type OrderDraft = Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
 
 function todayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  // Local calendar date (not UTC) — avoids rolling to "tomorrow" in the evening.
+  const d = new Date()
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 10)
+}
+
+// "14:30" -> "2:30 PM" for friendly display.
+export function formatTime(hhmm: string | null | undefined): string {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return hhmm
+  const ampm = h < 12 ? 'AM' : 'PM'
+  const hr = h % 12 || 12
+  return `${hr}:${String(m).padStart(2, '0')} ${ampm}`
 }
 
 let otherCounter = 0

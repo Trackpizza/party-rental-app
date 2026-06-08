@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { getOrder, money } from '@/lib/orders'
+import { getOrder, money, formatTime } from '@/lib/orders'
 import { getWaiver } from '@/lib/waiver'
 import { auth } from '@/lib/firebase/client'
 import { Order } from '@/lib/types'
@@ -80,8 +80,8 @@ export default function PrintContractPage() {
       <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
         <div><b>Order:</b> {order.id}</div>
         <div><b>Today:</b> {order.todaysDate || '—'}</div>
-        <div><b>Event start:</b> {order.event.eventDate || '—'} {order.event.deliveryTime}</div>
-        <div><b>Pickup:</b> {order.event.pickupDate || order.event.eventDate || '—'} {order.event.pickupTime}</div>
+        <div><b>Event start:</b> {order.event.eventDate || '—'} {formatTime(order.event.deliveryTime)}</div>
+        <div><b>Pickup:</b> {order.event.pickupDate || order.event.eventDate || '—'} {formatTime(order.event.pickupTime)}</div>
       </div>
 
       {/* customer */}

@@ -11,6 +11,7 @@ import {
   newOtherItem,
   isOtherItem,
 } from '@/lib/orders'
+import TimeSelect from '@/components/TimeSelect'
 import {
   ITEM_CATALOG,
   SURFACE_TYPES,
@@ -156,12 +157,10 @@ export default function NewOrderPage() {
             />
           </Field>
           <Field label="Delivery Time">
-            <input
-              type="time"
-              step={900}
+            <TimeSelect
               value={draft.event.deliveryTime}
-              onChange={(e) =>
-                patch((d) => ({ ...d, event: { ...d.event, deliveryTime: e.target.value } }))
+              onChange={(v) =>
+                patch((d) => ({ ...d, event: { ...d.event, deliveryTime: v } }))
               }
               className={`${inputCls} w-full`}
             />
@@ -177,12 +176,10 @@ export default function NewOrderPage() {
             />
           </Field>
           <Field label="Pickup Time">
-            <input
-              type="time"
-              step={900}
+            <TimeSelect
               value={draft.event.pickupTime}
-              onChange={(e) =>
-                patch((d) => ({ ...d, event: { ...d.event, pickupTime: e.target.value } }))
+              onChange={(v) =>
+                patch((d) => ({ ...d, event: { ...d.event, pickupTime: v } }))
               }
               className={`${inputCls} w-full`}
             />

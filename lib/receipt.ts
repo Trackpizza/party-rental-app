@@ -11,6 +11,14 @@ function fmtDate(iso: string | null): string {
   return isNaN(d.getTime()) ? iso : d.toLocaleDateString()
 }
 
+function fmtTime(hhmm: string | null | undefined): string {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return hhmm
+  const ampm = h < 12 ? 'AM' : 'PM'
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
+}
+
 // Inline-styled HTML receipt (email clients need inline styles).
 export function buildReceiptHtml(order: Order, business: string): string {
   const rows = order.items
@@ -36,8 +44,8 @@ export function buildReceiptHtml(order: Order, business: string): string {
 
     <p style="margin:16px 0 4px;"><strong>${order.customer.name || 'Customer'}</strong></p>
     <p style="color:#555;margin:0;font-size:14px;">
-      Event ${fmtDate(order.event.eventDate)} ${order.event.deliveryTime || ''}
-      &nbsp;→&nbsp; Pickup ${fmtDate(order.event.pickupDate || order.event.eventDate)} ${order.event.pickupTime || ''}
+      Event ${fmtDate(order.event.eventDate)} ${fmtTime(order.event.deliveryTime)}
+      &nbsp;→&nbsp; Pickup ${fmtDate(order.event.pickupDate || order.event.eventDate)} ${fmtTime(order.event.pickupTime)}
     </p>
 
     <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;">

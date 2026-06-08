@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import SignaturePad from './SignaturePad'
 import PhotoCapture from './PhotoCapture'
+import { formatTime } from '@/lib/orders'
 
 export interface SignFlowData {
   orderId: string
@@ -119,8 +120,8 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="font-semibold">{data.customerName}</p>
         <p className="text-sm text-gray-500">
-          Event {data.event.eventDate || '—'} {data.event.deliveryTime} → Pickup{' '}
-          {data.event.pickupDate || data.event.eventDate || '—'} {data.event.pickupTime}
+          Event {data.event.eventDate || '—'} {formatTime(data.event.deliveryTime)} → Pickup{' '}
+          {data.event.pickupDate || data.event.eventDate || '—'} {formatTime(data.event.pickupTime)}
         </p>
         <table className="mt-3 w-full text-sm">
           <tbody>
