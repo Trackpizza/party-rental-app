@@ -46,14 +46,14 @@ export async function POST(
     const enGreet = name ? `Hi ${name},` : 'Hi there,'
     const esGreet = name ? `Hola ${name},` : 'Hola,'
     const html = `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.5;">
       <h1 style="color:#7c2d91;font-size:20px;">${business}</h1>
       <p>${enGreet} &nbsp;/&nbsp; ${esGreet}</p>
       <p>Thank you for choosing us for your event! We took some photos of your setup — view and download them below.</p>
       <p>¡Gracias por elegirnos para su evento! Tomamos algunas fotos de su montaje — véalas y descárguelas abajo.</p>
       <p style="text-align:center;margin:24px 0;">
-        <a href="${galleryUrl}" style="background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;">
-          📸 View your event photos · Ver sus fotos
+        <a href="${galleryUrl}" style="display:inline-block;background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;line-height:1.4;">
+          📸 View your event photos &nbsp;·&nbsp; Ver sus fotos
         </a>
       </p>
       <p style="color:#555;">A quick review means others can find us — there's a button right on the photo page. Thank you!</p>

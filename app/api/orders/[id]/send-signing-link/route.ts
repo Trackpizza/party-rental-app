@@ -47,19 +47,19 @@ export async function POST(
     const enGreet = name ? `Hi ${name},` : 'Hi there,'
     const esGreet = name ? `Hola ${name},` : 'Hola,'
     const noteBlock = (note || '').trim()
-      ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;color:#166534;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
+      ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;color:#166534;line-height:1.5;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
       : ''
 
     const html = `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;">
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.5;">
       <h1 style="color:#7c2d91;font-size:20px;">${business}</h1>
       ${noteBlock}
       <p>${enGreet} &nbsp;/&nbsp; ${esGreet}</p>
       <p>Please review and sign your rental order using the button below.</p>
       <p>Por favor revise y firme su orden de alquiler con el botón de abajo.</p>
       <p style="text-align:center;margin:24px 0;">
-        <a href="${signingUrl}" style="background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;">
-          ✍️ Review &amp; sign · Revisar y firmar
+        <a href="${signingUrl}" style="display:inline-block;background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;line-height:1.4;">
+          ✍️ Review &amp; sign &nbsp;·&nbsp; Revisar y firmar
         </a>
       </p>
       <p style="color:#999;font-size:12px;margin-top:20px;">${business}<br/>${process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''}</p>
