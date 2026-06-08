@@ -1,10 +1,16 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from './firebase/client'
 
+export interface StaffMember {
+  name: string
+  email: string
+}
+
 export interface BusinessSettings {
   googleReviewUrl: string
   taxRate: number // percent, e.g. 9.5
   dlPurgeDays: number // days after event to auto-delete DL photos
+  staff: StaffMember[]
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
@@ -14,6 +20,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
     dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
+    staff: Array.isArray(d.staff) ? d.staff : [],
   }
 }
 

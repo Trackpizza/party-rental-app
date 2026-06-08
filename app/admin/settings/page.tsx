@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getWaiver, saveWaiver, DEFAULT_WAIVER } from '@/lib/waiver'
-import { getBusinessSettings, saveBusinessSettings } from '@/lib/settings'
+import { getBusinessSettings, saveBusinessSettings, StaffMember } from '@/lib/settings'
 
 export default function SettingsPage() {
   const [text, setText] = useState('')
@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
   const [purgeDays, setPurgeDays] = useState('')
+  const [staff, setStaff] = useState<StaffMember[]>([])
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
 
@@ -27,6 +28,7 @@ export default function SettingsPage() {
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setPurgeDays(String(b.dlPurgeDays))
+      setStaff(b.staff)
     })
   }, [])
 
@@ -37,6 +39,9 @@ export default function SettingsPage() {
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
       dlPurgeDays: parseInt(purgeDays) || 30,
+      staff: staff
+        .map((s) => ({ name: s.name.trim(), email: s.email.trim() }))
+        .filter((s) => s.name || s.email),
     })
     setBizSaving(false)
     setBizSaved(true)
@@ -110,6 +115,63 @@ export default function SettingsPage() {
             />
             <span className="text-gray-400">days</span>
           </div>
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Staff / team</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Add your crew so you can email the setup-photo link to a team member
+          from a dropdown instead of typing it each time.
+        </p>
+        <div className="space-y-2">
+          {staff.map((s, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                placeholder="Name"
+                value={s.name}
+                onChange={(e) =>
+                  setStaff(staff.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
+                }
+                className="w-1/3 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              />
+              <input
+                type="email"
+                placeholder="email@example.com"
+                value={s.email}
+                onChange={(e) =>
+                  setStaff(staff.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))
+                }
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              />
+              <button
+                onClick={() => setStaff(staff.filter((_, j) => j !== i))}
+                className="px-2 text-gray-300 hover:text-red-500"
+                aria-label="Remove staff"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          {staff.length === 0 && (
+            <p className="text-sm text-gray-400">No team members yet.</p>
+          )}
+        </div>
+        <div className="mt-3 flex items-center gap-4">
+          <button
+            onClick={() => setStaff([...staff, { name: '', email: '' }])}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            + Add staff
+          </button>
           <button
             onClick={saveBiz}
             disabled={bizSaving}

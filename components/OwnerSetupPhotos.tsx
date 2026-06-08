@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { ref as storageRef, deleteObject } from 'firebase/storage'
 import { auth, storage } from '@/lib/firebase/client'
 import { updateOrder } from '@/lib/orders'
+import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import PhotoCapture from './PhotoCapture'
 import { SetupPhoto } from '@/lib/types'
 
@@ -23,6 +24,34 @@ export default function OwnerSetupPhotos({
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(false)
+  const [staff, setStaff] = useState<StaffMember[]>([])
+  const [crewTo, setCrewTo] = useState('')
+  const [crewBcc, setCrewBcc] = useState('')
+  const [sendingCrew, setSendingCrew] = useState(false)
+  const [crewMsg, setCrewMsg] = useState('')
+
+  useEffect(() => {
+    getBusinessSettings().then((b) => setStaff(b.staff))
+  }, [])
+
+  async function sendCrewLink() {
+    setSendingCrew(true)
+    setCrewMsg('')
+    try {
+      const res = await fetch(`/api/orders/${orderId}/send-crew-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: crewTo, bcc: crewBcc }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setCrewMsg(`✓ Crew link sent to ${json.to}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
+    } catch (e: any) {
+      setCrewMsg(`Error: ${e.message}`)
+    } finally {
+      setSendingCrew(false)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -190,14 +219,9 @@ export default function OwnerSetupPhotos({
         </p>
       )}
 
+      {/* Photo actions */}
       <div className="no-print mt-3 flex flex-wrap items-center gap-3">
         <PhotoCapture onConfirm={addPhoto} label={uploading ? 'Uploading…' : 'Add photo'} />
-        <button
-          onClick={copyCrewLink}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand"
-        >
-          {copied ? 'Copied!' : 'Copy crew upload link'}
-        </button>
         {photos.length > 0 && (
           <button
             onClick={sendPhotos}
@@ -208,6 +232,59 @@ export default function OwnerSetupPhotos({
             {sending ? 'Sending…' : 'Send photos + review request'}
           </button>
         )}
+      </div>
+
+      {/* Crew upload link — text it or email a team member */}
+      <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">
+        <p className="text-sm font-medium text-gray-700">Crew upload link</p>
+        <p className="mb-2 text-xs text-gray-500">
+          Text it to your crew, or email it to a team member.
+        </p>
+        <button
+          onClick={copyCrewLink}
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
+        >
+          {copied ? 'Copied!' : '📋 Copy link'}
+        </button>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {staff.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => e.target.value && setCrewTo(e.target.value)}
+              className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand focus:outline-none"
+            >
+              <option value="">Pick team member…</option>
+              {staff.map((s, i) => (
+                <option key={i} value={s.email}>
+                  {s.name || s.email}
+                </option>
+              ))}
+            </select>
+          )}
+          <input
+            type="email"
+            value={crewTo}
+            onChange={(e) => setCrewTo(e.target.value)}
+            placeholder="Send to email"
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+          />
+        </div>
+        <input
+          type="text"
+          value={crewBcc}
+          onChange={(e) => setCrewBcc(e.target.value)}
+          placeholder="BCC others (comma-separated, optional)"
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+        />
+        <button
+          onClick={sendCrewLink}
+          disabled={!crewTo.trim() || sendingCrew}
+          className="mt-2 rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+        >
+          {sendingCrew ? 'Sending…' : '✉️ Email crew link'}
+        </button>
+        {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
 
       {photosSentAt && (
