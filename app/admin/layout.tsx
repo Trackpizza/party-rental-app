@@ -32,6 +32,9 @@ export default function AdminLayout({
             <Link href="/admin" className="text-gray-600 hover:text-brand">
               Orders
             </Link>
+            <Link href="/admin/calendar" className="text-gray-600 hover:text-brand">
+              Calendar
+            </Link>
             <Link href="/admin/settings" className="text-gray-600 hover:text-brand">
               Settings
             </Link>
