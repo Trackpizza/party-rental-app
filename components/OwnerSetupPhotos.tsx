@@ -27,6 +27,7 @@ export default function OwnerSetupPhotos({
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [crewTo, setCrewTo] = useState('')
   const [crewBcc, setCrewBcc] = useState('')
+  const [crewNote, setCrewNote] = useState('')
   const [sendingCrew, setSendingCrew] = useState(false)
   const [crewMsg, setCrewMsg] = useState('')
 
@@ -41,7 +42,7 @@ export default function OwnerSetupPhotos({
       const res = await fetch(`/api/orders/${orderId}/send-crew-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: crewTo, bcc: crewBcc }),
+        body: JSON.stringify({ to: crewTo, bcc: crewBcc, note: crewNote }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
@@ -275,6 +276,13 @@ export default function OwnerSetupPhotos({
           value={crewBcc}
           onChange={(e) => setCrewBcc(e.target.value)}
           placeholder="BCC others (comma-separated, optional)"
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+        />
+        <textarea
+          rows={2}
+          value={crewNote}
+          onChange={(e) => setCrewNote(e.target.value)}
+          placeholder="Add a personal note (optional) — appears in a green box in the email…"
           className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
         />
         <button

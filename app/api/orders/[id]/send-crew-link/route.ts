@@ -13,6 +13,10 @@ function baseUrl(req: NextRequest): string {
   return `${proto}://${host}`
 }
 
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 // Email a team member the on-site setup-photo upload link, optionally BCC'ing
 // other crew. The link itself needs no login.
 export async function POST(
@@ -20,7 +24,7 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    const { to, bcc } = await req.json()
+    const { to, bcc, note } = await req.json()
     const toClean = (to || '').trim()
     if (!toClean) {
       return NextResponse.json({ error: 'A recipient email is required.' }, { status: 400 })
@@ -38,10 +42,14 @@ export async function POST(
     const crewUrl = `${baseUrl(req)}/setup/${order.id}`
     const who = customerName(order.customer) || 'the event'
     const when = order.event?.eventDate ? ` (${order.event.eventDate})` : ''
+    const noteBlock = (note || '').trim()
+      ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;color:#166534;line-height:1.5;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
+      : ''
 
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.5;">
       <h1 style="color:#7c2d91;font-size:20px;">${business}</h1>
+      ${noteBlock}
       <p>Setup-photo upload link for <strong>${who}</strong>${when}.</p>
       <p>Open this on-site to snap photos of the finished setup — no login needed:</p>
       <p style="text-align:center;margin:24px 0;">
