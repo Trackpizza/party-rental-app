@@ -20,7 +20,7 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   sent: 'Sent',
   signed: 'Signed',
   deposit_paid: 'Deposit Paid',
-  confirmed: 'Confirmed',
+  confirmed: 'Deposit Paid',
   delivered: 'Delivered',
   picked_up: 'Picked Up',
   balance_paid: 'Balance Paid',

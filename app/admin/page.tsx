@@ -12,11 +12,29 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   sent: 'bg-blue-100 text-blue-700',
   signed: 'bg-indigo-100 text-indigo-700',
   deposit_paid: 'bg-amber-100 text-amber-700',
-  confirmed: 'bg-green-100 text-green-700',
+  confirmed: 'bg-amber-100 text-amber-700',
   delivered: 'bg-teal-100 text-teal-700',
   picked_up: 'bg-cyan-100 text-cyan-700',
-  balance_paid: 'bg-lime-100 text-lime-700',
+  balance_paid: 'bg-green-100 text-green-700',
   completed: 'bg-gray-800 text-white',
+}
+
+const FILTERS: { key: string; label: string; statuses?: OrderStatus[] }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'draft', label: 'Draft', statuses: ['draft'] },
+  { key: 'sent', label: 'Sent', statuses: ['sent'] },
+  { key: 'signed', label: 'Signed', statuses: ['signed'] },
+  { key: 'deposit', label: 'Deposit Paid', statuses: ['deposit_paid', 'confirmed'] },
+  { key: 'delivered', label: 'Delivered', statuses: ['delivered'] },
+  { key: 'picked_up', label: 'Picked Up', statuses: ['picked_up'] },
+  { key: 'balance', label: 'Balance Paid', statuses: ['balance_paid'] },
+  { key: 'completed', label: 'Completed', statuses: ['completed'] },
+]
+
+function matchesStatus(o: Order, key: string): boolean {
+  if (key === 'all') return true
+  const f = FILTERS.find((x) => x.key === key)
+  return f?.statuses ? f.statuses.includes(o.status) : true
 }
 
 function matchesSearch(o: Order, ql: string): boolean {
@@ -34,6 +52,7 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
@@ -51,7 +70,9 @@ export default function Dashboard() {
   }, [])
 
   const ql = search.toLowerCase().trim()
-  const filtered = orders.filter((o) => matchesSearch(o, ql))
+  const filtered = orders.filter(
+    (o) => matchesSearch(o, ql) && matchesStatus(o, statusFilter),
+  )
 
   return (
     <div>
@@ -80,6 +101,22 @@ export default function Dashboard() {
               className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 focus:border-brand focus:outline-none"
             />
             <span className="pointer-events-none absolute left-3 top-3 text-gray-400">🔍</span>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setStatusFilter(f.key)}
+                className={`rounded-full px-3 py-1 text-sm ${
+                  statusFilter === f.key
+                    ? 'bg-brand text-white'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:border-brand'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
 
           {filtered.length === 0 ? (
