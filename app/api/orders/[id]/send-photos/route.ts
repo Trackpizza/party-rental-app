@@ -61,7 +61,7 @@ export async function POST(
     await sendMail({ to, subject: `📸 Photos from your event — ${business}`, html })
     await ref.update({ photosSentAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
 
-    return NextResponse.json({ ok: true, emailed: true, to, count })
+    return NextResponse.json({ ok: true, emailed: true, to, count, galleryUrl })
   } catch (e: any) {
     console.error('send-photos error', e)
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
