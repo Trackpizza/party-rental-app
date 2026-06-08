@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS } from '@/lib/types'
 import { money, applyOrderAction, customerLink } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
+import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -240,6 +241,21 @@ export default function OrderDetailPage() {
             Auto-deletes {new Date(order.dlPurgeAfter).toLocaleDateString()} (30 days after event).
           </p>
         )}
+      </section>
+
+      {/* Setup photos + review funnel */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Setup photos</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Share the crew link to capture setup photos on-site, then select your
+          best shots and send them to the customer with a review request.
+        </p>
+        <OwnerSetupPhotos
+          orderId={order.id}
+          photos={order.setupPhotos || []}
+          customerEmail={order.customer.email}
+          photosSentAt={order.photosSentAt || null}
+        />
       </section>
 
       {/* Lifecycle */}

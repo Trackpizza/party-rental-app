@@ -64,6 +64,13 @@ export interface DLPhoto {
   source: 'staff' | 'customer'
 }
 
+// ---- Setup photo (review funnel; marketing asset, not purged) ----
+export interface SetupPhoto {
+  storagePath: string
+  uploadedAt: string
+  selected: boolean     // included in the customer gallery/email
+}
+
 // ---- Signature record (frozen at signing time) ----
 export interface SignatureRecord {
   signatureDataUrl: string   // base64 PNG of the drawn signature
@@ -138,4 +145,8 @@ export interface Order {
   // driver's license photos (owner-read only; auto-purged 30d after event)
   dlPhotos: DLPhoto[]
   dlPurgeAfter: string | null   // ISO; set to eventDate + 30 days
+
+  // setup photos + review funnel (kept; not purged)
+  setupPhotos: SetupPhoto[]
+  photosSentAt: string | null
 }

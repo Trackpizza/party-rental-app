@@ -19,8 +19,8 @@ export async function GET(
     await adminAuth.verifyIdToken(token) // throws if invalid
 
     const path = req.nextUrl.searchParams.get('path') || ''
-    // Path must belong to this order's DL folder — no traversal.
-    if (!path.startsWith(`dl/${params.id}/`)) {
+    // Path must belong to this order's DL or setup folder — no traversal.
+    if (!path.startsWith(`dl/${params.id}/`) && !path.startsWith(`setup/${params.id}/`)) {
       return NextResponse.json({ error: 'Bad path' }, { status: 400 })
     }
 

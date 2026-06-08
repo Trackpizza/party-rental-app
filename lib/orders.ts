@@ -84,6 +84,8 @@ export function buildEmptyOrder(): OrderDraft {
     signature: null,
     dlPhotos: [],
     dlPurgeAfter: null,
+    setupPhotos: [],
+    photosSentAt: null,
   }
 }
 
