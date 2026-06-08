@@ -17,6 +17,8 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [completeMsg, setCompleteMsg] = useState('')
+  const [completing, setCompleting] = useState(false)
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -67,6 +69,26 @@ export default function OrderDetailPage() {
   }
 
   const act = (patch: Partial<Order>) => order && applyOrderAction(order, patch)
+
+  async function markCompleted() {
+    if (!order) return
+    setCompleting(true)
+    setCompleteMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/complete`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setCompleteMsg(
+        json.emailed
+          ? `✓ Receipt emailed to ${json.to}`
+          : `Completed — receipt not sent (${json.reason})`,
+      )
+    } catch (e: any) {
+      setCompleteMsg(`Error: ${e.message}`)
+    } finally {
+      setCompleting(false)
+    }
+  }
   const activeItems = order.items.filter(
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
   )
@@ -226,8 +248,30 @@ export default function OrderDetailPage() {
         <div className="flex flex-wrap gap-3">
           <ActionButton done={!!order.deliveredAt} label="Mark delivered" doneLabel="Delivered" onClick={() => act({ deliveredAt: new Date().toISOString() })} />
           <ActionButton done={!!order.pickedUpAt} label="Mark picked up" doneLabel="Picked up" onClick={() => act({ pickedUpAt: new Date().toISOString() })} />
-          <ActionButton done={!!order.completedAt} label="Mark completed" doneLabel="Completed" onClick={() => act({ completedAt: new Date().toISOString() })} />
+          {order.completedAt ? (
+            <span className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+              ✓ Completed
+            </span>
+          ) : (
+            <button
+              onClick={markCompleted}
+              disabled={completing}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
+            >
+              {completing ? 'Completing…' : 'Mark completed + email receipt'}
+            </button>
+          )}
         </div>
+        {completeMsg && <p className="mt-2 text-sm text-gray-500">{completeMsg}</p>}
+        {order.completedAt && (
+          <button
+            onClick={markCompleted}
+            disabled={completing}
+            className="no-print mt-2 text-xs text-gray-400 underline hover:text-gray-600"
+          >
+            {completing ? 'Resending…' : 'Resend receipt'}
+          </button>
+        )}
       </section>
     </div>
   )

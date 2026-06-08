@@ -50,3 +50,14 @@ env:
   - variable: FIREBASE_PRIVATE_KEY
     secret: firebase-private-key
     availability: [RUNTIME]
+
+  # --- Email (Gmail SMTP) ---
+  - variable: GMAIL_USER
+    value: keepitlocal.la@gmail.com
+    availability: [RUNTIME]
+  - variable: MAIL_FROM_NAME
+    value: "Party Supplies La Poblanita 2"
+    availability: [RUNTIME]
+  - variable: GMAIL_APP_PASSWORD
+    secret: gmail-app-password
+    availability: [RUNTIME]
