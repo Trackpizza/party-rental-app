@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
-import { Order, STATUS_LABELS, customerName } from '@/lib/types'
+import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
 import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
@@ -24,6 +24,12 @@ export default function OrderDetailPage() {
   const [cc, setCc] = useState('')
   const [sendingLink, setSendingLink] = useState(false)
   const [sendMsg, setSendMsg] = useState('')
+  const [rcptTo, setRcptTo] = useState('')
+  const [rcptCc, setRcptCc] = useState('')
+  const [rcptBcc, setRcptBcc] = useState('')
+  const [rcptNote, setRcptNote] = useState('')
+  const [sendingRcpt, setSendingRcpt] = useState(false)
+  const [rcptMsg, setRcptMsg] = useState('')
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -36,6 +42,11 @@ export default function OrderDetailPage() {
     )
     return () => unsub()
   }, [id])
+
+  // Prefill the receipt recipient with the customer's email once loaded.
+  useEffect(() => {
+    if (order?.customer.email && !rcptTo) setRcptTo(order.customer.email)
+  }, [order, rcptTo])
 
   if (loading) return <p className="text-gray-400">Loading order…</p>
   if (!order)
@@ -87,19 +98,37 @@ export default function OrderDetailPage() {
       const res = await fetch(`/api/orders/${order.id}/complete`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setCompleteMsg(
-        json.emailed
-          ? `✓ Receipt emailed to ${json.to}`
-          : `Completed — receipt not sent (${json.reason})`,
-      )
+      setCompleteMsg('✓ Marked completed')
     } catch (e: any) {
       setCompleteMsg(`Error: ${e.message}`)
     } finally {
       setCompleting(false)
     }
   }
+
+  async function sendReceipt() {
+    if (!order) return
+    setSendingRcpt(true)
+    setRcptMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/send-receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: rcptTo, cc: rcptCc, bcc: rcptBcc, note: rcptNote }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setRcptMsg(
+        `✓ Receipt sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`,
+      )
+    } catch (e: any) {
+      setRcptMsg(`Error: ${e.message}`)
+    } finally {
+      setSendingRcpt(false)
+    }
+  }
   const activeItems = order.items.filter(
-    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
+    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
 
   return (
@@ -195,7 +224,12 @@ export default function OrderDetailPage() {
             ) : (
               activeItems.map((i) => (
                 <tr key={i.key} className="border-b border-gray-100">
-                  <td className="py-1.5 font-medium">{i.description || i.label}</td>
+                  <td className="py-1.5 font-medium">
+                    {itemName(i)}
+                    {i.note && (
+                      <span className="block text-xs font-normal text-gray-400">{i.note}</span>
+                    )}
+                  </td>
                   <td className="py-1.5">{i.qty ?? '—'}</td>
                   <td className="py-1.5 text-gray-500">{i.options?.join(', ') || '—'}</td>
                   <td className="py-1.5 text-right">{money(i.amount)}</td>
@@ -236,17 +270,19 @@ export default function OrderDetailPage() {
           </a>
         )}
         <div className="no-print mt-4 flex flex-wrap gap-3">
-          <ActionButton
-            done={order.depositPaid}
+          <PaidToggle
+            paid={order.depositPaid}
             label="Mark deposit paid"
-            doneLabel={`Deposit paid (${money(order.totals.deposit)})`}
-            onClick={() => act({ depositPaid: true, depositPaidAt: new Date().toISOString() })}
+            paidLabel={`Deposit paid (${money(order.totals.deposit)})`}
+            onMark={() => act({ depositPaid: true, depositPaidAt: new Date().toISOString() })}
+            onUndo={() => act({ depositPaid: false, depositPaidAt: null })}
           />
-          <ActionButton
-            done={order.balancePaid}
+          <PaidToggle
+            paid={order.balancePaid}
             label="Mark balance paid"
-            doneLabel={`Balance paid (${money(order.totals.balance)})`}
-            onClick={() => act({ balancePaid: true, balancePaidAt: new Date().toISOString() })}
+            paidLabel={`Balance paid (${money(order.totals.balance)})`}
+            onMark={() => act({ balancePaid: true, balancePaidAt: new Date().toISOString() })}
+            onUndo={() => act({ balancePaid: false, balancePaidAt: null })}
           />
         </div>
       </section>
@@ -308,21 +344,62 @@ export default function OrderDetailPage() {
               disabled={completing}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {completing ? 'Completing…' : 'Mark completed + email receipt'}
+              {completing ? 'Completing…' : 'Mark completed'}
             </button>
           )}
         </div>
         {completeMsg && <p className="mt-2 text-sm text-gray-500">{completeMsg}</p>}
-        {order.completedAt && (
-          <button
-            onClick={markCompleted}
-            disabled={completing}
-            className="no-print mt-2 text-xs text-gray-400 underline hover:text-gray-600"
-          >
-            {completing ? 'Resending…' : 'Resend receipt'}
-          </button>
-        )}
       </section>
+
+      {/* Final receipt — available once the balance is paid */}
+      {order.balancePaid && (
+        <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+          <h2 className="mb-1 font-semibold text-gray-800">Send final receipt</h2>
+          <p className="mb-3 text-sm text-gray-500">
+            {order.receiptSentAt
+              ? `Last sent ${new Date(order.receiptSentAt).toLocaleString()}.`
+              : 'Email the itemized receipt to the customer.'}
+          </p>
+          <input
+            type="email"
+            value={rcptTo}
+            onChange={(e) => setRcptTo(e.target.value)}
+            placeholder="Send to email"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          />
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={rcptCc}
+              onChange={(e) => setRcptCc(e.target.value)}
+              placeholder="CC (optional)"
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            />
+            <input
+              type="text"
+              value={rcptBcc}
+              onChange={(e) => setRcptBcc(e.target.value)}
+              placeholder="BCC (optional)"
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            />
+          </div>
+          <textarea
+            rows={2}
+            value={rcptNote}
+            onChange={(e) => setRcptNote(e.target.value)}
+            placeholder="Add a personal note (optional) — appears in a green box in the receipt…"
+            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          />
+          <button
+            onClick={sendReceipt}
+            disabled={!rcptTo.trim() || sendingRcpt}
+            className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {sendingRcpt ? 'Sending…' : '✉️ Send final receipt'}
+          </button>
+          {rcptMsg && <p className="mt-2 text-sm text-gray-600">{rcptMsg}</p>}
+        </section>
+      )}
     </div>
   )
 }
@@ -365,6 +442,38 @@ function ActionButton({
   }
   return (
     <button onClick={onClick} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand">
+      {label}
+    </button>
+  )
+}
+
+function PaidToggle({
+  paid,
+  label,
+  paidLabel,
+  onMark,
+  onUndo,
+}: {
+  paid: boolean
+  label: string
+  paidLabel: string
+  onMark: () => void
+  onUndo: () => void
+}) {
+  if (paid) {
+    return (
+      <button
+        onClick={() => window.confirm('Undo this payment status?') && onUndo()}
+        title="Click to undo"
+        className="group rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700 hover:bg-red-50 hover:text-red-600"
+      >
+        <span className="group-hover:hidden">✓ {paidLabel}</span>
+        <span className="hidden group-hover:inline">✕ Undo {paidLabel}</span>
+      </button>
+    )
+  }
+  return (
+    <button onClick={onMark} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand">
       {label}
     </button>
   )

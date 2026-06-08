@@ -11,6 +11,7 @@ export interface BusinessSettings {
   taxRate: number // percent, e.g. 9.5
   dlPurgeDays: number // days after event to auto-delete DL photos
   staff: StaffMember[]
+  requireDl: boolean // require a DL photo before the customer can sign
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
@@ -21,6 +22,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
     dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
     staff: Array.isArray(d.staff) ? d.staff : [],
+    requireDl: typeof d.requireDl === 'boolean' ? d.requireDl : true,
   }
 }
 

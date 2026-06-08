@@ -1,4 +1,8 @@
-import { Order, customerName } from './types'
+import { Order, customerName, itemName } from './types'
+
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 
 function money(n: number | null | undefined): string {
   if (n == null) return '$0.00'
@@ -20,16 +24,16 @@ function fmtTime(hhmm: string | null | undefined): string {
 }
 
 // Inline-styled HTML receipt (email clients need inline styles).
-export function buildReceiptHtml(order: Order, business: string): string {
+export function buildReceiptHtml(order: Order, business: string, note?: string): string {
   const rows = order.items
-    .filter((i) => i.qty || i.amount || (i.options && i.options.length) || i.description)
+    .filter((i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note)
     .map(
       (i) => `
       <tr>
         <td style="padding:6px 0;border-bottom:1px solid #eee;">
-          ${i.description || i.label}${
+          ${esc(itemName(i))}${
             i.options && i.options.length ? ` <span style="color:#888;">(${i.options.join(', ')})</span>` : ''
-          }
+          }${i.note ? `<br/><span style="color:#888;font-size:12px;">${esc(i.note)}</span>` : ''}
         </td>
         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:center;color:#555;">${i.qty ?? ''}</td>
         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;">${money(i.amount)}</td>
@@ -37,10 +41,15 @@ export function buildReceiptHtml(order: Order, business: string): string {
     )
     .join('')
 
+  const noteBlock = (note || '').trim()
+    ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin:12px 0;color:#166534;line-height:1.5;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
+    : ''
+
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a;">
     <h1 style="color:#7c2d91;font-size:20px;margin-bottom:2px;">${business}</h1>
     <p style="color:#888;margin-top:0;">Rental Receipt</p>
+    ${noteBlock}
 
     <p style="margin:16px 0 4px;"><strong>${customerName(order.customer) || 'Customer'}</strong></p>
     <p style="color:#555;margin:0;font-size:14px;">

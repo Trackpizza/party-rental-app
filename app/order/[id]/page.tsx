@@ -1,7 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { DEFAULT_WAIVER } from '@/lib/waiver'
 import SignFlow, { SignFlowData } from '@/components/SignFlow'
-import { customerName, type Order } from '@/lib/types'
+import { customerName, itemName, type Order } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,18 +70,23 @@ export default async function OrderSignPage({
   }
 
   const waiver = await loadWaiver()
+  const bizSnap = await adminDb.collection('settings').doc('business').get()
+  const requireDl = bizSnap.exists ? (bizSnap.data() as any).requireDl !== false : true
 
   const data: SignFlowData = {
     orderId: order.id,
     business,
+    requireDl,
     customerName: customerName(order.customer),
-    items: order.items.map((i) => ({
-      label: i.label,
-      qty: i.qty,
-      options: i.options || [],
-      amount: i.amount,
-      description: i.description || '',
-    })),
+    items: order.items
+      .filter((i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note)
+      .map((i) => ({
+        name: itemName(i),
+        qty: i.qty,
+        options: i.options || [],
+        amount: i.amount,
+        note: i.note || '',
+      })),
     totals: {
       total: order.totals.total,
       deposit: order.totals.deposit,

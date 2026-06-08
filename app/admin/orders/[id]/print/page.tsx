@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { getOrder, money, formatTime } from '@/lib/orders'
 import { getWaiver } from '@/lib/waiver'
 import { auth } from '@/lib/firebase/client'
-import { Order, customerName } from '@/lib/types'
+import { Order, customerName, itemName } from '@/lib/types'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''
@@ -53,7 +53,7 @@ export default function PrintContractPage() {
   if (!order) return <p className="p-6">Order not found.</p>
 
   const items = order.items.filter(
-    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
+    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
   const t = order.totals
 
@@ -106,9 +106,11 @@ export default function PrintContractPage() {
         <tbody>
           {items.map((i) => (
             <tr key={i.key} className="border-b border-gray-200">
-              <td className="py-1">{i.description || i.label}</td>
+              <td className="py-1">{itemName(i)}</td>
               <td className="py-1">{i.qty ?? ''}</td>
-              <td className="py-1 text-gray-600">{i.options?.join(', ') || ''}</td>
+              <td className="py-1 text-gray-600">
+                {[i.options?.join(', '), i.note].filter(Boolean).join(' · ')}
+              </td>
               <td className="py-1 text-right">{money(i.amount)}</td>
             </tr>
           ))}

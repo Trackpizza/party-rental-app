@@ -8,13 +8,14 @@ import { formatTime } from '@/lib/orders'
 export interface SignFlowData {
   orderId: string
   business: string
+  requireDl: boolean
   customerName: string
   items: {
-    label: string
+    name: string
     qty: number | null
     options: string[]
     amount: number | null
-    description?: string
+    note?: string
   }[]
   totals: { total: number | null; deposit: number | null; balance: number | null }
   event: { eventDate: string; deliveryTime: string; pickupDate: string; pickupTime: string }
@@ -105,9 +106,7 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
     )
   }
 
-  const activeItems = data.items.filter(
-    (i) => i.qty || i.amount || (i.options && i.options.length) || i.description,
-  )
+  const activeItems = data.items
 
   return (
     <div className="mx-auto max-w-lg space-y-4 p-4 pb-28">
@@ -128,9 +127,12 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
             {activeItems.map((i, idx) => (
               <tr key={idx} className="border-b border-gray-100">
                 <td className="py-1.5">
-                  {i.description || i.label}
+                  {i.name}
                   {i.options.length > 0 && (
                     <span className="text-gray-400"> ({i.options.join(', ')})</span>
+                  )}
+                  {i.note && (
+                    <span className="block text-xs text-gray-400">{i.note}</span>
                   )}
                 </td>
                 <td className="py-1.5 text-center text-gray-500">{i.qty ?? ''}</td>
@@ -172,10 +174,15 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
 
       {/* Driver's license */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Driver&apos;s license</h2>
+        <h2 className="mb-1 font-semibold text-gray-800">
+          Driver&apos;s license{data.requireDl && <span className="text-red-500"> *</span>}
+        </h2>
         <p className="mb-3 text-sm text-gray-500">
-          Take a photo of your driver&apos;s license for the rental record. The
-          photo uploads directly and is not saved to your phone.
+          {data.requireDl
+            ? 'A photo is required to sign. '
+            : ''}
+          Take a photo of your driver&apos;s license for the rental record — it
+          uploads directly and is not saved to your phone.
         </p>
         {dlThumb ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -235,9 +242,24 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
       {/* Submit bar */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-3">
         <div className="mx-auto max-w-lg">
+          {dlUploading ? (
+            <p className="mb-1 text-center text-xs text-amber-600">
+              Uploading license photo… please wait
+            </p>
+          ) : data.requireDl && !dlThumb ? (
+            <p className="mb-1 text-center text-xs text-amber-600">
+              Add your driver&apos;s license photo above to continue
+            </p>
+          ) : null}
           <button
             onClick={submit}
-            disabled={!agreed || !signature || submitting}
+            disabled={
+              !agreed ||
+              !signature ||
+              submitting ||
+              dlUploading ||
+              (data.requireDl && !dlThumb)
+            }
             className="w-full rounded-lg bg-brand py-3 font-semibold text-white hover:opacity-90 disabled:opacity-40"
           >
             {submitting ? 'Submitting…' : 'Sign & Submit'}

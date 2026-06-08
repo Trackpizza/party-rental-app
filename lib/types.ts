@@ -35,7 +35,14 @@ export interface LineItem {
   qty: number | null
   options?: string[]   // selected sub-types, e.g. ["round","folding"]
   amount: number | null
-  description?: string // free-text, used for custom "Other" rows
+  description?: string // free-text name, used for custom "Other" rows
+  note?: string        // per-item details/notes (any item)
+}
+
+// Display name for a line item (the custom text for "Other" rows, else label).
+export function itemName(i: { key: string; label: string; description?: string }): string {
+  if (i.key.startsWith('other')) return (i.description || '').trim() || 'Other'
+  return i.label
 }
 
 // Canonical catalog used to render a fresh order form.
@@ -161,4 +168,6 @@ export interface Order {
   // setup photos + review funnel (kept; not purged)
   setupPhotos: SetupPhoto[]
   photosSentAt: string | null
+
+  receiptSentAt?: string | null
 }

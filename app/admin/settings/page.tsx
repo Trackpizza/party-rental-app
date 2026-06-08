@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
   const [purgeDays, setPurgeDays] = useState('')
+  const [requireDl, setRequireDl] = useState(true)
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
@@ -28,6 +29,7 @@ export default function SettingsPage() {
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setPurgeDays(String(b.dlPurgeDays))
+      setRequireDl(b.requireDl)
       setStaff(b.staff)
     })
   }, [])
@@ -39,6 +41,7 @@ export default function SettingsPage() {
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
       dlPurgeDays: parseInt(purgeDays) || 30,
+      requireDl,
       staff: staff
         .map((s) => ({ name: s.name.trim(), email: s.email.trim() }))
         .filter((s) => s.name || s.email),
@@ -94,9 +97,15 @@ export default function SettingsPage() {
       </section>
 
       <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">
-          Driver&apos;s license auto-delete
-        </h2>
+        <h2 className="mb-1 font-semibold text-gray-800">Driver&apos;s license</h2>
+        <label className="mb-3 flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={requireDl}
+            onChange={(e) => setRequireDl(e.target.checked)}
+          />
+          Require a driver&apos;s license photo before the customer can sign
+        </label>
         <p className="mb-3 text-sm text-gray-500">
           License photos are automatically deleted this many days after the
           event date (keeps sensitive ID data from piling up). Applies to new

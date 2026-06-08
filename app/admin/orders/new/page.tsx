@@ -311,54 +311,59 @@ export default function NewOrderPage() {
           {draft.items.filter((i) => !isOtherItem(i)).map((item) => {
             const catalog = ITEM_CATALOG.find((c) => c.key === item.key)!
             return (
-              <div
-                key={item.key}
-                className="grid grid-cols-12 items-center gap-2 border-b border-gray-100 pb-3"
-              >
-                <div className="col-span-12 sm:col-span-2 font-medium text-gray-700">
-                  {item.label}
-                </div>
-                <div className="col-span-3 sm:col-span-2">
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="Qty"
-                    value={item.qty ?? ''}
-                    onChange={(e) => updateItem(item.key, { qty: num(e.target.value) })}
-                    className={`${inputCls} w-full`}
-                  />
-                </div>
-                <div className="col-span-9 sm:col-span-5 flex flex-wrap gap-x-3 gap-y-1">
-                  {catalog.options?.map((opt) => (
-                    <label
-                      key={opt}
-                      className="flex items-center gap-1 text-sm text-gray-600"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={item.options?.includes(opt) || false}
-                        onChange={() => toggleOption(item.key, opt)}
-                      />
-                      {opt}
-                    </label>
-                  ))}
-                </div>
-                <div className="col-span-12 sm:col-span-3">
-                  <div className="flex items-center rounded-lg border border-gray-300 px-2">
-                    <span className="text-gray-400">$</span>
+              <div key={item.key} className="border-b border-gray-100 pb-3">
+                <div className="grid grid-cols-12 items-center gap-2">
+                  <div className="col-span-12 sm:col-span-2 font-medium text-gray-700">
+                    {item.label}
+                  </div>
+                  <div className="col-span-3 sm:col-span-2">
                     <input
                       type="number"
                       min="0"
-                      step="0.01"
-                      placeholder="Amount"
-                      value={item.amount ?? ''}
-                      onChange={(e) =>
-                        updateItem(item.key, { amount: num(e.target.value) })
-                      }
-                      className="w-full px-1 py-2 focus:outline-none"
+                      placeholder="Qty"
+                      value={item.qty ?? ''}
+                      onChange={(e) => updateItem(item.key, { qty: num(e.target.value) })}
+                      className={`${inputCls} w-full`}
                     />
                   </div>
+                  <div className="col-span-9 sm:col-span-5 flex flex-wrap gap-x-3 gap-y-1">
+                    {catalog.options?.map((opt) => (
+                      <label
+                        key={opt}
+                        className="flex items-center gap-1 text-sm text-gray-600"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={item.options?.includes(opt) || false}
+                          onChange={() => toggleOption(item.key, opt)}
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="col-span-12 sm:col-span-3">
+                    <div className="flex items-center rounded-lg border border-gray-300 px-2">
+                      <span className="text-gray-400">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Amount"
+                        value={item.amount ?? ''}
+                        onChange={(e) =>
+                          updateItem(item.key, { amount: num(e.target.value) })
+                        }
+                        className="w-full px-1 py-2 focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
+                <input
+                  placeholder="Notes / details (optional)"
+                  value={item.note ?? ''}
+                  onChange={(e) => updateItem(item.key, { note: e.target.value })}
+                  className={`${inputCls} mt-2 w-full text-sm`}
+                />
               </div>
             )
           })}
@@ -378,7 +383,8 @@ export default function NewOrderPage() {
           </div>
           <div className="space-y-3">
             {draft.items.filter(isOtherItem).map((item) => (
-              <div key={item.key} className="grid grid-cols-12 items-center gap-2">
+              <div key={item.key}>
+              <div className="grid grid-cols-12 items-center gap-2">
                 <div className="col-span-12 sm:col-span-6">
                   <input
                     placeholder="Description"
@@ -421,6 +427,13 @@ export default function NewOrderPage() {
                     ✕
                   </button>
                 </div>
+              </div>
+              <input
+                placeholder="Notes / details (optional)"
+                value={item.note ?? ''}
+                onChange={(e) => updateItem(item.key, { note: e.target.value })}
+                className={`${inputCls} mt-2 w-full text-sm`}
+              />
               </div>
             ))}
           </div>
