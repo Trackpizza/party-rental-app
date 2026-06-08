@@ -108,7 +108,7 @@ export default function OrderDetailPage() {
           <span className="rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-white">
             {STATUS_LABELS[order.status]}
           </span>
-          <button onClick={() => window.print()} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
+          <button onClick={() => router.push(`/admin/orders/${order.id}/print`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Print / PDF
           </button>
         </div>
