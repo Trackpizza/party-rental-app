@@ -17,6 +17,13 @@ export default function OwnerVideos({
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
+  const [tCopied, setTCopied] = useState(false)
+
+  async function copyTestimonialLink() {
+    await navigator.clipboard.writeText(`${window.location.origin}/testimonial/${orderId}`)
+    setTCopied(true)
+    setTimeout(() => setTCopied(false), 1500)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -124,6 +131,30 @@ export default function OwnerVideos({
         </button>
       </div>
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
+
+      <div className="no-print mt-3 rounded-lg border border-gray-200 p-3">
+        <p className="text-sm font-medium text-gray-700">Testimonial</p>
+        <p className="mb-2 text-xs text-gray-500">
+          Record on-site at pickup, or text the link to the customer. They check
+          the release box, then record (≤3 min).
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={`/testimonial/${orderId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+          >
+            Open recorder (on-site)
+          </a>
+          <button
+            onClick={copyTestimonialLink}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
+          >
+            {tCopied ? 'Copied!' : 'Copy testimonial link'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

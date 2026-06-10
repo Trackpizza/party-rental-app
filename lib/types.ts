@@ -84,6 +84,8 @@ export interface VideoClip {
   type: 'walkthrough' | 'testimonial'
   uploadedAt: string
   purgeAfter: string    // uploadedAt + 20 days
+  releaseAgreedAt?: string     // testimonials: when the release was accepted
+  releaseTextSnapshot?: string // exact release text agreed to
 }
 
 // ---- Signature record (frozen at signing time) ----

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PhotoCapture from './PhotoCapture'
+import PublicVideoUpload from './PublicVideoUpload'
 
 export default function CrewSetupUpload({
   orderId,
@@ -43,6 +44,15 @@ export default function CrewSetupUpload({
 
         <div className="mt-6 flex justify-center">
           <PhotoCapture onConfirm={upload} label="Take setup photo" />
+        </div>
+
+        <div className="mt-4 flex justify-center border-t border-gray-100 pt-4">
+          <PublicVideoUpload
+            orderId={orderId}
+            type="walkthrough"
+            maxSeconds={60}
+            label="Walkthrough video (≤1 min)"
+          />
         </div>
 
         {uploading && <p className="mt-3 text-sm text-gray-500">Uploading…</p>}
