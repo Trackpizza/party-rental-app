@@ -107,6 +107,7 @@ export interface CustomerInfo {
   phone: string
   email: string
   address: string
+  address2: string
   city: string
   state: string
   zip: string

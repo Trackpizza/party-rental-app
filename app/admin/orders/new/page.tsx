@@ -297,6 +297,15 @@ export default function NewOrderPage() {
               className={`${inputCls} w-full`}
             />
           </Field>
+          <Field label="Apt / Suite / Unit">
+            <input
+              value={draft.customer.address2}
+              onChange={(e) =>
+                patch((d) => ({ ...d, customer: { ...d.customer, address2: e.target.value } }))
+              }
+              className={`${inputCls} w-full`}
+            />
+          </Field>
           <Field label="City">
             <input
               value={draft.customer.city}

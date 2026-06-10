@@ -65,10 +65,14 @@ export default function AddressAutocomplete({
           const route = get('route')?.long_name || ''
           onSelect({
             address: [streetNum, route].filter(Boolean).join(' '),
+            // Prefer the neighborhood/district (e.g. "North Hollywood") over the
+            // incorporated city ("Los Angeles") since deliveries go by area.
             city:
-              get('locality')?.long_name ||
+              get('neighborhood')?.long_name ||
+              get('sublocality_level_1')?.long_name ||
               get('sublocality')?.long_name ||
               get('postal_town')?.long_name ||
+              get('locality')?.long_name ||
               '',
             state: get('administrative_area_level_1')?.short_name || '',
             zip: get('postal_code')?.long_name || '',
