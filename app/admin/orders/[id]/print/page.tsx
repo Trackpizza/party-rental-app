@@ -88,7 +88,7 @@ export default function PrintContractPage() {
       <div className="mt-3 rounded border border-gray-300 p-3 text-sm">
         <p><b>{customerName(order.customer)}</b> &nbsp; {order.customer.phone}</p>
         <p className="text-gray-700">
-          {order.customer.address}{order.customer.city ? `, ${order.customer.city}` : ''} {order.customer.zip}
+          {order.customer.address}{order.customer.city ? `, ${order.customer.city}` : ''}{order.customer.state ? `, ${order.customer.state}` : ''} {order.customer.zip}
         </p>
         <p className="text-gray-700">{order.customer.email}</p>
       </div>

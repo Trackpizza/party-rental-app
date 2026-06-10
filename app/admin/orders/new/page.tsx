@@ -292,15 +292,26 @@ export default function NewOrderPage() {
               className={`${inputCls} w-full`}
             />
           </Field>
-          <Field label="ZIP">
-            <input
-              value={draft.customer.zip}
-              onChange={(e) =>
-                patch((d) => ({ ...d, customer: { ...d.customer, zip: e.target.value } }))
-              }
-              className={`${inputCls} w-full`}
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="State">
+              <input
+                value={draft.customer.state}
+                onChange={(e) =>
+                  patch((d) => ({ ...d, customer: { ...d.customer, state: e.target.value } }))
+                }
+                className={`${inputCls} w-full`}
+              />
+            </Field>
+            <Field label="ZIP">
+              <input
+                value={draft.customer.zip}
+                onChange={(e) =>
+                  patch((d) => ({ ...d, customer: { ...d.customer, zip: e.target.value } }))
+                }
+                className={`${inputCls} w-full`}
+              />
+            </Field>
+          </div>
         </div>
       </section>
 
