@@ -13,6 +13,7 @@ import {
 } from '@/lib/orders'
 import { getBusinessSettings } from '@/lib/settings'
 import TimeSelect from '@/components/TimeSelect'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 import {
   ITEM_CATALOG,
   SURFACE_TYPES,
@@ -275,11 +276,24 @@ export default function NewOrderPage() {
             />
           </Field>
           <Field label="Address">
-            <input
+            <AddressAutocomplete
               value={draft.customer.address}
-              onChange={(e) =>
-                patch((d) => ({ ...d, customer: { ...d.customer, address: e.target.value } }))
+              onChange={(v) =>
+                patch((d) => ({ ...d, customer: { ...d.customer, address: v } }))
               }
+              onSelect={(a) =>
+                patch((d) => ({
+                  ...d,
+                  customer: {
+                    ...d.customer,
+                    address: a.address || d.customer.address,
+                    city: a.city || d.customer.city,
+                    state: a.state || d.customer.state,
+                    zip: a.zip || d.customer.zip,
+                  },
+                }))
+              }
+              placeholder="Start typing the address…"
               className={`${inputCls} w-full`}
             />
           </Field>
