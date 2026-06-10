@@ -40,6 +40,11 @@ env:
     value: "747.389.8112"
     availability: [BUILD, RUNTIME]
 
+  # Google Places autocomplete (public client key, restricted by HTTP referrer)
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyB9IXr1TcVSfX4ZsZLDugxlKn_7CONtYK8
+    availability: [BUILD, RUNTIME]
+
   # --- Server-only admin credentials ---
   - variable: FIREBASE_PROJECT_ID
     value: party-rental-form
