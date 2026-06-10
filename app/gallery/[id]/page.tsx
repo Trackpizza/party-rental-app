@@ -37,6 +37,13 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   const urls = (await Promise.all(photos.map((p) => signedUrl(p.storagePath)))).filter(
     (u): u is string => !!u,
   )
+  const videoUrls = (
+    await Promise.all(
+      (order.videos || [])
+        .filter((v) => v.type === 'walkthrough')
+        .map((v) => signedUrl(v.storagePath)),
+    )
+  ).filter((u): u is string => !!u)
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -46,7 +53,15 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           <p className="text-sm text-gray-500">Photos from your event · Fotos de su evento 🎉</p>
         </header>
 
-        {urls.length === 0 ? (
+        {videoUrls.length > 0 && (
+          <div className="mb-3 space-y-3">
+            {videoUrls.map((u, i) => (
+              <video key={i} src={u} controls className="w-full rounded-xl bg-black" />
+            ))}
+          </div>
+        )}
+
+        {urls.length === 0 && videoUrls.length === 0 ? (
           <p className="text-center text-gray-400">No photos to show yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3">

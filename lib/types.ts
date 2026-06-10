@@ -78,6 +78,14 @@ export interface SetupPhoto {
   selected: boolean     // included in the customer gallery/email
 }
 
+// ---- Video clip (walkthrough or testimonial; auto-purged after 20 days) ----
+export interface VideoClip {
+  storagePath: string
+  type: 'walkthrough' | 'testimonial'
+  uploadedAt: string
+  purgeAfter: string    // uploadedAt + 20 days
+}
+
 // ---- Signature record (frozen at signing time) ----
 export interface SignatureRecord {
   signatureDataUrl: string   // base64 PNG of the drawn signature
@@ -169,6 +177,9 @@ export interface Order {
   // setup photos + review funnel (kept; not purged)
   setupPhotos: SetupPhoto[]
   photosSentAt: string | null
+
+  // videos (walkthrough / testimonial) — 20-day auto-purge
+  videos?: VideoClip[]
 
   receiptSentAt?: string | null
 }

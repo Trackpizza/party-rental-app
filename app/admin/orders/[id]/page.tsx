@@ -8,6 +8,7 @@ import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
 import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
+import OwnerVideos from '@/components/OwnerVideos'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -326,6 +327,16 @@ export default function OrderDetailPage() {
           customerEmail={order.customer.email}
           photosSentAt={order.photosSentAt || null}
         />
+      </section>
+
+      {/* Videos */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Videos</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Walkthrough video (≤1 min). Auto-deletes 20 days after upload.
+          &ldquo;Send content to producer&rdquo; emails the photos + videos for editing.
+        </p>
+        <OwnerVideos orderId={order.id} videos={order.videos || []} />
       </section>
 
       {/* Lifecycle */}

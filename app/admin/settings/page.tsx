@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [taxRate, setTaxRate] = useState('')
   const [purgeDays, setPurgeDays] = useState('')
   const [requireDl, setRequireDl] = useState(true)
+  const [producerEmail, setProducerEmail] = useState('')
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
@@ -30,6 +31,7 @@ export default function SettingsPage() {
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setPurgeDays(String(b.dlPurgeDays))
       setRequireDl(b.requireDl)
+      setProducerEmail(b.producerEmail)
       setStaff(b.staff)
     })
   }, [])
@@ -42,6 +44,7 @@ export default function SettingsPage() {
       taxRate: parseFloat(taxRate) || 0,
       dlPurgeDays: parseInt(purgeDays) || 30,
       requireDl,
+      producerEmail: producerEmail.trim(),
       staff: staff
         .map((s) => ({ name: s.name.trim(), email: s.email.trim() }))
         .filter((s) => s.name || s.email),
@@ -124,6 +127,31 @@ export default function SettingsPage() {
             />
             <span className="text-gray-400">days</span>
           </div>
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Producer email (content)</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Where &ldquo;Send to producer&rdquo; emails go (setup photos + videos
+          for editing into social content).
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={producerEmail}
+            onChange={(e) => setProducerEmail(e.target.value)}
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none"
+          />
           <button
             onClick={saveBiz}
             disabled={bizSaving}

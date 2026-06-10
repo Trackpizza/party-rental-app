@@ -43,5 +43,29 @@ exports.purgeDlPhotos = onSchedule(
     }
 
     logger.info(`DL purge complete: ${fileCount} files across ${orderCount} orders`)
+
+    // Videos: each clip has its own purgeAfter (upload + 20 days). Scan all
+    // orders that have videos and remove the expired ones.
+    let vFiles = 0
+    let vOrders = 0
+    const all = await db.collection('orders').get()
+    for (const doc of all.docs) {
+      const o = doc.data()
+      if (!o.videos || o.videos.length === 0) continue
+      const keep = o.videos.filter((v) => v.purgeAfter > nowIso)
+      const expired = o.videos.filter((v) => v.purgeAfter <= nowIso)
+      if (expired.length === 0) continue
+      for (const v of expired) {
+        try {
+          await bucket.file(v.storagePath).delete()
+          vFiles++
+        } catch (e) {
+          logger.warn(`Failed to delete ${v.storagePath}: ${e.message}`)
+        }
+      }
+      await doc.ref.update({ videos: keep })
+      vOrders++
+    }
+    logger.info(`Video purge complete: ${vFiles} files across ${vOrders} orders`)
   },
 )

@@ -12,6 +12,7 @@ export interface BusinessSettings {
   dlPurgeDays: number // days after event to auto-delete DL photos
   staff: StaffMember[]
   requireDl: boolean // require a DL photo before the customer can sign
+  producerEmail: string // where "send content to producer" emails go
 }
 
 export async function getBusinessSettings(): Promise<BusinessSettings> {
@@ -23,6 +24,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
     dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
     staff: Array.isArray(d.staff) ? d.staff : [],
     requireDl: typeof d.requireDl === 'boolean' ? d.requireDl : true,
+    producerEmail: d.producerEmail || '',
   }
 }
 

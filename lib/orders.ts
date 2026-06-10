@@ -99,6 +99,7 @@ export function buildEmptyOrder(): OrderDraft {
     dlPurgeAfter: null,
     setupPhotos: [],
     photosSentAt: null,
+    videos: [],
   }
 }
 
