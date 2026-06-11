@@ -65,7 +65,7 @@ export default async function ProducerPage({ params }: { params: { id: string } 
               {videos.map((v, i) => (
                 <div key={i} className="rounded-xl bg-white p-2 shadow-sm">
                   <p className="mb-1 text-xs capitalize text-gray-400">{v.type}</p>
-                  {v.view && <video src={v.view} controls className="w-full rounded-md bg-black" />}
+                  {v.view && <video src={v.view} controls className="mx-auto block max-h-[70vh] max-w-full rounded-md bg-black" />}
                   {v.dl && (
                     <a href={v.dl} className="mt-1 inline-block text-sm text-brand underline">
                       ⬇ Download video

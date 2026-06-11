@@ -95,7 +95,7 @@ export default function OwnerVideos({
                 <video
                   src={urls[v.storagePath]}
                   controls
-                  className="max-h-64 w-full rounded-md bg-black"
+                  className="mx-auto block max-h-[60vh] max-w-full rounded-md bg-black"
                 />
               ) : (
                 <div className="flex h-32 items-center justify-center rounded-md bg-gray-50 text-xs text-gray-400">

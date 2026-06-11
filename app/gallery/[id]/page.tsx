@@ -56,7 +56,7 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         {videoUrls.length > 0 && (
           <div className="mb-3 space-y-3">
             {videoUrls.map((u, i) => (
-              <video key={i} src={u} controls className="w-full rounded-xl bg-black" />
+              <video key={i} src={u} controls className="mx-auto block max-h-[70vh] max-w-full rounded-xl bg-black" />
             ))}
           </div>
         )}
