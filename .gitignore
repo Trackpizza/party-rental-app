@@ -12,3 +12,6 @@ functions/lib
 serviceAccountKey.json
 *-firebase-adminsdk-*.json
 *serviceaccount*.json
+
+# TS incremental build info
+tsconfig.tsbuildinfo

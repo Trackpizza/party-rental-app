@@ -195,6 +195,8 @@ export default function OrderDetailPage() {
         <p className="mt-2 break-all text-xs text-gray-400">{link}</p>
       </section>
 
+      <SectionDivider />
+
       {/* Order summary */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Order</h2>
@@ -258,6 +260,8 @@ export default function OrderDetailPage() {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* Payment */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Payment</h2>
@@ -288,6 +292,8 @@ export default function OrderDetailPage() {
         </div>
       </section>
 
+      <SectionDivider />
+
       {/* Signature */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Signature</h2>
@@ -303,6 +309,8 @@ export default function OrderDetailPage() {
         )}
       </section>
 
+      <SectionDivider />
+
       {/* Driver's license */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Driver&apos;s license</h2>
@@ -314,31 +322,7 @@ export default function OrderDetailPage() {
         )}
       </section>
 
-      {/* Setup photos + review funnel */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Setup photos</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Share the crew link to capture setup photos on-site, then select your
-          best shots and send them to the customer with a review request.
-        </p>
-        <OwnerSetupPhotos
-          orderId={order.id}
-          photos={order.setupPhotos || []}
-          videos={order.videos || []}
-          customerEmail={order.customer.email}
-          photosSentAt={order.photosSentAt || null}
-        />
-      </section>
-
-      {/* Content Creation (producer) */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Content Creation</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Select which photos &amp; videos go to your content creator, then send.
-          Videos auto-delete 20 days after upload.
-        </p>
-        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
-      </section>
+      <SectionDivider />
 
       {/* Lifecycle */}
       <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
@@ -365,55 +349,98 @@ export default function OrderDetailPage() {
 
       {/* Final receipt — available once the balance is paid */}
       {order.balancePaid && (
-        <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
-          <h2 className="mb-1 font-semibold text-gray-800">Send final receipt</h2>
-          <p className="mb-3 text-sm text-gray-500">
-            {order.receiptSentAt
-              ? `Last sent ${new Date(order.receiptSentAt).toLocaleString()}.`
-              : 'Email the itemized receipt to the customer.'}
-          </p>
-          <input
-            type="email"
-            value={rcptTo}
-            onChange={(e) => setRcptTo(e.target.value)}
-            placeholder="Send to email"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
-          />
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <>
+          <SectionDivider />
+          <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="mb-1 font-semibold text-gray-800">Send final receipt</h2>
+            <p className="mb-3 text-sm text-gray-500">
+              {order.receiptSentAt
+                ? `Last sent ${new Date(order.receiptSentAt).toLocaleString()}.`
+                : 'Email the itemized receipt to the customer.'}
+            </p>
             <input
-              type="text"
-              value={rcptCc}
-              onChange={(e) => setRcptCc(e.target.value)}
-              placeholder="CC (optional)"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              type="email"
+              value={rcptTo}
+              onChange={(e) => setRcptTo(e.target.value)}
+              placeholder="Send to email"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
             />
-            <input
-              type="text"
-              value={rcptBcc}
-              onChange={(e) => setRcptBcc(e.target.value)}
-              placeholder="BCC (optional)"
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <input
+                type="text"
+                value={rcptCc}
+                onChange={(e) => setRcptCc(e.target.value)}
+                placeholder="CC (optional)"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              />
+              <input
+                type="text"
+                value={rcptBcc}
+                onChange={(e) => setRcptBcc(e.target.value)}
+                placeholder="BCC (optional)"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              />
+            </div>
+            <textarea
+              rows={2}
+              value={rcptNote}
+              onChange={(e) => setRcptNote(e.target.value)}
+              placeholder="Add a personal note (optional) — appears in a green box in the receipt…"
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
             />
-          </div>
-          <textarea
-            rows={2}
-            value={rcptNote}
-            onChange={(e) => setRcptNote(e.target.value)}
-            placeholder="Add a personal note (optional) — appears in a green box in the receipt…"
-            className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
-          />
-          <button
-            onClick={sendReceipt}
-            disabled={!rcptTo.trim() || sendingRcpt}
-            className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-          >
-            {sendingRcpt ? 'Sending…' : '✉️ Send final receipt'}
-          </button>
-          {rcptMsg && <p className="mt-2 text-sm text-gray-600">{rcptMsg}</p>}
-        </section>
+            <button
+              onClick={sendReceipt}
+              disabled={!rcptTo.trim() || sendingRcpt}
+              className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {sendingRcpt ? 'Sending…' : '✉️ Send final receipt'}
+            </button>
+            {rcptMsg && <p className="mt-2 text-sm text-gray-600">{rcptMsg}</p>}
+          </section>
+        </>
       )}
+
+      {/* ===== MARKETING — clean break between the rental contract and content/social sections ===== */}
+      <div className="no-print rounded-xl bg-purple-600 px-5 py-3 text-center shadow-sm">
+        <h2 className="text-lg font-bold tracking-widest text-white">MARKETING</h2>
+        <p className="text-xs text-purple-100">
+          Photos &amp; content for social media — not part of the rental contract
+        </p>
+      </div>
+
+      {/* Setup photos + review funnel */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Setup photos</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Share the crew link to capture setup photos on-site, then select your
+          best shots and send them to the customer with a review request.
+        </p>
+        <OwnerSetupPhotos
+          orderId={order.id}
+          photos={order.setupPhotos || []}
+          videos={order.videos || []}
+          customerEmail={order.customer.email}
+          photosSentAt={order.photosSentAt || null}
+        />
+      </section>
+
+      <SectionDivider />
+
+      {/* Content Creation (producer) */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Content Creation</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Select which photos &amp; videos go to your content creator, then send.
+          Videos auto-delete 20 days after upload.
+        </p>
+        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
+      </section>
     </div>
   )
+}
+
+function SectionDivider() {
+  return <hr className="no-print -my-1 border-t border-purple-200" />
 }
 
 function Info({ label, value }: { label: string; value: string }) {
