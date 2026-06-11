@@ -326,6 +326,7 @@ export default function OrderDetailPage() {
           photos={order.setupPhotos || []}
           customerEmail={order.customer.email}
           photosSentAt={order.photosSentAt || null}
+          videoCount={(order.videos || []).filter((v) => v.type === 'walkthrough').length}
         />
       </section>
 

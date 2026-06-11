@@ -13,11 +13,13 @@ export default function OwnerSetupPhotos({
   photos,
   customerEmail,
   photosSentAt,
+  videoCount = 0,
 }: {
   orderId: string
   photos: SetupPhoto[]
   customerEmail: string
   photosSentAt: string | null
+  videoCount?: number
 }) {
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [uploading, setUploading] = useState(false)
@@ -253,11 +255,15 @@ export default function OwnerSetupPhotos({
       {/* Send photos + review request */}
       {photos.length > 0 && (
         <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">
-          <p className="text-sm font-medium text-gray-700">Send photos + review request</p>
+          <p className="text-sm font-medium text-gray-700">
+            Send photos{videoCount > 0 ? ' & video' : ''} + review request
+          </p>
           <p className="mb-2 text-xs text-gray-500">
             {selectedCount === 0
-              ? `All ${photos.length} photos will be sent.`
-              : `${selectedCount} selected photo${selectedCount === 1 ? '' : 's'} will be sent.`}
+              ? `All ${photos.length} photo${photos.length === 1 ? '' : 's'}`
+              : `${selectedCount} selected photo${selectedCount === 1 ? '' : 's'}`}
+            {videoCount > 0 ? ` + ${videoCount} walkthrough video${videoCount === 1 ? '' : 's'}` : ''}
+            {' will be sent.'}
             {photosSentAt ? ` · Last sent ${new Date(photosSentAt).toLocaleString()}` : ''}
           </p>
           <input
@@ -295,7 +301,9 @@ export default function OwnerSetupPhotos({
             disabled={!photoTo.trim() || sending}
             className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {sending ? 'Sending…' : '✉️ Send photos + review request'}
+            {sending
+              ? 'Sending…'
+              : `✉️ Send photos${videoCount > 0 ? ' & video' : ''} + review request`}
           </button>
           {photoMsg && <p className="mt-2 text-sm text-gray-600">{photoMsg}</p>}
         </div>
