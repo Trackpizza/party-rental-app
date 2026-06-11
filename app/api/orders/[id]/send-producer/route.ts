@@ -39,7 +39,10 @@ export async function POST(
         { status: 400 },
       )
     }
-    const producerTo = producers.join(', ')
+    // First producer goes on To; any others are BCC'd so producers can't see
+    // each other's addresses. The owner's manual BCC field layers on top.
+    const producerTo = producers[0]
+    const allBcc = [...producers.slice(1), (bcc || '').trim()].filter(Boolean).join(', ')
     if (!isEmailConfigured()) {
       return NextResponse.json({ error: 'Email not configured.' }, { status: 500 })
     }
@@ -69,7 +72,7 @@ export async function POST(
     await sendMail({
       to: producerTo,
       cc: (cc || '').trim() || undefined,
-      bcc: (bcc || '').trim() || undefined,
+      bcc: allBcc || undefined,
       subject: `Content — ${who}${when}`,
       html,
     })
@@ -78,7 +81,7 @@ export async function POST(
       ok: true,
       to: producerTo,
       cc: (cc || '').trim() || null,
-      bcc: (bcc || '').trim() || null,
+      bcc: allBcc || null,
     })
   } catch (e: any) {
     console.error('send-producer error', e)

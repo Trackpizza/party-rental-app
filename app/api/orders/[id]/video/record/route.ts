@@ -65,7 +65,8 @@ export async function POST(
       const who = customerName(order.customer) || 'a customer'
       const url = `${baseUrl(req)}/producer/${order.id}`
       await sendMail({
-        to: producers.join(', '),
+        to: producers[0],
+        bcc: producers.slice(1).join(', ') || undefined,
         subject: `🎬 New testimonial — ${who}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;line-height:1.5;">
           <p>New video testimonial from <strong>${who}</strong>.</p>
