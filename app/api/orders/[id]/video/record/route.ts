@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import admin, { adminDb } from '@/lib/firebase/admin'
 import { sendMail, isEmailConfigured } from '@/lib/email'
+import { producerRecipients } from '@/lib/settings'
 import { Order, customerName } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -58,12 +59,13 @@ export async function POST(
       updatedAt: now,
     })
 
-    // Notify the producer when a testimonial comes in.
-    if (type === 'testimonial' && bizData.producerEmail?.trim() && isEmailConfigured()) {
+    // Notify the producer(s) when a testimonial comes in.
+    const producers = producerRecipients(bizData)
+    if (type === 'testimonial' && producers.length > 0 && isEmailConfigured()) {
       const who = customerName(order.customer) || 'a customer'
       const url = `${baseUrl(req)}/producer/${order.id}`
       await sendMail({
-        to: bizData.producerEmail.trim(),
+        to: producers.join(', '),
         subject: `🎬 New testimonial — ${who}`,
         html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;line-height:1.5;">
           <p>New video testimonial from <strong>${who}</strong>.</p>

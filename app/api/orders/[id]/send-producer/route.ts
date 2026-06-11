@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { sendMail, isEmailConfigured } from '@/lib/email'
+import { producerRecipients } from '@/lib/settings'
 import { Order, customerName } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -31,13 +32,14 @@ export async function POST(
     const order = { id: snap.id, ...(snap.data() as Omit<Order, 'id'>) }
 
     const biz = await adminDb.collection('settings').doc('business').get()
-    const producerEmail = (biz.exists ? (biz.data() as any).producerEmail : '') || ''
-    if (!producerEmail.trim()) {
+    const producers = producerRecipients(biz.exists ? biz.data() : {})
+    if (producers.length === 0) {
       return NextResponse.json(
         { error: 'No producer email set (Settings → Producer email).' },
         { status: 400 },
       )
     }
+    const producerTo = producers.join(', ')
     if (!isEmailConfigured()) {
       return NextResponse.json({ error: 'Email not configured.' }, { status: 500 })
     }
@@ -65,7 +67,7 @@ export async function POST(
     </div>`
 
     await sendMail({
-      to: producerEmail.trim(),
+      to: producerTo,
       cc: (cc || '').trim() || undefined,
       bcc: (bcc || '').trim() || undefined,
       subject: `Content — ${who}${when}`,
@@ -74,7 +76,7 @@ export async function POST(
 
     return NextResponse.json({
       ok: true,
-      to: producerEmail.trim(),
+      to: producerTo,
       cc: (cc || '').trim() || null,
       bcc: (bcc || '').trim() || null,
     })

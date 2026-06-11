@@ -76,7 +76,7 @@ export default function OwnerContentCreation({
           <p className="text-sm font-medium text-gray-700">Send to content creator</p>
           <p className="mb-2 text-xs text-gray-500">
             Emails a download link for the selected photos &amp; videos to your
-            producer email (set in Settings).
+            producer email(s) (set in Settings).
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             <input type="text" value={cc} onChange={(e) => setCc(e.target.value)} placeholder="CC (optional)" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
