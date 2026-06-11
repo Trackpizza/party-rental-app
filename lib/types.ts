@@ -75,7 +75,8 @@ export interface DLPhoto {
 export interface SetupPhoto {
   storagePath: string
   uploadedAt: string
-  selected: boolean     // included in the customer gallery/email
+  selected: boolean          // included in the customer gallery/email
+  producerSelected?: boolean // included in the producer (content creator) send
 }
 
 // ---- Video clip (walkthrough or testimonial; auto-purged after 20 days) ----
@@ -84,6 +85,8 @@ export interface VideoClip {
   type: 'walkthrough' | 'testimonial'
   uploadedAt: string
   purgeAfter: string    // uploadedAt + 20 days
+  selected?: boolean          // included in the customer gallery (walkthrough)
+  producerSelected?: boolean  // included in the producer (content creator) send
   releaseAgreedAt?: string     // testimonials: when the release was accepted
   releaseTextSnapshot?: string // exact release text agreed to
 }

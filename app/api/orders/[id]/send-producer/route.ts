@@ -14,11 +14,16 @@ function baseUrl(req: NextRequest): string {
 }
 
 // Email the producer a link to download this order's setup photos + videos.
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
   try {
+    const { cc, bcc, note } = await req.json().catch(() => ({}))
     const snap = await adminDb.collection('orders').doc(params.id).get()
     if (!snap.exists) {
       return NextResponse.json({ error: 'Order not found.' }, { status: 404 })
@@ -43,9 +48,13 @@ export async function POST(
     const nPhotos = (order.setupPhotos || []).length
     const nVideos = (order.videos || []).length
 
+    const noteBlock = (note || '').trim()
+      ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;color:#166534;line-height:1.5;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
+      : ''
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.5;">
       <h1 style="color:#7c2d91;font-size:20px;">${business} — content</h1>
+      ${noteBlock}
       <p>Content from <strong>${who}</strong>${when}: ${nPhotos} photo(s), ${nVideos} video(s).</p>
       <p>Download everything here:</p>
       <p style="text-align:center;margin:24px 0;">
@@ -57,11 +66,18 @@ export async function POST(
 
     await sendMail({
       to: producerEmail.trim(),
+      cc: (cc || '').trim() || undefined,
+      bcc: (bcc || '').trim() || undefined,
       subject: `Content — ${who}${when}`,
       html,
     })
 
-    return NextResponse.json({ ok: true, to: producerEmail.trim() })
+    return NextResponse.json({
+      ok: true,
+      to: producerEmail.trim(),
+      cc: (cc || '').trim() || null,
+      bcc: (bcc || '').trim() || null,
+    })
   } catch (e: any) {
     console.error('send-producer error', e)
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })

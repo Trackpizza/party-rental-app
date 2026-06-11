@@ -8,7 +8,7 @@ import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
 import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
-import OwnerVideos from '@/components/OwnerVideos'
+import OwnerContentCreation from '@/components/OwnerContentCreation'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -324,20 +324,20 @@ export default function OrderDetailPage() {
         <OwnerSetupPhotos
           orderId={order.id}
           photos={order.setupPhotos || []}
+          videos={order.videos || []}
           customerEmail={order.customer.email}
           photosSentAt={order.photosSentAt || null}
-          videoCount={(order.videos || []).filter((v) => v.type === 'walkthrough').length}
         />
       </section>
 
-      {/* Videos */}
+      {/* Content Creation (producer) */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Videos</h2>
+        <h2 className="mb-1 font-semibold text-gray-800">Content Creation</h2>
         <p className="mb-3 text-sm text-gray-500">
-          Walkthrough video (≤1 min). Auto-deletes 20 days after upload.
-          &ldquo;Send content to producer&rdquo; emails the photos + videos for editing.
+          Select which photos &amp; videos go to your content creator, then send.
+          Videos auto-delete 20 days after upload.
         </p>
-        <OwnerVideos orderId={order.id} videos={order.videos || []} />
+        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
       </section>
 
       {/* Lifecycle */}

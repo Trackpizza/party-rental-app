@@ -37,12 +37,10 @@ export default async function GalleryPage({ params }: { params: { id: string } }
   const urls = (await Promise.all(photos.map((p) => signedUrl(p.storagePath)))).filter(
     (u): u is string => !!u,
   )
+  const walkthroughs = (order.videos || []).filter((v) => v.type === 'walkthrough')
+  const selWalk = walkthroughs.filter((v) => v.selected)
   const videoUrls = (
-    await Promise.all(
-      (order.videos || [])
-        .filter((v) => v.type === 'walkthrough')
-        .map((v) => signedUrl(v.storagePath)),
-    )
+    await Promise.all((selWalk.length ? selWalk : walkthroughs).map((v) => signedUrl(v.storagePath)))
   ).filter((u): u is string => !!u)
 
   return (

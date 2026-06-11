@@ -34,14 +34,19 @@ export default async function ProducerPage({ params }: { params: { id: string } 
     )
   }
 
+  const selP = (order.setupPhotos || []).filter((p) => p.producerSelected)
+  const photoList = selP.length ? selP : order.setupPhotos || []
+  const selV = (order.videos || []).filter((v) => v.producerSelected)
+  const videoList = selV.length ? selV : order.videos || []
+
   const photos = await Promise.all(
-    (order.setupPhotos || []).map(async (p) => ({
+    photoList.map(async (p) => ({
       view: await signed(p.storagePath),
       dl: await signed(p.storagePath, true),
     })),
   )
   const videos = await Promise.all(
-    (order.videos || []).map(async (v) => ({
+    videoList.map(async (v) => ({
       type: v.type,
       view: await signed(v.storagePath),
       dl: await signed(v.storagePath, true),
