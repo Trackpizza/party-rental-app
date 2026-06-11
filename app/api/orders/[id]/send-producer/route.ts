@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { sendMail, isEmailConfigured } from '@/lib/email'
-import { producerRecipients } from '@/lib/settings'
 import { Order, customerName } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -24,25 +23,20 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    const { cc, bcc, note } = await req.json().catch(() => ({}))
+    const { to, cc, bcc, note } = await req.json().catch(() => ({}))
+    const toClean = (to || '').trim()
+    if (!toClean) {
+      return NextResponse.json(
+        { error: 'No recipient — set a producer email in Settings or type one in.' },
+        { status: 400 },
+      )
+    }
     const snap = await adminDb.collection('orders').doc(params.id).get()
     if (!snap.exists) {
       return NextResponse.json({ error: 'Order not found.' }, { status: 404 })
     }
     const order = { id: snap.id, ...(snap.data() as Omit<Order, 'id'>) }
 
-    const biz = await adminDb.collection('settings').doc('business').get()
-    const producers = producerRecipients(biz.exists ? biz.data() : {})
-    if (producers.length === 0) {
-      return NextResponse.json(
-        { error: 'No producer email set (Settings → Producer email).' },
-        { status: 400 },
-      )
-    }
-    // First producer goes on To; any others are BCC'd so producers can't see
-    // each other's addresses. The owner's manual BCC field layers on top.
-    const producerTo = producers[0]
-    const allBcc = [...producers.slice(1), (bcc || '').trim()].filter(Boolean).join(', ')
     if (!isEmailConfigured()) {
       return NextResponse.json({ error: 'Email not configured.' }, { status: 500 })
     }
@@ -70,18 +64,18 @@ export async function POST(
     </div>`
 
     await sendMail({
-      to: producerTo,
+      to: toClean,
       cc: (cc || '').trim() || undefined,
-      bcc: allBcc || undefined,
+      bcc: (bcc || '').trim() || undefined,
       subject: `Content — ${who}${when}`,
       html,
     })
 
     return NextResponse.json({
       ok: true,
-      to: producerTo,
+      to: toClean,
       cc: (cc || '').trim() || null,
-      bcc: allBcc || null,
+      bcc: (bcc || '').trim() || null,
     })
   } catch (e: any) {
     console.error('send-producer error', e)
