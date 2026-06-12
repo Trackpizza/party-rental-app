@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings } from '@/lib/settings'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
+import TextCustomer from './TextCustomer'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Producer-facing: select which photos + videos go to the content creator,
@@ -12,10 +13,12 @@ export default function OwnerContentCreation({
   orderId,
   photos,
   videos,
+  customerPhone,
 }: {
   orderId: string
   photos: SetupPhoto[]
   videos: VideoClip[]
+  customerPhone: string
 }) {
   const [to, setTo] = useState('')
   const [cc, setCc] = useState('')
@@ -135,6 +138,13 @@ export default function OwnerContentCreation({
             title="Quick video testimonial"
             text="Would you record a quick video review of your event?"
             label="Share link"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
+          />
+          <TextCustomer
+            phone={customerPhone}
+            url={`/testimonial/${orderId}`}
+            text="Would you record a quick video review of your event?"
+            label="Text link"
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
           />
         </div>

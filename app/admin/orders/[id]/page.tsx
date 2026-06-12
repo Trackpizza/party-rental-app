@@ -508,7 +508,7 @@ export default function OrderDetailPage() {
           Select which photos &amp; videos go to your content creator, then send.
           Videos auto-delete 20 days after upload.
         </p>
-        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
+        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} customerPhone={order.customer.phone} />
       </section>
     </div>
   )

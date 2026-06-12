@@ -4,6 +4,7 @@ import { db } from './firebase/client'
 export interface StaffMember {
   name: string
   email: string
+  phone: string // optional; enables the Text/QR (Phone Link) action for crew
 }
 
 export interface BusinessSettings {
@@ -42,7 +43,9 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
     dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
-    staff: Array.isArray(d.staff) ? d.staff : [],
+    staff: Array.isArray(d.staff)
+      ? d.staff.map((s: any) => ({ name: s.name || '', email: s.email || '', phone: s.phone || '' }))
+      : [],
     requireDl: typeof d.requireDl === 'boolean' ? d.requireDl : true,
     producerEmails: producerRecipients(d),
     videoReleaseText: d.videoReleaseText || DEFAULT_VIDEO_RELEASE,

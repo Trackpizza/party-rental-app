@@ -49,8 +49,8 @@ export default function SettingsPage() {
       producerEmails: producerEmails.map((e) => e.trim()).filter(Boolean),
       videoReleaseText: videoRelease,
       staff: staff
-        .map((s) => ({ name: s.name.trim(), email: s.email.trim() }))
-        .filter((s) => s.name || s.email),
+        .map((s) => ({ name: s.name.trim(), email: s.email.trim(), phone: (s.phone || '').trim() }))
+        .filter((s) => s.name || s.email || s.phone),
     })
     setBizSaving(false)
     setBizSaved(true)
@@ -223,14 +223,14 @@ export default function SettingsPage() {
         </p>
         <div className="space-y-2">
           {staff.map((s, i) => (
-            <div key={i} className="flex gap-2">
+            <div key={i} className="flex flex-wrap items-center gap-2">
               <input
                 placeholder="Name"
                 value={s.name}
                 onChange={(e) =>
                   setStaff(staff.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
                 }
-                className="w-1/3 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                className="min-w-[110px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
               />
               <input
                 type="email"
@@ -239,7 +239,16 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   setStaff(staff.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))
                 }
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+                className="min-w-[160px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              />
+              <input
+                type="tel"
+                placeholder="Phone (for texting)"
+                value={s.phone || ''}
+                onChange={(e) =>
+                  setStaff(staff.map((x, j) => (j === i ? { ...x, phone: e.target.value } : x)))
+                }
+                className="min-w-[140px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
               />
               <button
                 onClick={() => setStaff(staff.filter((_, j) => j !== i))}
@@ -256,7 +265,7 @@ export default function SettingsPage() {
         </div>
         <div className="mt-3 flex items-center gap-4">
           <button
-            onClick={() => setStaff([...staff, { name: '', email: '' }])}
+            onClick={() => setStaff([...staff, { name: '', email: '', phone: '' }])}
             className="text-sm font-semibold text-brand hover:underline"
           >
             + Add staff

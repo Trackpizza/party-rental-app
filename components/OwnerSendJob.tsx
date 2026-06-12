@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import ShareButton from './ShareButton'
+import TextStaffPicker from './TextStaffPicker'
 
 // Owner action: send the crew a job ticket (/job/{id}) — address, equipment,
 // and balance to collect, with no ID/contract/signature. Email a team member
@@ -135,6 +136,7 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
           className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
         />
       </div>
+      <TextStaffPicker staff={staff} url={`/job/${orderId}`} text="Delivery job ticket:" />
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
     </div>
   )

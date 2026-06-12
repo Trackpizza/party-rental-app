@@ -7,6 +7,7 @@ import VideoUpload from './VideoUpload'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
 import TextCustomer from './TextCustomer'
+import TextStaffPicker from './TextStaffPicker'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Customer-facing: select which photos + walkthrough videos the customer
@@ -235,6 +236,7 @@ export default function OwnerSetupPhotos({
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
           />
         </div>
+        <TextStaffPicker staff={staff} url={`/setup/${orderId}`} text="Setup photo upload link:" />
         {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
     </div>
