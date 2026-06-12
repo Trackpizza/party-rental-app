@@ -5,6 +5,7 @@ import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import PhotoCapture from './PhotoCapture'
 import VideoUpload from './VideoUpload'
 import MediaGrid from './MediaGrid'
+import ShareButton from './ShareButton'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Customer-facing: select which photos + walkthrough videos the customer
@@ -168,9 +169,18 @@ export default function OwnerSetupPhotos({
             <input type="text" value={photoBcc} onChange={(e) => setPhotoBcc(e.target.value)} placeholder="BCC (optional)" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
           </div>
           <textarea rows={2} value={photoNote} onChange={(e) => setPhotoNote(e.target.value)} placeholder="Add a personal note (optional) — appears in a green box in the email…" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-          <button onClick={sendPhotos} disabled={!photoTo.trim() || sending} className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-            {sending ? 'Sending…' : '✉️ Send to customer + review'}
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button onClick={sendPhotos} disabled={!photoTo.trim() || sending} className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+              {sending ? 'Sending…' : '✉️ Send to customer + review'}
+            </button>
+            <ShareButton
+              url={`/gallery/${orderId}`}
+              title="Your event photos"
+              text="Here are the photos from your event:"
+              label="Share photos"
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
+            />
+          </div>
           {photoMsg && <p className="mt-2 text-sm text-gray-600">{photoMsg}</p>}
         </div>
       )}
@@ -203,9 +213,18 @@ export default function OwnerSetupPhotos({
         </div>
         <input type="text" value={crewBcc} onChange={(e) => setCrewBcc(e.target.value)} placeholder="BCC others (comma-separated, optional)" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
         <textarea rows={2} value={crewNote} onChange={(e) => setCrewNote(e.target.value)} placeholder="Add a personal note (optional) — appears in a green box in the email…" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-        <button onClick={sendCrewLink} disabled={!crewTos.some((t) => t.trim()) || sendingCrew} className="mt-2 rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-          {sendingCrew ? 'Sending…' : '✉️ Email crew link'}
-        </button>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button onClick={sendCrewLink} disabled={!crewTos.some((t) => t.trim()) || sendingCrew} className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+            {sendingCrew ? 'Sending…' : '✉️ Email crew link'}
+          </button>
+          <ShareButton
+            url={`/setup/${orderId}`}
+            title="Setup photo upload"
+            text="Upload the setup photos here:"
+            label="Share crew link"
+            className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
+          />
+        </div>
         {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
     </div>

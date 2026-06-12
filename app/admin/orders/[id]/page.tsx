@@ -9,6 +9,7 @@ import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
+import ShareButton from '@/components/ShareButton'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -187,6 +188,12 @@ export default function OrderDetailPage() {
           <button onClick={copyLink} className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand">
             {copied ? 'Copied!' : 'Copy link'}
           </button>
+          <ShareButton
+            url={link}
+            title={`${business} — rental agreement`}
+            text="Please review & sign your rental agreement:"
+            className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+          />
           <a href={link} target="_blank" rel="noreferrer" className="text-sm text-gray-400 underline">
             Preview customer view
           </a>

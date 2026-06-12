@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getBusinessSettings } from '@/lib/settings'
 import MediaGrid from './MediaGrid'
+import ShareButton from './ShareButton'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Producer-facing: select which photos + videos go to the content creator,
@@ -101,9 +102,17 @@ export default function OwnerContentCreation({
             <input type="text" value={bcc} onChange={(e) => setBcc(e.target.value)} placeholder="BCC (optional)" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
           </div>
           <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a note (optional) — appears in a green box…" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-          <button onClick={sendToProducer} disabled={!to.trim() || sending} className="mt-2 rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-            {sending ? 'Sending…' : '✉️ Send to content creator'}
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button onClick={sendToProducer} disabled={!to.trim() || sending} className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+              {sending ? 'Sending…' : '✉️ Send to content creator'}
+            </button>
+            <ShareButton
+              url={`/producer/${orderId}`}
+              title="Event content"
+              text="Content to download for editing:"
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
+            />
+          </div>
           {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
         </div>
       )}
@@ -121,6 +130,13 @@ export default function OwnerContentCreation({
           <button onClick={copyTestimonialLink} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             {tCopied ? 'Copied!' : 'Copy testimonial link'}
           </button>
+          <ShareButton
+            url={`/testimonial/${orderId}`}
+            title="Quick video testimonial"
+            text="Would you record a quick video review of your event?"
+            label="Share link"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
+          />
         </div>
       </div>
     </div>
