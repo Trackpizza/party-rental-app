@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
-import { money, applyOrderAction, customerLink, formatTime } from '@/lib/orders'
+import { money, applyOrderAction, customerLink, formatTime, fullAddress, mapsHref } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
 import ShareButton from '@/components/ShareButton'
+import OwnerSendJob from '@/components/OwnerSendJob'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -62,6 +63,7 @@ export default function OrderDetailPage() {
     )
 
   const link = customerLink(order.id)
+  const address = fullAddress(order.customer)
 
   async function sendSigningLink() {
     if (!order) return
@@ -147,11 +149,60 @@ export default function OrderDetailPage() {
           <span className="rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-white">
             {STATUS_LABELS[order.status]}
           </span>
+          <button onClick={() => router.push(`/admin/orders/${order.id}/edit`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
+            Edit
+          </button>
           <button onClick={() => router.push(`/admin/orders/${order.id}/print`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Print / PDF
           </button>
         </div>
       </div>
+
+      {/* Customer & delivery */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-3 font-semibold text-gray-800">Customer &amp; delivery</h2>
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <p className="text-xs text-gray-400">Name</p>
+            <p className="font-medium text-gray-700">{customerName(order.customer) || '—'}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">Phone</p>
+            {order.customer.phone ? (
+              <a href={`tel:${order.customer.phone.replace(/[^\d+]/g, '')}`} className="font-medium text-brand underline">
+                {order.customer.phone}
+              </a>
+            ) : (
+              <p className="font-medium text-gray-700">—</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">Email</p>
+            {order.customer.email ? (
+              <a href={`mailto:${order.customer.email}`} className="break-all font-medium text-brand underline">
+                {order.customer.email}
+              </a>
+            ) : (
+              <p className="font-medium text-gray-700">—</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-gray-400">Delivery address</p>
+            {address ? (
+              <>
+                <p className="font-medium text-gray-700">{address}</p>
+                <a href={mapsHref(order.customer)} target="_blank" rel="noreferrer" className="no-print text-sm text-brand underline">
+                  📍 Open in Maps
+                </a>
+              </>
+            ) : (
+              <p className="font-medium text-gray-700">—</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <SectionDivider />
 
       {/* Send signing link */}
       <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
@@ -327,6 +378,14 @@ export default function OrderDetailPage() {
             Auto-deletes {new Date(order.dlPurgeAfter).toLocaleDateString()} (30 days after event).
           </p>
         )}
+      </section>
+
+      <SectionDivider />
+
+      {/* Crew job ticket */}
+      <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Crew job ticket</h2>
+        <OwnerSendJob orderId={order.id} />
       </section>
 
       <SectionDivider />

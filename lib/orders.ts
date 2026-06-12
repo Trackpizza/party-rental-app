@@ -10,6 +10,7 @@ import {
   Order,
   LineItem,
   Totals,
+  CustomerInfo,
   ITEM_CATALOG,
 } from './types'
 
@@ -172,6 +173,19 @@ export async function getOrder(id: string): Promise<Order | null> {
 export function money(n: number | null | undefined): string {
   if (n == null) return '—'
   return `$${n.toFixed(2)}`
+}
+
+// One-line delivery address from the customer fields (skips blanks).
+export function fullAddress(c: Partial<CustomerInfo>): string {
+  const street = [c.address, c.address2].filter((x) => x && x.trim()).join(', ')
+  const region = [c.city, c.state].filter((x) => x && x.trim()).join(', ')
+  const cityZip = [region, c.zip].filter((x) => x && x.trim()).join(' ')
+  return [street, cityZip].filter(Boolean).join(', ')
+}
+
+// Google Maps link for the delivery address (opens directions/search on mobile).
+export function mapsHref(c: Partial<CustomerInfo>): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress(c))}`
 }
 
 // Derive the furthest-along lifecycle status purely from flags/timestamps.
