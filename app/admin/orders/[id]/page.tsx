@@ -11,6 +11,7 @@ import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
 import ShareButton from '@/components/ShareButton'
 import OwnerSendJob from '@/components/OwnerSendJob'
+import TextCustomer from '@/components/TextCustomer'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -243,6 +244,13 @@ export default function OrderDetailPage() {
             url={link}
             title={`${business} — rental agreement`}
             text="Please review & sign your rental agreement:"
+            className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+          />
+          <TextCustomer
+            phone={order.customer.phone}
+            url={link}
+            text="Please review & sign your rental agreement:"
+            label="Text customer"
             className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
           />
           <a href={link} target="_blank" rel="noreferrer" className="text-sm text-gray-400 underline">
@@ -486,6 +494,7 @@ export default function OrderDetailPage() {
           photos={order.setupPhotos || []}
           videos={order.videos || []}
           customerEmail={order.customer.email}
+          customerPhone={order.customer.phone}
           photosSentAt={order.photosSentAt || null}
         />
       </section>

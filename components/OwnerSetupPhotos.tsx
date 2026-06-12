@@ -6,6 +6,7 @@ import PhotoCapture from './PhotoCapture'
 import VideoUpload from './VideoUpload'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
+import TextCustomer from './TextCustomer'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Customer-facing: select which photos + walkthrough videos the customer
@@ -15,12 +16,14 @@ export default function OwnerSetupPhotos({
   photos,
   videos,
   customerEmail,
+  customerPhone,
   photosSentAt,
 }: {
   orderId: string
   photos: SetupPhoto[]
   videos: VideoClip[]
   customerEmail: string
+  customerPhone: string
   photosSentAt: string | null
 }) {
   const [staff, setStaff] = useState<StaffMember[]>([])
@@ -178,6 +181,13 @@ export default function OwnerSetupPhotos({
               title="Your event photos"
               text="Here are the photos from your event:"
               label="Share photos"
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
+            />
+            <TextCustomer
+              phone={customerPhone}
+              url={`/gallery/${orderId}`}
+              text="Here are the photos from your event:"
+              label="Text photos"
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
             />
           </div>
