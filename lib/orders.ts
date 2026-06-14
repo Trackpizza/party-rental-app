@@ -55,6 +55,7 @@ export function isOtherItem(i: LineItem): boolean {
 export function buildEmptyOrder(): OrderDraft {
   const items: LineItem[] = ITEM_CATALOG.map((c) => ({
     key: c.key,
+    catalogKey: c.key,
     label: c.label,
     qty: null,
     options: [],

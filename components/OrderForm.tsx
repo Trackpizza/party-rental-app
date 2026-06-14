@@ -147,6 +147,34 @@ export default function OrderForm({
     patch((d) => ({ ...d, items: [...d.items, newOtherItem()] }))
   }
 
+  // Add another row of a catalog item (e.g. a 2nd "Tables" for a different
+  // sub-type). Inserted right after the last existing row of that type.
+  function addCatalogRow(catalogKey: string) {
+    const cat = ITEM_CATALOG.find((c) => c.key === catalogKey)
+    if (!cat) return
+    const row: LineItem = {
+      key: `${catalogKey}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      catalogKey,
+      label: cat.label,
+      qty: null,
+      options: [],
+      amount: null,
+      note: '',
+    }
+    patch((d) => {
+      const items = [...d.items]
+      let insertAt = items.length
+      for (let i = items.length - 1; i >= 0; i--) {
+        if ((items[i].catalogKey || items[i].key) === catalogKey) {
+          insertAt = i + 1
+          break
+        }
+      }
+      items.splice(insertAt, 0, row)
+      return { ...d, items }
+    })
+  }
+
   function removeItem(key: string) {
     patch((d) => ({ ...d, items: d.items.filter((i) => i.key !== key) }))
   }
@@ -214,6 +242,7 @@ export default function OrderForm({
 
   const t = draft.totals
   const editing = mode === 'edit'
+  const nonOtherItems = draft.items.filter((i) => !isOtherItem(i))
 
   return (
     <div className="space-y-6 pb-24">
@@ -398,13 +427,28 @@ export default function OrderForm({
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 font-semibold text-gray-800">Items</h2>
         <div className="space-y-3">
-          {draft.items.filter((i) => !isOtherItem(i)).map((item) => {
-            const catalog = ITEM_CATALOG.find((c) => c.key === item.key)
+          {nonOtherItems.map((item, idx) => {
+            const ck = item.catalogKey || item.key
+            const catalog = ITEM_CATALOG.find((c) => c.key === ck)
+            const isExtra = item.key !== ck
+            const isLastOfType = !nonOtherItems
+              .slice(idx + 1)
+              .some((x) => (x.catalogKey || x.key) === ck)
             return (
               <div key={item.key} className="border-b border-gray-100 pb-3">
                 <div className="grid grid-cols-12 items-center gap-2">
-                  <div className="col-span-12 sm:col-span-2 font-medium text-gray-700">
-                    {item.label}
+                  <div className="col-span-12 flex items-center gap-2 font-medium text-gray-700 sm:col-span-2">
+                    <span>{item.label}</span>
+                    {isExtra && (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.key)}
+                        className="text-gray-300 hover:text-red-500"
+                        aria-label={`Remove ${item.label} row`}
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                   <div className="col-span-3 sm:col-span-2">
                     <input
@@ -454,6 +498,15 @@ export default function OrderForm({
                   onChange={(e) => updateItem(item.key, { note: e.target.value })}
                   className={`${inputCls} mt-2 w-full text-sm`}
                 />
+                {catalog?.options && isLastOfType && (
+                  <button
+                    type="button"
+                    onClick={() => addCatalogRow(ck)}
+                    className="mt-2 text-sm font-semibold text-brand hover:underline"
+                  >
+                    + Add {catalog.label}
+                  </button>
+                )}
               </div>
             )
           })}

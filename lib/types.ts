@@ -30,7 +30,8 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 // ---- Line items (the rental table on the card) ----
 // Each row may carry sub-type checkboxes (e.g. tables: round/square/folding).
 export interface LineItem {
-  key: string          // e.g. "tables", "chairs", "jumpers", "other-<id>"
+  key: string          // unique row id, e.g. "tables", "tables-<id>" (extra row), "other-<id>"
+  catalogKey?: string  // which catalog entry this row is (lets a type repeat, e.g. two "Tables" rows)
   label: string        // "TABLES"
   qty: number | null
   options?: string[]   // selected sub-types, e.g. ["round","folding"]
