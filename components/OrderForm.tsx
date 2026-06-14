@@ -41,6 +41,18 @@ function Field({
   )
 }
 
+// The day after an ISO date (YYYY-MM-DD), handling month/year rollover. Built
+// from local parts so it never shifts a day due to timezone parsing.
+function nextDayISO(isoDate: string): string {
+  if (!isoDate) return ''
+  const [y, m, d] = isoDate.split('-').map(Number)
+  if (!y || !m || !d) return ''
+  const dt = new Date(y, m - 1, d + 1)
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const dd = String(dt.getDate()).padStart(2, '0')
+  return `${dt.getFullYear()}-${mm}-${dd}`
+}
+
 // Shared order form, used for both creating a new order and editing an existing
 // one. In edit mode it saves back to the same document (preserving signature,
 // photos, payment flags, etc. that aren't editable here) and shows a warning if
@@ -63,6 +75,10 @@ export default function OrderForm({
   const [taxRate, setTaxRate] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Pickup defaults to the next day at the same time as delivery. Once the owner
+  // edits pickup directly, it stops auto-following (so we never clobber it).
+  const [pickupDateTouched, setPickupDateTouched] = useState(!!initial.event.pickupDate)
+  const [pickupTimeTouched, setPickupTimeTouched] = useState(!!initial.event.pickupTime)
 
   // Load the saved tax rate + DL purge window. For a brand-new order, also apply
   // the auto tax to the (empty) order; for edits, leave the saved totals alone.
@@ -229,9 +245,18 @@ export default function OrderForm({
             <input
               type="date"
               value={draft.event.eventDate}
-              onChange={(e) =>
-                patch((d) => ({ ...d, event: { ...d.event, eventDate: e.target.value } }))
-              }
+              onChange={(e) => {
+                const v = e.target.value
+                patch((d) => ({
+                  ...d,
+                  event: {
+                    ...d.event,
+                    eventDate: v,
+                    // Default pickup to the next day unless the owner set it.
+                    pickupDate: pickupDateTouched ? d.event.pickupDate : nextDayISO(v),
+                  },
+                }))
+              }}
               className={`${inputCls} w-full`}
             />
           </Field>
@@ -239,7 +264,15 @@ export default function OrderForm({
             <TimeSelect
               value={draft.event.deliveryTime}
               onChange={(v) =>
-                patch((d) => ({ ...d, event: { ...d.event, deliveryTime: v } }))
+                patch((d) => ({
+                  ...d,
+                  event: {
+                    ...d.event,
+                    deliveryTime: v,
+                    // Default pickup time to the same time unless set.
+                    pickupTime: pickupTimeTouched ? d.event.pickupTime : v,
+                  },
+                }))
               }
               className={`${inputCls} w-full`}
             />
@@ -248,18 +281,20 @@ export default function OrderForm({
             <input
               type="date"
               value={draft.event.pickupDate}
-              onChange={(e) =>
+              onChange={(e) => {
+                setPickupDateTouched(true)
                 patch((d) => ({ ...d, event: { ...d.event, pickupDate: e.target.value } }))
-              }
+              }}
               className={`${inputCls} w-full`}
             />
           </Field>
           <Field label="Pickup Time">
             <TimeSelect
               value={draft.event.pickupTime}
-              onChange={(v) =>
+              onChange={(v) => {
+                setPickupTimeTouched(true)
                 patch((d) => ({ ...d, event: { ...d.event, pickupTime: v } }))
-              }
+              }}
               className={`${inputCls} w-full`}
             />
           </Field>
