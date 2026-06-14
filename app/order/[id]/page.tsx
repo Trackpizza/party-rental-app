@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { DEFAULT_WAIVER } from '@/lib/waiver'
 import SignFlow, { SignFlowData } from '@/components/SignFlow'
+import CustomerDLRetake from '@/components/CustomerDLRetake'
 import { customerName, itemName, type Order } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,7 @@ export default async function OrderSignPage({
           This order was signed on{' '}
           {new Date(order.signature.signedAt).toLocaleDateString()}. Thank you!
         </p>
+        {(order.dlPhotos?.length || 0) > 0 && <CustomerDLRetake orderId={order.id} />}
       </Centered>
     )
   }
