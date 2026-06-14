@@ -526,6 +526,7 @@ export default function OrderDetailPage() {
           videos={order.videos || []}
           customerEmail={order.customer.email}
           customerPhone={order.customer.phone}
+          customerName={customerName(order.customer)}
           photosSentAt={order.photosSentAt || null}
         />
       </section>

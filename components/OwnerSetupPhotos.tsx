@@ -18,6 +18,7 @@ export default function OwnerSetupPhotos({
   videos,
   customerEmail,
   customerPhone,
+  customerName,
   photosSentAt,
 }: {
   orderId: string
@@ -25,8 +26,10 @@ export default function OwnerSetupPhotos({
   videos: VideoClip[]
   customerEmail: string
   customerPhone: string
+  customerName: string
   photosSentAt: string | null
 }) {
+  const crewText = `Setup photos for ${customerName || 'the event'}:`
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [uploading, setUploading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -231,12 +234,12 @@ export default function OwnerSetupPhotos({
           <ShareButton
             url={`/setup/${orderId}`}
             title="Setup photo upload"
-            text="Upload the setup photos here:"
+            text={crewText}
             label="Share crew link"
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
           />
         </div>
-        <TextStaffPicker staff={staff} url={`/setup/${orderId}`} text="Setup photo upload link:" />
+        <TextStaffPicker staff={staff} url={`/setup/${orderId}`} text={crewText} />
         {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
     </div>
