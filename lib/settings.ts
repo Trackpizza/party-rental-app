@@ -22,8 +22,8 @@ export const DEFAULT_VIDEO_RELEASE =
   'Doy permiso para usar este video y las fotos de mi evento para publicidad y redes sociales.'
 
 export const DEFAULT_MEDIA_CONSENT =
-  'You may take setup photos and a short walkthrough video of my event to use on social media and advertising — and you’ll send me the photos and video afterward.\n' +
-  'Pueden tomar fotos del montaje y un video corto de mi evento para usarlos en redes sociales y publicidad, y me enviarán las fotos y el video después.'
+  'We can take setup photos and a short walkthrough video of your event before guests arrive to use on social media and advertising — and we’ll send you the photos and video afterward.\n' +
+  'Podemos tomar fotos del montaje y un video corto de su evento antes de que lleguen los invitados para usarlos en redes sociales y publicidad, y le enviaremos las fotos y el video después.'
 
 // Resolve the producer recipient list from raw settings data. Prefers the
 // `producerEmails` array; falls back to the legacy single `producerEmail`
