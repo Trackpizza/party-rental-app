@@ -29,6 +29,7 @@ const FILTERS: { key: string; label: string; statuses?: OrderStatus[] }[] = [
   { key: 'picked_up', label: 'Picked Up', statuses: ['picked_up'] },
   { key: 'balance', label: 'Balance Paid', statuses: ['balance_paid'] },
   { key: 'completed', label: 'Completed', statuses: ['completed'] },
+  { key: 'archived', label: 'Archived' },
 ]
 
 function matchesStatus(o: Order, key: string): boolean {
@@ -70,9 +71,13 @@ export default function Dashboard() {
   }, [])
 
   const ql = search.toLowerCase().trim()
-  const filtered = orders.filter(
-    (o) => matchesSearch(o, ql) && matchesStatus(o, statusFilter),
-  )
+  const filtered = orders.filter((o) => {
+    if (!matchesSearch(o, ql)) return false
+    // The "Archived" chip shows only archived orders; every other view hides them.
+    if (statusFilter === 'archived') return !!o.archived
+    if (o.archived) return false
+    return matchesStatus(o, statusFilter)
+  })
 
   return (
     <div>

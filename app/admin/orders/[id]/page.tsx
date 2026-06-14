@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
-import { money, applyOrderAction, customerLink, formatTime, fullAddress, mapsHref } from '@/lib/orders'
+import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
@@ -34,6 +34,8 @@ export default function OrderDetailPage() {
   const [rcptNote, setRcptNote] = useState('')
   const [sendingRcpt, setSendingRcpt] = useState(false)
   const [rcptMsg, setRcptMsg] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteMsg, setDeleteMsg] = useState('')
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -95,6 +97,32 @@ export default function OrderDetailPage() {
 
   const act = (patch: Partial<Order>) => order && applyOrderAction(order, patch)
 
+  async function toggleArchive() {
+    if (!order) return
+    await updateOrder(
+      order.id,
+      order.archived
+        ? { archived: false, archivedAt: null }
+        : { archived: true, archivedAt: new Date().toISOString() },
+    )
+  }
+
+  async function deleteOrder() {
+    if (!order) return
+    if (!window.confirm('Permanently delete this order and any uploaded files? This cannot be undone.')) return
+    setDeleting(true)
+    setDeleteMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/delete`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      router.push('/admin')
+    } catch (e: any) {
+      setDeleteMsg(`Error: ${e.message}`)
+      setDeleting(false)
+    }
+  }
+
   async function markCompleted() {
     if (!order) return
     setCompleting(true)
@@ -152,6 +180,9 @@ export default function OrderDetailPage() {
           </span>
           <button onClick={() => router.push(`/admin/orders/${order.id}/edit`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Edit
+          </button>
+          <button onClick={toggleArchive} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
+            {order.archived ? 'Unarchive' : 'Archive'}
           </button>
           <button onClick={() => router.push(`/admin/orders/${order.id}/print`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Print / PDF
@@ -510,6 +541,29 @@ export default function OrderDetailPage() {
         </p>
         <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} customerPhone={order.customer.phone} />
       </section>
+
+      {/* Delete — unsigned orders only; signed orders are protected (archive them) */}
+      {!order.signature && (
+        <>
+          <SectionDivider />
+          <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="mb-1 font-semibold text-gray-800">Delete order</h2>
+            <p className="mb-3 text-sm text-gray-500">
+              Permanently delete this unsigned order and any uploaded files. This
+              can&apos;t be undone. (Once an order is signed it can&apos;t be deleted —
+              archive it instead.)
+            </p>
+            <button
+              onClick={deleteOrder}
+              disabled={deleting}
+              className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Delete this order'}
+            </button>
+            {deleteMsg && <p className="mt-2 text-sm text-red-600">{deleteMsg}</p>}
+          </section>
+        </>
+      )}
     </div>
   )
 }

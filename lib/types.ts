@@ -188,4 +188,8 @@ export interface Order {
   videos?: VideoClip[]
 
   receiptSentAt?: string | null
+
+  // archive (hides from the default dashboard list; record is kept)
+  archived?: boolean
+  archivedAt?: string | null
 }
