@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { adminDb } from '@/lib/firebase/admin'
 import { Order, customerName, itemName } from '@/lib/types'
 import { formatTime, fullAddress, mapsHref, money } from '@/lib/orders'
@@ -28,6 +29,19 @@ export default async function JobPage({ params }: { params: { id: string } }) {
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
   const balance = order.totals.balance
+
+  // "Text owner — payment collected": SMS to the business phone (the page itself
+  // stays read-only; only the logged-in owner can actually mark it paid).
+  const ownerTel = (process.env.NEXT_PUBLIC_BUSINESS_PHONE || '').replace(/[^\d+]/g, '')
+  const h = headers()
+  const host = h.get('x-forwarded-host') || h.get('host') || ''
+  const proto = h.get('x-forwarded-proto') || 'https'
+  const adminUrl = host ? `${proto}://${host}/admin/orders/${order.id}` : ''
+  const who = customerName(order.customer) || 'the customer'
+  const paidMsg =
+    `Payment collected for ${who} — ${money(balance)} balance.` +
+    (adminUrl ? ` Mark paid: ${adminUrl}` : '')
+  const paidSmsHref = `sms:${ownerTel}?body=${encodeURIComponent(paidMsg)}`
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -124,10 +138,26 @@ export default async function JobPage({ params }: { params: { id: string } }) {
               ✓ Balance paid — nothing to collect · Saldo pagado
             </p>
           ) : (
-            <p className="text-gray-700">
-              Collect on delivery · Cobrar a la entrega:{' '}
-              <span className="text-lg font-bold text-gray-900">{money(balance)}</span>
-            </p>
+            <>
+              <p className="text-gray-700">
+                Collect on delivery · Cobrar a la entrega:{' '}
+                <span className="text-lg font-bold text-gray-900">{money(balance)}</span>
+              </p>
+              {ownerTel && (
+                <>
+                  <a
+                    href={paidSmsHref}
+                    className="mt-3 inline-block rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white hover:opacity-90"
+                  >
+                    💬 Text owner: payment collected
+                  </a>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Texts the office that you collected the balance · Avisa a la
+                    oficina. Only the office marks it paid.
+                  </p>
+                </>
+              )}
+            </>
           )}
         </section>
       </div>
