@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import admin, { adminDb, adminStorage } from '@/lib/firebase/admin'
+import { DL_RETENTION_DAYS } from '@/lib/orders'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,14 +68,9 @@ export async function POST(
       dlPhotos: admin.firestore.FieldValue.arrayUnion(photo),
       updatedAt: new Date().toISOString(),
     }
-    // Ensure the purge clock is set (event date + configured window).
+    // Ensure the purge clock is set (event date + fixed retention window).
     if (!order.dlPurgeAfter && order.event?.eventDate) {
-      const biz = await adminDb.collection('settings').doc('business').get()
-      const days =
-        biz.exists && typeof (biz.data() as any).dlPurgeDays === 'number'
-          ? (biz.data() as any).dlPurgeDays
-          : 30
-      patch.dlPurgeAfter = purgeDateFromEvent(order.event.eventDate, days)
+      patch.dlPurgeAfter = purgeDateFromEvent(order.event.eventDate, DL_RETENTION_DAYS)
     }
     await ref.update(patch)
 

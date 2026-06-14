@@ -11,6 +11,7 @@ import {
   money,
   newOtherItem,
   isOtherItem,
+  DL_RETENTION_DAYS,
 } from '@/lib/orders'
 import { getBusinessSettings } from '@/lib/settings'
 import TimeSelect from '@/components/TimeSelect'
@@ -60,7 +61,6 @@ export default function OrderForm({
   const [depositManual, setDepositManual] = useState(mode === 'edit')
   const [taxManual, setTaxManual] = useState(mode === 'edit')
   const [taxRate, setTaxRate] = useState(0)
-  const [purgeDays, setPurgeDays] = useState(30)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -69,7 +69,6 @@ export default function OrderForm({
   useEffect(() => {
     getBusinessSettings().then((b) => {
       setTaxRate(b.taxRate)
-      setPurgeDays(b.dlPurgeDays)
       if (mode === 'create') {
         setDraft((d) => ({
           ...d,
@@ -184,11 +183,11 @@ export default function OrderForm({
       if (mode === 'edit' && orderId) {
         await updateOrder(orderId, {
           ...draft,
-          dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, purgeDays),
+          dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, DL_RETENTION_DAYS),
         })
         router.push(`/admin/orders/${orderId}`)
       } else {
-        const id = await createOrder(draft, purgeDays)
+        const id = await createOrder(draft, DL_RETENTION_DAYS)
         router.push(`/admin/orders/${id}`)
       }
     } catch (err: any) {

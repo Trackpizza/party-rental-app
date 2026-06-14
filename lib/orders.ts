@@ -132,8 +132,13 @@ export function recalcTotals(
   }
 }
 
+// Fixed retention windows (hardcoded — not owner-configurable). The clocks run
+// off the event/upload date, never off "completed", so media always expires
+// even if an order is never marked complete.
+export const DL_RETENTION_DAYS = 30 // driver's-license photos: after the event
+
 // N days after the event date (for DL photo auto-purge).
-export function purgeDateFromEvent(eventDate: string, days = 30): string | null {
+export function purgeDateFromEvent(eventDate: string, days = DL_RETENTION_DAYS): string | null {
   if (!eventDate) return null
   const d = new Date(eventDate)
   if (isNaN(d.getTime())) return null
@@ -142,7 +147,7 @@ export function purgeDateFromEvent(eventDate: string, days = 30): string | null 
 }
 
 // Create a new order document; returns the new id.
-export async function createOrder(draft: OrderDraft, purgeDays = 30): Promise<string> {
+export async function createOrder(draft: OrderDraft, purgeDays = DL_RETENTION_DAYS): Promise<string> {
   const now = new Date().toISOString()
   const payload = {
     ...draft,

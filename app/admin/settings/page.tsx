@@ -15,7 +15,6 @@ export default function SettingsPage() {
 
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
-  const [purgeDays, setPurgeDays] = useState('')
   const [requireDl, setRequireDl] = useState(true)
   const [producerEmails, setProducerEmails] = useState<string[]>([])
   const [videoRelease, setVideoRelease] = useState('')
@@ -38,7 +37,6 @@ export default function SettingsPage() {
     getBusinessSettings().then((b) => {
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
-      setPurgeDays(String(b.dlPurgeDays))
       setRequireDl(b.requireDl)
       setProducerEmails(b.producerEmails)
       setVideoRelease(b.videoReleaseText)
@@ -52,7 +50,6 @@ export default function SettingsPage() {
     await saveBusinessSettings({
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
-      dlPurgeDays: parseInt(purgeDays) || 30,
       requireDl,
       producerEmails: producerEmails.map((e) => e.trim()).filter(Boolean),
       videoReleaseText: videoRelease,
@@ -159,23 +156,10 @@ export default function SettingsPage() {
           Require a driver&apos;s license photo before the customer can sign
         </label>
         <p className="mb-3 text-sm text-gray-500">
-          License photos are automatically deleted this many days after the
-          event date (keeps sensitive ID data from piling up). Applies to new
-          orders.
+          License photos are automatically deleted <strong>30 days after the
+          event</strong> (keeps sensitive ID data from piling up).
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center rounded-lg border border-gray-300 px-3">
-            <input
-              type="number"
-              min="1"
-              step="1"
-              placeholder="30"
-              value={purgeDays}
-              onChange={(e) => setPurgeDays(e.target.value)}
-              className="w-20 py-2 focus:outline-none"
-            />
-            <span className="text-gray-400">days</span>
-          </div>
           <button
             onClick={saveBiz}
             disabled={bizSaving}

@@ -10,7 +10,6 @@ export interface StaffMember {
 export interface BusinessSettings {
   googleReviewUrl: string
   taxRate: number // percent, e.g. 9.5
-  dlPurgeDays: number // days after event to auto-delete DL photos
   staff: StaffMember[]
   requireDl: boolean // require a DL photo before the customer can sign
   producerEmails: string[] // where "send content to producer" emails go (one or more)
@@ -42,7 +41,6 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
   return {
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
-    dlPurgeDays: typeof d.dlPurgeDays === 'number' ? d.dlPurgeDays : 30,
     staff: Array.isArray(d.staff)
       ? d.staff.map((s: any) => ({ name: s.name || '', email: s.email || '', phone: s.phone || '' }))
       : [],
