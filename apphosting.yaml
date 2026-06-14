@@ -36,6 +36,9 @@ env:
   - variable: NEXT_PUBLIC_BUSINESS_ADDRESS
     value: "12034 Vanowen Street, North Hollywood, CA 91605"
     availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_BUSINESS_WEBSITE
+    value: "https://ezbookaparty.com"
+    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_ZELLE_NUMBER
     value: "747.389.8112"
     availability: [BUILD, RUNTIME]

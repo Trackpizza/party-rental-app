@@ -4,6 +4,8 @@ export default function Home() {
   const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
   const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''
   const address = process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || ''
+  const website = process.env.NEXT_PUBLIC_BUSINESS_WEBSITE || ''
+  const websiteLabel = website.replace(/^https?:\/\//, '').replace(/\/$/, '')
   const tel = phone.replace(/[^\d+]/g, '')
   const smsBody = encodeURIComponent("Hi! I'd like to book a party rental.")
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
@@ -39,12 +41,23 @@ export default function Home() {
         </>
       )}
 
+      {website && (
+        <a
+          href={website}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-6 font-medium text-brand underline hover:opacity-80"
+        >
+          🌐 {websiteLabel}
+        </a>
+      )}
+
       {address && (
         <a
           href={mapsHref}
           target="_blank"
           rel="noreferrer"
-          className="mt-6 text-sm text-gray-500 underline hover:text-brand"
+          className="mt-3 text-sm text-gray-500 underline hover:text-brand"
         >
           📍 {address}
         </a>
