@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { DEFAULT_WAIVER } from '@/lib/waiver'
+import { DEFAULT_MEDIA_CONSENT } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,7 @@ export async function POST(
 ) {
   try {
     const body = await req.json()
-    const { signatureDataUrl, waiverScrolled, waiverAgreed, waiverVersion } = body
+    const { signatureDataUrl, waiverScrolled, waiverAgreed, waiverVersion, mediaConsent } = body
 
     if (!signatureDataUrl || !waiverAgreed) {
       return NextResponse.json(
@@ -57,9 +58,16 @@ export async function POST(
       ? (waiverSnap.data() as any).text
       : DEFAULT_WAIVER
 
+    // Snapshot the consent text the customer saw (only if they opted in).
+    const bizSnap = await adminDb.collection('settings').doc('business').get()
+    const mediaConsentText = bizSnap.exists
+      ? (bizSnap.data() as any).mediaConsentText || DEFAULT_MEDIA_CONSENT
+      : DEFAULT_MEDIA_CONSENT
+    const now = new Date().toISOString()
+
     const signature = {
       signatureDataUrl,
-      signedAt: new Date().toISOString(),
+      signedAt: now,
       ipAddress: getClientIp(req),
       waiverScrolled: !!waiverScrolled,
       waiverAgreed: !!waiverAgreed,
@@ -71,8 +79,11 @@ export async function POST(
     const merged = { ...order, signature }
     await ref.update({
       signature,
+      mediaConsent: !!mediaConsent,
+      mediaConsentAt: mediaConsent ? now : null,
+      mediaConsentText: mediaConsent ? mediaConsentText : null,
       status: deriveStatus(merged),
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     })
 
     return NextResponse.json({ ok: true })

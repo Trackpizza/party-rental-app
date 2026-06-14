@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [requireDl, setRequireDl] = useState(true)
   const [producerEmails, setProducerEmails] = useState<string[]>([])
   const [videoRelease, setVideoRelease] = useState('')
+  const [consentText, setConsentText] = useState('')
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
@@ -40,6 +41,7 @@ export default function SettingsPage() {
       setRequireDl(b.requireDl)
       setProducerEmails(b.producerEmails)
       setVideoRelease(b.videoReleaseText)
+      setConsentText(b.mediaConsentText)
       setStaff(b.staff)
     })
   }, [])
@@ -53,6 +55,7 @@ export default function SettingsPage() {
       requireDl,
       producerEmails: producerEmails.map((e) => e.trim()).filter(Boolean),
       videoReleaseText: videoRelease,
+      mediaConsentText: consentText,
       staff: staff
         .map((s) => ({ name: s.name.trim(), email: s.email.trim(), phone: (s.phone || '').trim() }))
         .filter((s) => s.name || s.email || s.phone),
@@ -231,6 +234,31 @@ export default function SettingsPage() {
           rows={3}
           value={videoRelease}
           onChange={(e) => setVideoRelease(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-brand focus:outline-none"
+        />
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Photo/video consent (signing)</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          An optional checkbox shown when the customer signs — permission to take
+          setup photos &amp; a walkthrough video for social media. It doesn&apos;t
+          block signing.
+        </p>
+        <textarea
+          rows={3}
+          value={consentText}
+          onChange={(e) => setConsentText(e.target.value)}
           className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-brand focus:outline-none"
         />
         <div className="mt-2 flex items-center gap-3">

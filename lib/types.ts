@@ -190,6 +190,11 @@ export interface Order {
 
   receiptSentAt?: string | null
 
+  // social-media consent captured at signing (optional; doesn't block signing)
+  mediaConsent?: boolean
+  mediaConsentAt?: string | null
+  mediaConsentText?: string | null // snapshot of the exact text agreed to
+
   // archive (hides from the default dashboard list; record is kept)
   archived?: boolean
   archivedAt?: string | null

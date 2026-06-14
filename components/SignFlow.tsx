@@ -22,6 +22,7 @@ export interface SignFlowData {
   payment: { method: string | null; zelle: string; squareLink: string | null }
   waiverText: string
   waiverVersion: string
+  mediaConsentText: string
 }
 
 function money(n: number | null) {
@@ -31,6 +32,7 @@ function money(n: number | null) {
 export default function SignFlow({ data }: { data: SignFlowData }) {
   const [scrolled, setScrolled] = useState(false)
   const [agreed, setAgreed] = useState(false)
+  const [mediaConsent, setMediaConsent] = useState(false)
   const [signature, setSignature] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
@@ -80,6 +82,7 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
           waiverScrolled: scrolled,
           waiverAgreed: agreed,
           waiverVersion: data.waiverVersion,
+          mediaConsent,
         }),
       })
       const json = await res.json()
@@ -228,6 +231,22 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
             className="mt-0.5"
           />
           I have read and agree to the rental agreement above.
+        </label>
+      </section>
+
+      {/* Social-media consent (optional) */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-2 font-semibold text-gray-800">
+          Photos &amp; video <span className="font-normal text-gray-400">(optional)</span>
+        </h2>
+        <label className="flex items-start gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={mediaConsent}
+            onChange={(e) => setMediaConsent(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="whitespace-pre-wrap">{data.mediaConsentText}</span>
         </label>
       </section>
 

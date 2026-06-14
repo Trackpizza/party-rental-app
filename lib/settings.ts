@@ -14,11 +14,16 @@ export interface BusinessSettings {
   requireDl: boolean // require a DL photo before the customer can sign
   producerEmails: string[] // where "send content to producer" emails go (one or more)
   videoReleaseText: string // media release the customer agrees to before recording
+  mediaConsentText: string // social-media consent checkbox shown in the signing flow
 }
 
 export const DEFAULT_VIDEO_RELEASE =
   'I give permission to use this video and photos from my event for advertising and social media.\n' +
   'Doy permiso para usar este video y las fotos de mi evento para publicidad y redes sociales.'
+
+export const DEFAULT_MEDIA_CONSENT =
+  'You may take setup photos and a short walkthrough video of my event to use on social media and advertising — and you’ll send me the photos and video afterward.\n' +
+  'Pueden tomar fotos del montaje y un video corto de mi evento para usarlos en redes sociales y publicidad, y me enviarán las fotos y el video después.'
 
 // Resolve the producer recipient list from raw settings data. Prefers the
 // `producerEmails` array; falls back to the legacy single `producerEmail`
@@ -47,6 +52,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
     requireDl: typeof d.requireDl === 'boolean' ? d.requireDl : true,
     producerEmails: producerRecipients(d),
     videoReleaseText: d.videoReleaseText || DEFAULT_VIDEO_RELEASE,
+    mediaConsentText: d.mediaConsentText || DEFAULT_MEDIA_CONSENT,
   }
 }
 
