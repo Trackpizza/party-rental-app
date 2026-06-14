@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
+import { auth } from '@/lib/firebase/client'
 import { getWaiver, saveWaiver, DEFAULT_WAIVER } from '@/lib/waiver'
 import { getBusinessSettings, saveBusinessSettings, StaffMember } from '@/lib/settings'
 
@@ -20,6 +22,12 @@ export default function SettingsPage() {
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [bizSaving, setBizSaving] = useState(false)
   const [bizSaved, setBizSaved] = useState(false)
+
+  const [curPw, setCurPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwMsg, setPwMsg] = useState('')
 
   useEffect(() => {
     getWaiver().then((w) => {
@@ -55,6 +63,44 @@ export default function SettingsPage() {
     setBizSaving(false)
     setBizSaved(true)
     setTimeout(() => setBizSaved(false), 2000)
+  }
+
+  async function changePassword() {
+    setPwMsg('')
+    const user = auth.currentUser
+    if (!user || !user.email) {
+      setPwMsg('Not signed in.')
+      return
+    }
+    if (newPw.length < 6) {
+      setPwMsg('New password must be at least 6 characters.')
+      return
+    }
+    if (newPw !== confirmPw) {
+      setPwMsg('New passwords do not match.')
+      return
+    }
+    setPwSaving(true)
+    try {
+      // Re-authenticate first so Firebase allows the change (and to verify the
+      // current password) even if the session is old.
+      const cred = EmailAuthProvider.credential(user.email, curPw)
+      await reauthenticateWithCredential(user, cred)
+      await updatePassword(user, newPw)
+      setPwMsg('✓ Password changed.')
+      setCurPw('')
+      setNewPw('')
+      setConfirmPw('')
+    } catch (e: any) {
+      const code = e?.code || ''
+      setPwMsg(
+        code === 'auth/wrong-password' || code === 'auth/invalid-credential'
+          ? 'Current password is incorrect.'
+          : 'Could not change password. Try again.',
+      )
+    } finally {
+      setPwSaving(false)
+    }
   }
 
   async function handleSave() {
@@ -278,6 +324,53 @@ export default function SettingsPage() {
             {bizSaving ? 'Saving…' : 'Save'}
           </button>
           {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Change password</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Update your sign-in password. You&apos;ll need your current password.
+        </p>
+        <div className="grid max-w-sm gap-2">
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={curPw}
+            onChange={(e) => setCurPw(e.target.value)}
+            placeholder="Current password"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          />
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            placeholder="New password (min 6 characters)"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          />
+          <input
+            type="password"
+            autoComplete="new-password"
+            value={confirmPw}
+            onChange={(e) => setConfirmPw(e.target.value)}
+            placeholder="Confirm new password"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          />
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            onClick={changePassword}
+            disabled={pwSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {pwSaving ? 'Saving…' : 'Change password'}
+          </button>
+          {pwMsg && (
+            <span className={`text-sm ${pwMsg.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
+              {pwMsg}
+            </span>
+          )}
         </div>
       </section>
 
