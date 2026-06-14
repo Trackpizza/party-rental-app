@@ -61,7 +61,7 @@ env:
 
   # --- Email (Gmail SMTP) ---
   - variable: GMAIL_USER
-    value: keepitlocal.la@gmail.com
+    value: ezbookaparty@gmail.com
     availability: [RUNTIME]
   - variable: MAIL_FROM_NAME
     value: "Party Supplies La Poblanita 2"
