@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { auth } from '@/lib/firebase/client'
 
 export default function LoginPage() {
@@ -10,11 +10,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setNotice('')
     setBusy(true)
     try {
       await signInWithEmailAndPassword(auth, email, password)
@@ -22,6 +24,21 @@ export default function LoginPage() {
     } catch (err: any) {
       setError('Incorrect email or password.')
       setBusy(false)
+    }
+  }
+
+  async function handleReset() {
+    setError('')
+    setNotice('')
+    if (!email.trim()) {
+      setError('Enter your email above first, then tap “Forgot password?”.')
+      return
+    }
+    try {
+      await sendPasswordResetEmail(auth, email.trim())
+      setNotice(`Reset link sent to ${email.trim()}. Check your inbox (and spam).`)
+    } catch (err: any) {
+      setError('Could not send the reset email. Check the address and try again.')
     }
   }
 
@@ -59,6 +76,7 @@ export default function LoginPage() {
         </label>
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {notice && <p className="mt-3 text-sm text-green-600">{notice}</p>}
 
         <button
           type="submit"
@@ -66,6 +84,14 @@ export default function LoginPage() {
           className="mt-6 w-full rounded-lg bg-brand py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           {busy ? 'Signing in…' : 'Sign In'}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleReset}
+          className="mt-4 block w-full text-center text-sm text-gray-500 underline hover:text-brand"
+        >
+          Forgot password?
         </button>
       </form>
     </main>
