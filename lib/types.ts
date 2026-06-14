@@ -56,7 +56,7 @@ export const ITEM_CATALOG: { key: string; label: string; options?: string[] }[] 
   { key: 'tablecloths', label: 'Tablecloths' },
   { key: 'seat_covers', label: 'Seat Covers' },
   { key: 'balloons', label: 'Balloons' },
-  { key: 'tents', label: 'Tents' },
+  { key: 'tents', label: 'Tents', options: ['10x30', '14x20', '14x30', '20x20', '20x30', '20x40'] },
   { key: 'heaters', label: 'Heaters' },
 ]
 
