@@ -33,6 +33,9 @@ env:
   - variable: NEXT_PUBLIC_BUSINESS_PHONE
     value: "818.982.5234"
     availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_OWNER_CELL
+    value: "818.321.0663"
+    availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_BUSINESS_ADDRESS
     value: "12034 Vanowen Street, North Hollywood, CA 91605"
     availability: [BUILD, RUNTIME]

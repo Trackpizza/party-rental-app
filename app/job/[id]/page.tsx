@@ -32,7 +32,11 @@ export default async function JobPage({ params }: { params: { id: string } }) {
 
   // "Text owner — payment collected": SMS to the business phone (the page itself
   // stays read-only; only the logged-in owner can actually mark it paid).
-  const ownerTel = (process.env.NEXT_PUBLIC_BUSINESS_PHONE || '').replace(/[^\d+]/g, '')
+  const ownerTel = (
+    process.env.NEXT_PUBLIC_OWNER_CELL ||
+    process.env.NEXT_PUBLIC_BUSINESS_PHONE ||
+    ''
+  ).replace(/[^\d+]/g, '')
   const h = headers()
   const host = h.get('x-forwarded-host') || h.get('host') || ''
   const proto = h.get('x-forwarded-proto') || 'https'
