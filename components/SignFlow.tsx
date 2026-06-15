@@ -18,7 +18,13 @@ export interface SignFlowData {
     note?: string
   }[]
   totals: { total: number | null; deposit: number | null; balance: number | null }
-  event: { eventDate: string; deliveryTime: string; pickupDate: string; pickupTime: string }
+  event: {
+    eventDate: string
+    deliveryTime: string
+    pickupDate: string
+    pickupTime: string
+    propertyType?: 'private' | 'public'
+  }
   payment: { method: string | null; zelle: string; squareLink: string | null }
   waiverText: string
   waiverVersion: string
@@ -234,7 +240,8 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
         </label>
       </section>
 
-      {/* Social-media consent (optional) */}
+      {/* Social-media consent (optional) — omitted for public-property jobs */}
+      {data.event.propertyType !== 'public' && (
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-2 font-semibold text-gray-800">
           Photos &amp; video <span className="font-normal text-gray-400">(optional)</span>
@@ -249,6 +256,7 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
           <span className="whitespace-pre-wrap">{data.mediaConsentText}</span>
         </label>
       </section>
+      )}
 
       {/* Signature */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">

@@ -102,6 +102,7 @@ export default async function OrderSignPage({
       deliveryTime: order.event.deliveryTime,
       pickupDate: order.event.pickupDate || '',
       pickupTime: order.event.pickupTime,
+      propertyType: order.event.propertyType ?? 'private',
     },
     payment: {
       method: order.paymentMethod,

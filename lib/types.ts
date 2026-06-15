@@ -63,6 +63,10 @@ export const ITEM_CATALOG: { key: string; label: string; options?: string[] }[] 
 export type SurfaceType = 'grass' | 'cement' | 'dirt' | 'house' | 'park'
 export const SURFACE_TYPES: SurfaceType[] = ['grass', 'cement', 'dirt', 'house', 'park']
 
+// Where the setup happens. Public property (e.g. a park) needs no media consent,
+// so the social-media consent clause is omitted from the contract for public jobs.
+export type PropertyType = 'private' | 'public'
+
 export type PaymentMethod = 'zelle' | 'square' | 'cash'
 
 // ---- Driver's license photo ----
@@ -135,6 +139,7 @@ export interface EventInfo {
   pickupTime: string
   surfaces: SurfaceType[]
   stairs: boolean
+  propertyType?: PropertyType // defaults to 'private' (consent clause shown); legacy orders lack it
   notes: string
 }
 

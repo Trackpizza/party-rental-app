@@ -636,6 +636,27 @@ export default function OrderForm({
             Stairs (extra charge)
           </label>
         </div>
+
+        <p className="mt-4 text-sm font-medium text-gray-700">Property type</p>
+        <div className="mt-2 flex flex-wrap gap-4">
+          {(['private', 'public'] as const).map((p) => (
+            <label key={p} className="flex items-center gap-1.5 text-sm capitalize text-gray-600">
+              <input
+                type="radio"
+                name="propertyType"
+                checked={(draft.event.propertyType ?? 'private') === p}
+                onChange={() =>
+                  patch((d) => ({ ...d, event: { ...d.event, propertyType: p } }))
+                }
+              />
+              {p}
+            </label>
+          ))}
+        </div>
+        <p className="mt-1 text-xs text-gray-400">
+          Public (e.g. a park) skips the photo/video consent clause on the contract.
+        </p>
+
         <div className="mt-4">
           <Field label="Notes">
             <textarea

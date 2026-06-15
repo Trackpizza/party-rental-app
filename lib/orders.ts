@@ -74,6 +74,7 @@ export function buildEmptyOrder(): OrderDraft {
       pickupTime: '',
       surfaces: [],
       stairs: false,
+      propertyType: 'private',
       notes: '',
     },
     items,

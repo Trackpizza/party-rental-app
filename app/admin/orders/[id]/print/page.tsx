@@ -123,6 +123,9 @@ export default function PrintContractPage() {
           {(order.event.surfaces.length > 0 || order.event.stairs) && (
             <p><b>Surface:</b> {order.event.surfaces.join(', ')}{order.event.stairs ? ' · Stairs' : ''}</p>
           )}
+          {order.event.propertyType && (
+            <p><b>Property:</b> {order.event.propertyType === 'public' ? 'Public' : 'Private'}</p>
+          )}
           {order.totals.miles != null && <p><b>Miles:</b> {order.totals.miles}</p>}
           {order.event.notes && <p><b>Notes:</b> {order.event.notes}</p>}
           <p className="mt-1"><b>Payment:</b> {order.paymentMethod || '—'}</p>

@@ -511,12 +511,18 @@ export default function OrderDetailPage() {
         <p className="text-xs text-purple-100">
           Photos &amp; content for social media — not part of the rental contract
         </p>
-        {order.signature && (
+        {order.event.propertyType === 'public' ? (
           <p className="mt-1 text-xs font-semibold text-white">
-            {order.mediaConsent
-              ? '✅ Customer approved social-media use'
-              : '⚠️ No social-media consent — ask before posting'}
+            🏞 Public property — consent not required
           </p>
+        ) : (
+          order.signature && (
+            <p className="mt-1 text-xs font-semibold text-white">
+              {order.mediaConsent
+                ? '✅ Customer approved social-media use'
+                : '⚠️ No social-media consent — ask before posting'}
+            </p>
+          )
         )}
       </div>
 
