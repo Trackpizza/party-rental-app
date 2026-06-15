@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import SignaturePad from './SignaturePad'
 import PhotoCapture from './PhotoCapture'
+import Markdown from './Markdown'
 import { formatTime } from '@/lib/orders'
 
 export interface SignFlowData {
@@ -215,9 +216,9 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
         <div
           ref={waiverRef}
           onScroll={onWaiverScroll}
-          className="h-56 overflow-y-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-700"
+          className="h-56 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-700"
         >
-          {data.waiverText}
+          <Markdown text={data.waiverText} />
         </div>
         {!scrolled && (
           <p className="mt-2 text-center text-xs text-gray-400">
@@ -246,14 +247,17 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
         <h2 className="mb-2 font-semibold text-gray-800">
           Photos &amp; video <span className="font-normal text-gray-400">(optional)</span>
         </h2>
-        <label className="flex items-start gap-2 text-sm text-gray-700">
+        <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-700">
+          <Markdown text={data.mediaConsentText} />
+        </div>
+        <label className="mt-3 flex items-start gap-2 text-sm text-gray-700">
           <input
             type="checkbox"
             checked={mediaConsent}
             onChange={(e) => setMediaConsent(e.target.checked)}
             className="mt-0.5"
           />
-          <span className="whitespace-pre-wrap">{data.mediaConsentText}</span>
+          I agree to the photo &amp; video release above.
         </label>
       </section>
       )}

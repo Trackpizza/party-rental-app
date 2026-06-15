@@ -6,6 +6,7 @@ import { getOrder, money, formatTime } from '@/lib/orders'
 import { getWaiver } from '@/lib/waiver'
 import { auth } from '@/lib/firebase/client'
 import { Order, customerName, itemName } from '@/lib/types'
+import Markdown from '@/components/Markdown'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''
@@ -143,7 +144,7 @@ export default function PrintContractPage() {
       {/* terms */}
       <div className="mt-4 border-t border-ink pt-2">
         <p className="text-xs font-semibold">TERMS</p>
-        <pre className="whitespace-pre-wrap font-sans text-[10px] leading-snug text-gray-700">{waiver}</pre>
+        <Markdown text={waiver} className="text-[10px] leading-snug text-gray-700" />
       </div>
 
       {/* signature */}

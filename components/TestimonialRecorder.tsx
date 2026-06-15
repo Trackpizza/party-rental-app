@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PublicVideoUpload from './PublicVideoUpload'
+import Markdown from './Markdown'
 
 export default function TestimonialRecorder({
   orderId,
@@ -25,8 +26,8 @@ export default function TestimonialRecorder({
           your event! 🎉 (up to 3 minutes)
         </p>
 
-        <div className="mt-4 whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-3 text-left text-xs leading-relaxed text-gray-700">
-          {releaseText}
+        <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3 text-left text-xs leading-relaxed text-gray-700">
+          <Markdown text={releaseText} />
         </div>
 
         <label className="mt-3 flex items-start gap-2 text-left text-sm text-gray-700">

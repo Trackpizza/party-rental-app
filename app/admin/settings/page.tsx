@@ -5,6 +5,7 @@ import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 
 import { auth } from '@/lib/firebase/client'
 import { getWaiver, saveWaiver, DEFAULT_WAIVER } from '@/lib/waiver'
 import { getBusinessSettings, saveBusinessSettings, StaffMember } from '@/lib/settings'
+import MarkdownField from '@/components/MarkdownField'
 
 export default function SettingsPage() {
   const [text, setText] = useState('')
@@ -230,12 +231,7 @@ export default function SettingsPage() {
           The customer checks a box agreeing to this before recording a video
           testimonial (so you can use it on social).
         </p>
-        <textarea
-          rows={3}
-          value={videoRelease}
-          onChange={(e) => setVideoRelease(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-brand focus:outline-none"
-        />
+        <MarkdownField value={videoRelease} onChange={setVideoRelease} rows={4} />
         <div className="mt-2 flex items-center gap-3">
           <button
             onClick={saveBiz}
@@ -253,14 +249,9 @@ export default function SettingsPage() {
         <p className="mb-3 text-sm text-gray-500">
           An optional checkbox shown when the customer signs — permission to take
           setup photos &amp; a walkthrough video for social media. It doesn&apos;t
-          block signing.
+          block signing. Supports markdown — use the Preview tab to check it.
         </p>
-        <textarea
-          rows={3}
-          value={consentText}
-          onChange={(e) => setConsentText(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-brand focus:outline-none"
-        />
+        <MarkdownField value={consentText} onChange={setConsentText} rows={6} />
         <div className="mt-2 flex items-center gap-3">
           <button
             onClick={saveBiz}
@@ -427,12 +418,7 @@ export default function SettingsPage() {
           <p className="text-gray-400">Loading…</p>
         ) : (
           <>
-            <textarea
-              rows={18}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-brand focus:outline-none"
-            />
+            <MarkdownField value={text} onChange={setText} rows={18} mono />
             <div className="mt-3 flex items-center gap-3">
               <button
                 onClick={handleSave}

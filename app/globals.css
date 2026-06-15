@@ -10,6 +10,47 @@ body {
   @apply bg-gray-50 text-ink antialiased;
 }
 
+/* Rendered markdown (waiver, consent, release text). */
+.md > :first-child {
+  margin-top: 0;
+}
+.md h1 {
+  @apply mb-1 mt-3 text-base font-bold;
+}
+.md h2 {
+  @apply mb-1 mt-3 text-sm font-bold;
+}
+.md h3 {
+  @apply mb-1 mt-2 text-sm font-semibold;
+}
+.md p {
+  @apply mb-2;
+}
+.md strong {
+  @apply font-semibold;
+}
+.md em {
+  @apply italic;
+}
+.md ul {
+  @apply mb-2 list-disc pl-5;
+}
+.md ol {
+  @apply mb-2 list-decimal pl-5;
+}
+.md li {
+  @apply mb-0.5;
+}
+.md a {
+  @apply text-brand underline;
+}
+.md hr {
+  @apply my-3 border-gray-200;
+}
+.md blockquote {
+  @apply border-l-2 border-gray-300 pl-3 italic text-gray-600;
+}
+
 @media print {
   .no-print {
     display: none !important;
