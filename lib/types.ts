@@ -48,15 +48,15 @@ export function itemName(i: { key: string; label: string; description?: string }
 
 // Canonical catalog used to render a fresh order form.
 export const ITEM_CATALOG: { key: string; label: string; options?: string[] }[] = [
-  { key: 'tables', label: 'Tables', options: ['Round', 'Square', 'Folding'] },
-  { key: 'chairs', label: 'Chairs', options: ['Wood', 'White'] },
-  { key: 'jumpers', label: 'Jumpers', options: ['Regular', 'Big Slide', 'Dbl Slide'] },
-  { key: 'bathrooms', label: 'Bathrooms', options: ['Single', 'Hand Wash'] },
+  { key: 'tables', label: 'Tables', options: ['Round', 'Square', 'Folding', 'Kids'] },
+  { key: 'chairs', label: 'Chairs', options: ['Wood', 'White', 'Kids'] },
+  { key: 'jumpers', label: 'Jumpers', options: ['Regular', 'Big Slide', 'Dbl Slide', 'Obstacles', 'Slide'] },
+  { key: 'bathrooms', label: 'Bathrooms', options: ['Single', 'Hand Wash Inside', 'Hand Wash Outside'] },
   { key: 'helium', label: 'Helium' },
   { key: 'tablecloths', label: 'Tablecloths', options: ['Round', 'Rectangle'] },
   { key: 'seat_covers', label: 'Seat Covers' },
   { key: 'balloons', label: 'Balloons' },
-  { key: 'tents', label: 'Tents', options: ['10x30', '14x20', '14x30', '20x20', '20x30', '20x40'] },
+  { key: 'tents', label: 'Tents', options: ['10x20', '10x30', '16x20', '16x30', '20x20', '20x30', '20x40', '30x30', '30x40', 'Other'] },
   { key: 'heaters', label: 'Heaters' },
 ]
 
