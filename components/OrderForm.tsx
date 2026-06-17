@@ -74,6 +74,8 @@ export default function OrderForm({
   const [depositManual, setDepositManual] = useState(mode === 'edit')
   const [taxManual, setTaxManual] = useState(mode === 'edit')
   const [taxRate, setTaxRate] = useState(0)
+  // Google Places suggestions on the Address field. Off by default; the owner
+  // flips it on per-order from the toggle above the Address field.
   const [addressAutocomplete, setAddressAutocomplete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -87,7 +89,6 @@ export default function OrderForm({
   useEffect(() => {
     getBusinessSettings().then((b) => {
       setTaxRate(b.taxRate)
-      setAddressAutocomplete(b.addressAutocomplete)
       if (mode === 'create') {
         setDraft((d) => ({
           ...d,
@@ -379,6 +380,14 @@ export default function OrderForm({
               className={`${inputCls} w-full`}
             />
           </Field>
+          <label className="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <input
+              type="checkbox"
+              checked={addressAutocomplete}
+              onChange={(e) => setAddressAutocomplete(e.target.checked)}
+            />
+            Find address as I type (Google suggestions)
+          </label>
           <Field label="Address">
             {addressAutocomplete ? (
               <AddressAutocomplete
