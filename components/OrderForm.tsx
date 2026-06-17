@@ -15,6 +15,7 @@ import {
 } from '@/lib/orders'
 import { getBusinessSettings } from '@/lib/settings'
 import TimeSelect from '@/components/TimeSelect'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 import {
   ITEM_CATALOG,
   SURFACE_TYPES,
@@ -73,6 +74,7 @@ export default function OrderForm({
   const [depositManual, setDepositManual] = useState(mode === 'edit')
   const [taxManual, setTaxManual] = useState(mode === 'edit')
   const [taxRate, setTaxRate] = useState(0)
+  const [addressAutocomplete, setAddressAutocomplete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   // Pickup defaults to the next day at the same time as delivery. Once the owner
@@ -85,6 +87,7 @@ export default function OrderForm({
   useEffect(() => {
     getBusinessSettings().then((b) => {
       setTaxRate(b.taxRate)
+      setAddressAutocomplete(b.addressAutocomplete)
       if (mode === 'create') {
         setDraft((d) => ({
           ...d,
@@ -377,14 +380,39 @@ export default function OrderForm({
             />
           </Field>
           <Field label="Address">
-            <input
-              value={draft.customer.address}
-              onChange={(e) =>
-                patch((d) => ({ ...d, customer: { ...d.customer, address: e.target.value } }))
-              }
-              placeholder="Street address"
-              className={`${inputCls} w-full`}
-            />
+            {addressAutocomplete ? (
+              <AddressAutocomplete
+                value={draft.customer.address}
+                onChange={(v) =>
+                  patch((d) => ({ ...d, customer: { ...d.customer, address: v } }))
+                }
+                onSelect={(parts) =>
+                  patch((d) => ({
+                    ...d,
+                    customer: {
+                      ...d.customer,
+                      address: parts.address || d.customer.address,
+                      // Only overwrite city/state/zip when Places returned a value,
+                      // so a partial match never blanks out fields the owner typed.
+                      city: parts.city || d.customer.city,
+                      state: parts.state || d.customer.state,
+                      zip: parts.zip || d.customer.zip,
+                    },
+                  }))
+                }
+                placeholder="Start typing the street address…"
+                className={`${inputCls} w-full`}
+              />
+            ) : (
+              <input
+                value={draft.customer.address}
+                onChange={(e) =>
+                  patch((d) => ({ ...d, customer: { ...d.customer, address: e.target.value } }))
+                }
+                placeholder="Street address"
+                className={`${inputCls} w-full`}
+              />
+            )}
           </Field>
           <Field label="Apt / Suite / Unit">
             <input
