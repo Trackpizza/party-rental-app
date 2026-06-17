@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 // 15-minute options, reordered to start at 8:00 AM (business hours first),
 // with midnight–7:45 AM moved to the end so you don't scroll past unused hours.
@@ -60,6 +60,12 @@ export default function TimeSelect({
 }) {
   const listId = useId().replace(/:/g, '')
   const [text, setText] = useState(() => toLabel(value))
+
+  // Reflect external value changes (e.g. pickup time auto-filled from the
+  // delivery time) without clobbering what the user is currently typing.
+  useEffect(() => {
+    setText((prev) => (parseTime(prev) === value ? prev : toLabel(value)))
+  }, [value])
 
   function handle(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value
