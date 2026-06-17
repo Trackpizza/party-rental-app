@@ -28,6 +28,10 @@ export default function OrderDetailPage() {
   const [cc, setCc] = useState('')
   const [sendingLink, setSendingLink] = useState(false)
   const [sendMsg, setSendMsg] = useState('')
+  const [dlNote, setDlNote] = useState('')
+  const [dlCc, setDlCc] = useState('')
+  const [sendingDl, setSendingDl] = useState(false)
+  const [dlMsg, setDlMsg] = useState('')
   const [rcptTo, setRcptTo] = useState('')
   const [rcptCc, setRcptCc] = useState('')
   const [rcptBcc, setRcptBcc] = useState('')
@@ -86,6 +90,27 @@ export default function OrderDetailPage() {
       setSendMsg(`Error: ${e.message}`)
     } finally {
       setSendingLink(false)
+    }
+  }
+
+  async function sendDlRetake() {
+    if (!order) return
+    setSendingDl(true)
+    setDlMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/send-dl-retake`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: dlNote, cc: dlCc }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setDlMsg(`✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
+      setDlNote('')
+    } catch (e: any) {
+      setDlMsg(`Error: ${e.message}`)
+    } finally {
+      setSendingDl(false)
     }
   }
 
@@ -423,16 +448,39 @@ export default function OrderDetailPage() {
               License photo blurry?
             </p>
             <p className="mb-3 text-xs text-gray-500">
-              Send the customer their link — they&apos;ll see a &quot;Retake license
-              photo&quot; button on the signed screen. The new photo appears here;
-              delete the blurry one above.
+              {order.customer.email
+                ? <>Emails <span className="font-medium text-gray-700">{order.customer.email}</span> a &quot;Retake license photo&quot; link. The new photo appears here — delete the blurry one above. Signature stays as is.</>
+                : 'No email on file — add one to the order, or use Text / Share / Copy link below.'}
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+
+            <textarea
+              rows={2}
+              value={dlNote}
+              onChange={(e) => setDlNote(e.target.value)}
+              placeholder="Add a personal note (optional) — appears in a green box at the top of the email…"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            />
+            <input
+              type="email"
+              value={dlCc}
+              onChange={(e) => setDlCc(e.target.value)}
+              placeholder="CC (optional) — e.g. spouse's email"
+              className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand focus:outline-none"
+            />
+
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                onClick={sendDlRetake}
+                disabled={!order.customer.email || sendingDl}
+                className="rounded-lg bg-brand px-5 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {sendingDl ? 'Sending…' : '✉️ Send DL retake'}
+              </button>
               <TextCustomer
                 phone={order.customer.phone}
                 url={link}
                 text="Your driver's license photo came out blurry — please retake it here:"
-                label="Ask customer to retake"
+                label="Text customer"
                 className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
               />
               <ShareButton
@@ -442,6 +490,7 @@ export default function OrderDetailPage() {
                 className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
               />
             </div>
+            {dlMsg && <p className="mt-2 text-sm text-gray-600">{dlMsg}</p>}
           </div>
         )}
       </section>
