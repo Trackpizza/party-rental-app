@@ -52,6 +52,7 @@ export default function AddressAutocomplete({
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
+  const [loading, setLoading] = useState(false)
 
   // Load the Places library on demand, memoized so it only loads once. Returns
   // null if there's no key or Maps fails (caller falls back to a plain input).
@@ -98,7 +99,13 @@ export default function AddressAutocomplete({
     }
     // Wait for the library — this is what makes the first keystroke work even
     // before the Maps script has finished loading (no toggle-off/on needed).
+    // Show a loading hint while the script downloads so the field isn't blank.
+    if (!placesLib.current) {
+      setLoading(true)
+      setOpen(true)
+    }
     const lib = await getPlacesLib()
+    setLoading(false)
     if (!lib?.AutocompleteSuggestion) {
       setSuggestions([])
       setOpen(false)
@@ -197,6 +204,9 @@ export default function AddressAutocomplete({
       />
       {open && (
         <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+          {loading && suggestions.length === 0 && (
+            <li className="px-3 py-2 text-sm text-gray-400">Loading suggestions…</li>
+          )}
           {suggestions.map((p, i) => (
             <li
               key={i}
