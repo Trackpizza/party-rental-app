@@ -417,6 +417,33 @@ export default function OrderDetailPage() {
             Auto-deletes {new Date(order.dlPurgeAfter).toLocaleDateString()} (30 days after event).
           </p>
         )}
+        {order.signature && (order.dlPhotos?.length || 0) > 0 && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <p className="mb-1 text-sm font-medium text-gray-700">
+              License photo blurry?
+            </p>
+            <p className="mb-3 text-xs text-gray-500">
+              Send the customer their link — they&apos;ll see a &quot;Retake license
+              photo&quot; button on the signed screen. The new photo appears here;
+              delete the blurry one above.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <TextCustomer
+                phone={order.customer.phone}
+                url={link}
+                text="Your driver's license photo came out blurry — please retake it here:"
+                label="Ask customer to retake"
+                className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+              />
+              <ShareButton
+                url={link}
+                title={`${business} — retake license photo`}
+                text="Your driver's license photo came out blurry — please retake it here:"
+                className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+              />
+            </div>
+          </div>
+        )}
       </section>
 
       <SectionDivider />
