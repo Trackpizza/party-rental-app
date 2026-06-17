@@ -45,6 +45,7 @@ export default function AddressAutocomplete({
 }) {
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   const placesLib = useRef<any>(null)
+  const libPromise = useRef<Promise<any> | null>(null)
   const sessionToken = useRef<any>(null)
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -52,23 +53,30 @@ export default function AddressAutocomplete({
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
 
-  // Load the Places library once.
-  useEffect(() => {
-    if (!key) return
-    let cancelled = false
-    loadMaps(key)
-      .then(async () => {
-        const g = (window as any).google
-        if (cancelled || !g?.maps?.importLibrary) return
-        placesLib.current = await g.maps.importLibrary('places')
-      })
-      .catch(() => {
-        /* fall back to plain input */
-      })
-    return () => {
-      cancelled = true
+  // Load the Places library on demand, memoized so it only loads once. Returns
+  // null if there's no key or Maps fails (caller falls back to a plain input).
+  function getPlacesLib(): Promise<any> {
+    if (placesLib.current) return Promise.resolve(placesLib.current)
+    if (!key) return Promise.resolve(null)
+    if (!libPromise.current) {
+      libPromise.current = loadMaps(key)
+        .then(async () => {
+          const g = (window as any).google
+          if (!g?.maps?.importLibrary) return null
+          placesLib.current = await g.maps.importLibrary('places')
+          return placesLib.current
+        })
+        .catch(() => null)
     }
-  }, [key])
+    return libPromise.current
+  }
+
+  // Kick off the load as soon as the field appears, so the library is usually
+  // ready by the time the user types (and the first keystroke awaits it anyway).
+  useEffect(() => {
+    getPlacesLib()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Close the dropdown when clicking outside.
   useEffect(() => {
@@ -80,13 +88,20 @@ export default function AddressAutocomplete({
   }, [])
 
   async function fetchSuggestions(input: string) {
-    const lib = placesLib.current
-    if (!lib?.AutocompleteSuggestion || !input.trim()) {
+    if (!input.trim()) {
       setSuggestions([])
       setOpen(false)
       // Empty field = no active session; drop the token so the next address
       // starts a fresh one.
       sessionToken.current = null
+      return
+    }
+    // Wait for the library — this is what makes the first keystroke work even
+    // before the Maps script has finished loading (no toggle-off/on needed).
+    const lib = await getPlacesLib()
+    if (!lib?.AutocompleteSuggestion) {
+      setSuggestions([])
+      setOpen(false)
       return
     }
     try {
