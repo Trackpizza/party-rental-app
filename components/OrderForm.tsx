@@ -393,26 +393,23 @@ export default function OrderForm({
               className={`${inputCls} w-full`}
             />
           </Field>
-          <div>
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-x-2">
-              <span className="text-sm font-medium text-gray-700">Address</span>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-                <input
-                  type="checkbox"
-                  checked={addressAutocomplete}
-                  onChange={(e) => {
-                    const on = e.target.checked
-                    setAddressAutocomplete(on)
-                    try {
-                      localStorage.setItem(ADDR_AC_KEY, on ? '1' : '0')
-                    } catch {
-                      /* localStorage unavailable — choice just won't persist */
-                    }
-                  }}
-                />
-                Find address as I type (Google suggestions)
-              </label>
-            </div>
+          <label className="flex items-center gap-2 text-xs font-medium text-gray-500 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={addressAutocomplete}
+              onChange={(e) => {
+                const on = e.target.checked
+                setAddressAutocomplete(on)
+                try {
+                  localStorage.setItem(ADDR_AC_KEY, on ? '1' : '0')
+                } catch {
+                  /* localStorage unavailable — choice just won't persist */
+                }
+              }}
+            />
+            Find address as I type (Google suggestions)
+          </label>
+          <Field label="Address">
             {addressAutocomplete ? (
               <AddressAutocomplete
                 value={draft.customer.address}
@@ -446,7 +443,7 @@ export default function OrderForm({
                 className={`${inputCls} w-full`}
               />
             )}
-          </div>
+          </Field>
           <Field label="Apt / Suite / Unit">
             <input
               value={draft.customer.address2}
