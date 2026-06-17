@@ -198,6 +198,7 @@ export default function OrderForm({
   function toggleSurface(s: SurfaceType) {
     patch((d) => {
       const has = d.event.surfaces.includes(s)
+      const willHave = !has
       return {
         ...d,
         event: {
@@ -205,6 +206,9 @@ export default function OrderForm({
           surfaces: has
             ? d.event.surfaces.filter((x) => x !== s)
             : [...d.event.surfaces, s],
+          // Checking "Park" implies a public venue — flip Property type to Public.
+          propertyType:
+            s === 'park' && willHave ? 'public' : d.event.propertyType,
         },
       }
     })
