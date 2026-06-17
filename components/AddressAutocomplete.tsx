@@ -84,6 +84,9 @@ export default function AddressAutocomplete({
     if (!lib?.AutocompleteSuggestion || !input.trim()) {
       setSuggestions([])
       setOpen(false)
+      // Empty field = no active session; drop the token so the next address
+      // starts a fresh one.
+      sessionToken.current = null
       return
     }
     try {
@@ -101,9 +104,13 @@ export default function AddressAutocomplete({
       setSuggestions(preds)
       setOpen(preds.length > 0)
       setActive(-1)
-    } catch {
+    } catch (err) {
+      // Most likely an expired/over-used session token. Discard it so the next
+      // keystroke retries with a fresh one — self-heals without a remount.
+      sessionToken.current = null
       setSuggestions([])
       setOpen(false)
+      console.warn('Address autocomplete request failed; resetting session.', err)
     }
   }
 
