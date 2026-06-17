@@ -1,9 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-// Google Places address autocomplete. Falls back to a plain input when no
-// Maps key is configured, so the form always works.
+// Google Places address autocomplete using the NEW Places API
+// (AutocompleteSuggestion + Place), driving our own styled input and dropdown.
+// The legacy google.maps.places.Autocomplete widget was deprecated, so this
+// uses the supported data API instead. Falls back to a plain input (the value
+// still updates as you type) when no Maps key is set or the library fails.
 let mapsPromise: Promise<void> | null = null
 function loadMaps(key: string): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
@@ -11,7 +14,7 @@ function loadMaps(key: string): Promise<void> {
   if (mapsPromise) return mapsPromise
   mapsPromise = new Promise((resolve, reject) => {
     const s = document.createElement('script')
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&loading=async`
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async`
     s.async = true
     s.onload = () => resolve()
     s.onerror = () => reject(new Error('Google Maps failed to load'))
@@ -40,65 +43,155 @@ export default function AddressAutocomplete({
   className?: string
   placeholder?: string
 }) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  const placesLib = useRef<any>(null)
+  const sessionToken = useRef<any>(null)
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(-1)
 
+  // Load the Places library once.
   useEffect(() => {
-    if (!key || !inputRef.current) return
-    let ac: any
+    if (!key) return
     let cancelled = false
     loadMaps(key)
       .then(async () => {
         const g = (window as any).google
-        if (cancelled || !g?.maps?.importLibrary || !inputRef.current) return
-        const places = await g.maps.importLibrary('places')
-        ac = new places.Autocomplete(inputRef.current, {
-          types: ['address'],
-          componentRestrictions: { country: 'us' },
-          fields: ['address_components'],
-        })
-        ac.addListener('place_changed', () => {
-          const comp = ac.getPlace()?.address_components || []
-          const get = (t: string) =>
-            comp.find((c: any) => c.types.includes(t))
-          const streetNum = get('street_number')?.long_name || ''
-          const route = get('route')?.long_name || ''
-          onSelect({
-            address: [streetNum, route].filter(Boolean).join(' '),
-            // Prefer the neighborhood/district (e.g. "North Hollywood") over the
-            // incorporated city ("Los Angeles") since deliveries go by area.
-            city:
-              get('neighborhood')?.long_name ||
-              get('sublocality_level_1')?.long_name ||
-              get('sublocality')?.long_name ||
-              get('postal_town')?.long_name ||
-              get('locality')?.long_name ||
-              '',
-            state: get('administrative_area_level_1')?.short_name || '',
-            zip: get('postal_code')?.long_name || '',
-          })
-        })
+        if (cancelled || !g?.maps?.importLibrary) return
+        placesLib.current = await g.maps.importLibrary('places')
       })
       .catch(() => {
         /* fall back to plain input */
       })
     return () => {
       cancelled = true
-      if (ac && (window as any).google) {
-        ;(window as any).google.maps.event.clearInstanceListeners(ac)
-      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
+  // Close the dropdown when clicking outside.
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [])
+
+  async function fetchSuggestions(input: string) {
+    const lib = placesLib.current
+    if (!lib?.AutocompleteSuggestion || !input.trim()) {
+      setSuggestions([])
+      setOpen(false)
+      return
+    }
+    try {
+      // One session token per "type → pick" cycle keeps billing efficient.
+      if (!sessionToken.current && lib.AutocompleteSessionToken) {
+        sessionToken.current = new lib.AutocompleteSessionToken()
+      }
+      const { suggestions: out } =
+        await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input,
+          includedRegionCodes: ['us'],
+          sessionToken: sessionToken.current,
+        })
+      const preds = (out || []).map((s: any) => s.placePrediction).filter(Boolean)
+      setSuggestions(preds)
+      setOpen(preds.length > 0)
+      setActive(-1)
+    } catch {
+      setSuggestions([])
+      setOpen(false)
+    }
+  }
+
+  function handleInput(v: string) {
+    onChange(v)
+    if (debounce.current) clearTimeout(debounce.current)
+    debounce.current = setTimeout(() => fetchSuggestions(v), 200)
+  }
+
+  async function choose(pred: any) {
+    setOpen(false)
+    setSuggestions([])
+    try {
+      const place = pred.toPlace()
+      await place.fetchFields({ fields: ['addressComponents'] })
+      const comp = place.addressComponents || []
+      const get = (t: string) => comp.find((c: any) => c.types.includes(t))
+      const streetNum = get('street_number')?.longText || ''
+      const route = get('route')?.longText || ''
+      onSelect({
+        address: [streetNum, route].filter(Boolean).join(' '),
+        // Prefer the neighborhood/district (e.g. "North Hollywood") over the
+        // incorporated city ("Los Angeles") since deliveries go by area.
+        city:
+          get('neighborhood')?.longText ||
+          get('sublocality_level_1')?.longText ||
+          get('sublocality')?.longText ||
+          get('postal_town')?.longText ||
+          get('locality')?.longText ||
+          '',
+        state: get('administrative_area_level_1')?.shortText || '',
+        zip: get('postal_code')?.longText || '',
+      })
+    } catch {
+      // Details fetch failed — keep the text the customer picked.
+      const txt = pred?.text?.text || ''
+      if (txt) onChange(txt)
+    }
+    // Selection ends the billing session; start fresh next time.
+    sessionToken.current = null
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActive((a) => Math.min(a + 1, suggestions.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive((a) => Math.max(a - 1, 0))
+    } else if (e.key === 'Enter' && active >= 0) {
+      e.preventDefault()
+      choose(suggestions[active])
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
   return (
-    <input
-      ref={inputRef}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      autoComplete="off"
-      className={className}
-    />
+    <div ref={boxRef} className="relative w-full">
+      <input
+        value={value}
+        onChange={(e) => handleInput(e.target.value)}
+        onKeyDown={onKeyDown}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        placeholder={placeholder}
+        autoComplete="off"
+        className={className}
+      />
+      {open && (
+        <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+          {suggestions.map((p, i) => (
+            <li
+              key={i}
+              onMouseDown={(e) => {
+                e.preventDefault()
+                choose(p)
+              }}
+              onMouseEnter={() => setActive(i)}
+              className={`cursor-pointer px-3 py-2 text-sm ${
+                i === active ? 'bg-gray-100' : ''
+              }`}
+            >
+              {p?.text?.text || ''}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
