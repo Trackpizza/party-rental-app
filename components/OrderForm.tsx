@@ -27,6 +27,9 @@ import {
 const inputCls =
   'rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none'
 
+// Remembers the owner's address-suggestions toggle across sessions.
+const ADDR_AC_KEY = 'pr_address_autocomplete'
+
 function Field({
   label,
   children,
@@ -74,8 +77,9 @@ export default function OrderForm({
   const [depositManual, setDepositManual] = useState(mode === 'edit')
   const [taxManual, setTaxManual] = useState(mode === 'edit')
   const [taxRate, setTaxRate] = useState(0)
-  // Google Places suggestions on the Address field. Off by default; the owner
-  // flips it on per-order from the toggle above the Address field.
+  // Google Places suggestions on the Address field. Off the very first time;
+  // after that it remembers the owner's last choice (persisted in localStorage),
+  // so if he turns it on it stays on across sessions until he turns it off.
   const [addressAutocomplete, setAddressAutocomplete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -101,6 +105,15 @@ export default function OrderForm({
       }
     })
   }, [mode])
+
+  // Restore the owner's last address-suggestions choice (persists across sessions).
+  useEffect(() => {
+    try {
+      setAddressAutocomplete(localStorage.getItem(ADDR_AC_KEY) === '1')
+    } catch {
+      /* localStorage unavailable — fall back to off */
+    }
+  }, [])
 
   // Recompute totals, honoring manual tax / deposit overrides + tax rate.
   function withTotals(next: OrderDraft): OrderDraft {
@@ -384,7 +397,15 @@ export default function OrderForm({
             <input
               type="checkbox"
               checked={addressAutocomplete}
-              onChange={(e) => setAddressAutocomplete(e.target.checked)}
+              onChange={(e) => {
+                const on = e.target.checked
+                setAddressAutocomplete(on)
+                try {
+                  localStorage.setItem(ADDR_AC_KEY, on ? '1' : '0')
+                } catch {
+                  /* localStorage unavailable — choice just won't persist */
+                }
+              }}
             />
             Find address as I type (Google suggestions)
           </label>
