@@ -139,6 +139,9 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <p className="font-semibold">
                       {customerName(o.customer) || 'Unnamed customer'}
+                      {o.event.eventName && (
+                        <span className="font-normal text-gray-500"> · {o.event.eventName}</span>
+                      )}
                     </p>
                     <p className="truncate text-sm text-gray-500">
                       {o.customer.phone && <span>{o.customer.phone} · </span>}

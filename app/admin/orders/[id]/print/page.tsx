@@ -87,6 +87,9 @@ export default function PrintContractPage() {
 
       {/* customer */}
       <div className="mt-3 rounded border border-gray-300 p-3 text-sm">
+        {order.event.eventName && (
+          <p className="mb-1"><b>Event:</b> {order.event.eventName}</p>
+        )}
         <p><b>{customerName(order.customer)}</b> &nbsp; {order.customer.phone}</p>
         <p className="text-gray-700">
           {order.customer.address}{order.customer.address2 ? `, ${order.customer.address2}` : ''}{order.customer.city ? `, ${order.customer.city}` : ''}{order.customer.state ? `, ${order.customer.state}` : ''} {order.customer.zip}

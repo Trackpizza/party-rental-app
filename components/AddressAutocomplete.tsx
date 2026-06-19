@@ -78,20 +78,16 @@ export default function AddressAutocomplete({
   // null if there's no key or Maps fails (caller falls back to a plain input).
   function getPlacesLib(): Promise<any> {
     if (placesLib.current) return Promise.resolve(placesLib.current)
-    console.log('[ADDR] getPlacesLib called. key present:', !!key)
     if (!key) return Promise.resolve(null)
     if (!libPromise.current) {
-      console.log('[ADDR] bootstrapping maps…')
       bootstrapMaps(key)
       libPromise.current = (window as any).google.maps
         .importLibrary('places')
         .then((lib: any) => {
           placesLib.current = lib
-          console.log('[ADDR] places lib loaded. AutocompleteSuggestion:', !!lib?.AutocompleteSuggestion)
           return lib
         })
-        .catch((e: any) => {
-          console.warn('[ADDR] importLibrary FAILED', e)
+        .catch(() => {
           libPromise.current = null // allow a retry on the next keystroke
           return null
         })
@@ -116,7 +112,6 @@ export default function AddressAutocomplete({
   }, [])
 
   async function fetchSuggestions(input: string) {
-    console.log('[ADDR] fetchSuggestions:', JSON.stringify(input), 'libReady:', !!placesLib.current)
     if (!input.trim()) {
       setSuggestions([])
       setOpen(false)
@@ -151,7 +146,6 @@ export default function AddressAutocomplete({
           sessionToken: sessionToken.current,
         })
       const preds = (out || []).map((s: any) => s.placePrediction).filter(Boolean)
-      console.log('[ADDR] got', preds.length, 'predictions')
       setSuggestions(preds)
       setOpen(preds.length > 0)
       setActive(-1)
@@ -166,7 +160,6 @@ export default function AddressAutocomplete({
   }
 
   function handleInput(v: string) {
-    console.log('[ADDR] handleInput:', JSON.stringify(v))
     onChange(v)
     if (debounce.current) clearTimeout(debounce.current)
     debounce.current = setTimeout(() => fetchSuggestions(v), 200)

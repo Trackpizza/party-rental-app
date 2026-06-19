@@ -69,6 +69,11 @@ export default async function JobPage({ params }: { params: { id: string } }) {
         {/* Where + who */}
         <section className="mt-3 rounded-2xl bg-white p-5 shadow-sm">
           <h2 className="mb-3 font-semibold text-gray-800">Customer · Cliente</h2>
+          {order.event.eventName && (
+            <p className="mb-1 text-sm text-gray-500">
+              Event · Evento: <span className="font-medium text-gray-700">{order.event.eventName}</span>
+            </p>
+          )}
           <p className="font-medium text-gray-800">{customerName(order.customer) || '—'}</p>
           {phone && (
             <a href={telHref} className="mt-1 inline-block text-brand underline">

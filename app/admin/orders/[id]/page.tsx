@@ -219,6 +219,12 @@ export default function OrderDetailPage() {
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Customer &amp; delivery</h2>
         <div className="grid gap-3 text-sm sm:grid-cols-2">
+          {order.event.eventName && (
+            <div className="sm:col-span-2">
+              <p className="text-xs text-gray-400">Event</p>
+              <p className="font-medium text-gray-700">{order.event.eventName}</p>
+            </div>
+          )}
           <div>
             <p className="text-xs text-gray-400">Name</p>
             <p className="font-medium text-gray-700">{customerName(order.customer) || '—'}</p>

@@ -137,7 +137,11 @@ export default function CalendarPage() {
                   className="block rounded-xl border border-gray-200 p-3 hover:border-brand"
                 >
                   <p className="font-medium">
-                    {customerName(o.customer) || 'Unnamed'} · {money(o.totals.total)}
+                    {customerName(o.customer) || 'Unnamed'}
+                    {o.event.eventName && (
+                      <span className="font-normal text-gray-500"> · {o.event.eventName}</span>
+                    )}
+                    {' · '}{money(o.totals.total)}
                   </p>
                   <p className="text-sm text-gray-500">
                     {o.items.filter((i) => i.qty).map((i) => `${i.qty} ${itemName(i)}`).join(', ') ||
