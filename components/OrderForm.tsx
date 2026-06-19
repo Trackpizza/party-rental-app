@@ -267,12 +267,22 @@ export default function OrderForm({
       {/* Dates & times */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-4 font-semibold text-gray-800">Dates</h2>
-        <div className="mb-4 max-w-xs">
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Today's date">
             <input
               type="date"
               value={draft.todaysDate}
               onChange={(e) => patch((d) => ({ ...d, todaysDate: e.target.value }))}
+              className={`${inputCls} w-full`}
+            />
+          </Field>
+          <Field label="Event Name">
+            <input
+              value={draft.event.eventName ?? ''}
+              onChange={(e) =>
+                patch((d) => ({ ...d, event: { ...d.event, eventName: e.target.value } }))
+              }
+              placeholder="e.g. Maria's Quinceañera"
               className={`${inputCls} w-full`}
             />
           </Field>

@@ -133,6 +133,7 @@ export function customerName(c: {
 }
 
 export interface EventInfo {
+  eventName?: string     // optional label for the event (e.g. "Maria's Quinceañera")
   eventDate: string      // ISO date — event start date
   deliveryTime: string
   pickupDate: string     // ISO date — pickup date
