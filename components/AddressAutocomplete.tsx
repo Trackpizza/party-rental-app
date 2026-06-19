@@ -7,20 +7,40 @@ import { useEffect, useRef, useState } from 'react'
 // The legacy google.maps.places.Autocomplete widget was deprecated, so this
 // uses the supported data API instead. Falls back to a plain input (the value
 // still updates as you type) when no Maps key is set or the library fails.
-let mapsPromise: Promise<void> | null = null
-function loadMaps(key: string): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-  if ((window as any).google?.maps?.importLibrary) return Promise.resolve()
-  if (mapsPromise) return mapsPromise
-  mapsPromise = new Promise((resolve, reject) => {
-    const s = document.createElement('script')
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async`
-    s.async = true
-    s.onload = () => resolve()
-    s.onerror = () => reject(new Error('Google Maps failed to load'))
-    document.head.appendChild(s)
-  })
-  return mapsPromise
+// Google Maps "dynamic library import" bootstrap (a clean version of Google's
+// official loader snippet). It defines google.maps.importLibrary SYNCHRONOUSLY,
+// so we can call it immediately instead of waiting for a <script> onload — which
+// can fire BEFORE importLibrary exists. That timing gap was the real bug: the
+// field only worked after a toggle off/on because the remount happened to land
+// after importLibrary had finally appeared.
+function bootstrapMaps(key: string): void {
+  if (typeof window === 'undefined') return
+  const w = window as any
+  if (w.google?.maps?.importLibrary) return
+  const google = (w.google = w.google || {})
+  const maps = (google.maps = google.maps || {})
+  const want = new Set<string>()
+  let loading: Promise<void> | null = null
+  const CB = '__ib__'
+  const startLoad = (): Promise<void> =>
+    loading ||
+    (loading = new Promise<void>((resolve, reject) => {
+      const params = new URLSearchParams()
+      params.set('libraries', Array.from(want).join(','))
+      params.set('key', key)
+      params.set('v', 'weekly')
+      params.set('callback', 'google.maps.' + CB)
+      maps[CB] = resolve
+      const s = document.createElement('script')
+      s.src = 'https://maps.googleapis.com/maps/api/js?' + params.toString()
+      s.onerror = () => reject(new Error('Google Maps could not load.'))
+      document.head.append(s)
+    }))
+  // The real importLibrary (defined once the script loads) replaces this stub.
+  maps.importLibrary = (name: string): Promise<any> => {
+    want.add(name)
+    return startLoad().then(() => maps.importLibrary(name))
+  }
 }
 
 export interface AddressParts {
@@ -61,22 +81,22 @@ export default function AddressAutocomplete({
     console.log('[ADDR] getPlacesLib called. key present:', !!key)
     if (!key) return Promise.resolve(null)
     if (!libPromise.current) {
-      console.log('[ADDR] starting loadMaps…')
-      libPromise.current = loadMaps(key)
-        .then(async () => {
-          const g = (window as any).google
-          console.log('[ADDR] loadMaps resolved. importLibrary present:', !!g?.maps?.importLibrary)
-          if (!g?.maps?.importLibrary) return null
-          placesLib.current = await g.maps.importLibrary('places')
-          console.log('[ADDR] places lib loaded. AutocompleteSuggestion:', !!placesLib.current?.AutocompleteSuggestion)
-          return placesLib.current
+      console.log('[ADDR] bootstrapping maps…')
+      bootstrapMaps(key)
+      libPromise.current = (window as any).google.maps
+        .importLibrary('places')
+        .then((lib: any) => {
+          placesLib.current = lib
+          console.log('[ADDR] places lib loaded. AutocompleteSuggestion:', !!lib?.AutocompleteSuggestion)
+          return lib
         })
-        .catch((e) => {
-          console.warn('[ADDR] loadMaps/importLibrary FAILED', e)
+        .catch((e: any) => {
+          console.warn('[ADDR] importLibrary FAILED', e)
+          libPromise.current = null // allow a retry on the next keystroke
           return null
         })
     }
-    return libPromise.current
+    return libPromise.current ?? Promise.resolve(null)
   }
 
   // Kick off the load as soon as the field appears, so the library is usually
