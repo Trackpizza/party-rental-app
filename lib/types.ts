@@ -169,8 +169,18 @@ export interface Order {
   // payments
   paymentMethod: PaymentMethod | null
   squareLink: string | null
+  // Auto-generated Square deposit payment link (Phase 1). squareDepositOrderId
+  // is the Square order id we match incoming webhooks against; squareDepositAmount
+  // is the deposit (in dollars) the link was created for, to flag a stale link if
+  // the order total later changes.
+  squareDepositLink: string | null
+  squareDepositOrderId: string | null
+  squareDepositAmount: number | null
   depositPaid: boolean
   depositPaidAt: string | null
+  // Set when the deposit was marked paid automatically by the Square webhook
+  // (vs. Oscar marking it by hand).
+  depositPaidVia: 'square' | 'manual' | null
   balancePaid: boolean
   balancePaidAt: string | null
 

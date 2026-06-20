@@ -32,6 +32,8 @@ export default function OrderDetailPage() {
   const [dlCc, setDlCc] = useState('')
   const [sendingDl, setSendingDl] = useState(false)
   const [dlMsg, setDlMsg] = useState('')
+  const [sqLoading, setSqLoading] = useState(false)
+  const [sqMsg, setSqMsg] = useState('')
   const [rcptTo, setRcptTo] = useState('')
   const [rcptCc, setRcptCc] = useState('')
   const [rcptBcc, setRcptBcc] = useState('')
@@ -111,6 +113,22 @@ export default function OrderDetailPage() {
       setDlMsg(`Error: ${e.message}`)
     } finally {
       setSendingDl(false)
+    }
+  }
+
+  async function createSquareDepositLink() {
+    if (!order) return
+    setSqLoading(true)
+    setSqMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/square-link`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setSqMsg(`✓ Deposit link ready (${money(json.amount)})`)
+    } catch (e: any) {
+      setSqMsg(`Error: ${e.message}`)
+    } finally {
+      setSqLoading(false)
     }
   }
 
@@ -397,18 +415,64 @@ export default function OrderDetailPage() {
           Method: <span className="font-medium capitalize text-gray-700">{order.paymentMethod || '—'}</span>
           {order.paymentMethod === 'zelle' && zelle && <> · Zelle: <span className="font-medium text-gray-700">{zelle}</span></>}
         </p>
-        {order.paymentMethod === 'square' && order.squareLink && (
+        {order.paymentMethod === 'square' && order.squareLink && !order.squareDepositLink && (
           <a href={order.squareLink} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-brand underline">
             Square payment link
           </a>
         )}
+
+        {/* Square deposit link (auto-generated) */}
+        <div className="no-print mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-gray-700">
+              Square deposit link {order.depositPaid && <span className="text-green-600">· Paid</span>}
+            </p>
+            <button
+              onClick={createSquareDepositLink}
+              disabled={sqLoading || order.depositPaid}
+              className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {sqLoading
+                ? 'Creating…'
+                : order.squareDepositLink
+                  ? '↻ Regenerate'
+                  : '＋ Create deposit link'}
+            </button>
+          </div>
+          {order.squareDepositLink ? (
+            <div className="mt-2 space-y-1">
+              <a
+                href={order.squareDepositLink}
+                target="_blank"
+                rel="noreferrer"
+                className="block break-all text-sm text-brand underline"
+              >
+                {order.squareDepositLink}
+              </a>
+              {order.squareDepositAmount != null &&
+                order.squareDepositAmount !== order.totals.deposit && (
+                  <p className="text-xs text-amber-600">
+                    ⚠️ Deposit is now {money(order.totals.deposit)} but this link is for{' '}
+                    {money(order.squareDepositAmount)} — regenerate to update.
+                  </p>
+                )}
+            </div>
+          ) : (
+            <p className="mt-1 text-xs text-gray-500">
+              Generates a Square checkout link for the deposit ({money(order.totals.deposit)}). It
+              marks the deposit paid automatically once the customer pays.
+            </p>
+          )}
+          {sqMsg && <p className="mt-2 text-sm text-gray-600">{sqMsg}</p>}
+        </div>
+
         <div className="no-print mt-4 flex flex-wrap gap-3">
           <PaidToggle
             paid={order.depositPaid}
             label="Mark deposit paid"
-            paidLabel={`Deposit paid (${money(order.totals.deposit)})`}
-            onMark={() => act({ depositPaid: true, depositPaidAt: new Date().toISOString() })}
-            onUndo={() => act({ depositPaid: false, depositPaidAt: null })}
+            paidLabel={`Deposit paid (${money(order.totals.deposit)})${order.depositPaidVia === 'square' ? ' · via Square' : ''}`}
+            onMark={() => act({ depositPaid: true, depositPaidAt: new Date().toISOString(), depositPaidVia: 'manual' })}
+            onUndo={() => act({ depositPaid: false, depositPaidAt: null, depositPaidVia: null })}
           />
           <PaidToggle
             paid={order.balancePaid}

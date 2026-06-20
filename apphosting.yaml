@@ -72,3 +72,25 @@ env:
   - variable: GMAIL_APP_PASSWORD
     secret: gmail-app-password
     availability: [RUNTIME]
+
+  # --- Square payments (Phase 1: deposit link + auto-mark-paid webhook) ---
+  # "sandbox" for safe testing (test cards), "production" for real charges.
+  - variable: SQUARE_ENV
+    value: "sandbox"
+    availability: [RUNTIME]
+  # Location id from the client's Square account (not secret). Fill in once known.
+  - variable: SQUARE_LOCATION_ID
+    value: ""
+    availability: [RUNTIME]
+  # The two secrets below must exist in Secret Manager BEFORE uncommenting them —
+  # an undefined secret reference fails the deploy. Until then the feature stays
+  # inert (the admin button reports "Square not configured", nothing breaks).
+  # Create them with:
+  #   firebase apphosting:secrets:set square-access-token
+  #   firebase apphosting:secrets:set square-webhook-signature-key
+  # - variable: SQUARE_ACCESS_TOKEN
+  #   secret: square-access-token
+  #   availability: [RUNTIME]
+  # - variable: SQUARE_WEBHOOK_SIGNATURE_KEY
+  #   secret: square-webhook-signature-key
+  #   availability: [RUNTIME]
