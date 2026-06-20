@@ -41,8 +41,10 @@ export async function POST(
       )
     }
 
-    const name = customerName(order.customer).trim()
-    const title = `Deposit — ${business}${name ? ` (${name})` : ''}`
+    // Title the customer sees on the Square checkout: business + the event (or
+    // customer name) so they recognize what it's for.
+    const label = (order.event.eventName || '').trim() || customerName(order.customer).trim()
+    const title = [business, label, 'Deposit'].filter(Boolean).join(' · ')
     const items = order.items
       .filter((i) => i.qty || (i.options && i.options.length) || i.description)
       .map((i) => itemName(i))
