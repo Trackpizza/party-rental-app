@@ -54,6 +54,29 @@ function nextDayISO(isoDate: string): string {
   return `${dt.getFullYear()}-${mm}-${dd}`
 }
 
+// Readable date from an ISO (YYYY-MM-DD), built from local parts (no TZ shift).
+function readableDate(iso: string): string {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  if (!y || !m || !d) return iso
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+// The auto-filled payment note: "For {event} on {date}". Owner can use as-is,
+// edit, or clear it.
+function defaultPaymentNote(eventName?: string, eventDate?: string): string {
+  const name = (eventName || '').trim()
+  const date = readableDate((eventDate || '').trim())
+  if (name && date) return `For ${name} on ${date}`
+  if (name) return `For ${name}`
+  if (date) return `For your event on ${date}`
+  return ''
+}
+
 // Shared order form, used for both creating a new order and editing an existing
 // one. In edit mode it saves back to the same document (preserving signature,
 // photos, payment flags, etc. that aren't editable here) and shows a warning if
@@ -83,6 +106,10 @@ export default function OrderForm({
   // edits pickup directly, it stops auto-following (so we never clobber it).
   const [pickupDateTouched, setPickupDateTouched] = useState(!!initial.event.pickupDate)
   const [pickupTimeTouched, setPickupTimeTouched] = useState(!!initial.event.pickupTime)
+  // Payment note auto-fills from the event until the owner edits it.
+  const [paymentNoteTouched, setPaymentNoteTouched] = useState(
+    mode === 'edit' ? !!initial.paymentNote : false,
+  )
 
   // Load the saved tax rate + DL purge window. For a brand-new order, also apply
   // the auto tax to the (empty) order; for edits, leave the saved totals alone.
@@ -101,6 +128,14 @@ export default function OrderForm({
       }
     })
   }, [mode])
+
+  // Keep the payment note in sync with "For {event} on {date}" until the owner
+  // edits it (then leave their text alone).
+  useEffect(() => {
+    if (paymentNoteTouched) return
+    const def = defaultPaymentNote(draft.event.eventName, draft.event.eventDate)
+    setDraft((d) => (d.paymentNote === def ? d : { ...d, paymentNote: def }))
+  }, [draft.event.eventName, draft.event.eventDate, paymentNoteTouched])
 
   // Recompute totals, honoring manual tax / deposit overrides + tax rate.
   function withTotals(next: OrderDraft): OrderDraft {
@@ -757,14 +792,36 @@ export default function OrderForm({
           )}
         </div>
         <div className="mt-4">
-          <Field label="Payment note (shows on the Square checkout & for staff)">
-            <input
-              placeholder="e.g. Weekend rate · delivery to backyard · balance due on pickup"
-              value={draft.paymentNote ?? ''}
-              onChange={(e) => patch((d) => ({ ...d, paymentNote: e.target.value }))}
-              className={`${inputCls} w-full`}
-            />
-          </Field>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">
+              Payment note (shows on the Square checkout &amp; for staff)
+            </span>
+            {paymentNoteTouched &&
+              defaultPaymentNote(draft.event.eventName, draft.event.eventDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentNoteTouched(false)
+                    setDraft((d) => ({
+                      ...d,
+                      paymentNote: defaultPaymentNote(d.event.eventName, d.event.eventDate),
+                    }))
+                  }}
+                  className="text-xs font-semibold text-brand hover:underline"
+                >
+                  ↺ Reset to default
+                </button>
+              )}
+          </div>
+          <input
+            placeholder="For {event} on {date}…"
+            value={draft.paymentNote ?? ''}
+            onChange={(e) => {
+              setPaymentNoteTouched(true)
+              setDraft((d) => ({ ...d, paymentNote: e.target.value }))
+            }}
+            className={`${inputCls} mt-1 w-full`}
+          />
         </div>
       </section>
 
