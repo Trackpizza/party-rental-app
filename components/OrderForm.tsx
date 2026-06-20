@@ -27,6 +27,10 @@ import {
 const inputCls =
   'rounded-lg border border-gray-300 px-3 py-2 focus:border-brand focus:outline-none'
 
+// Payment-note cap. Square's checkout title maxes at 255 incl. the business +
+// event prefix, so we limit the note itself so it stays visible, not truncated.
+const NOTE_MAX = 175
+
 function Field({
   label,
   children,
@@ -792,33 +796,47 @@ export default function OrderForm({
           )}
         </div>
         <div className="mt-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-3">
             <span className="text-sm font-medium text-gray-700">
               Payment note (shows on the Square checkout &amp; for staff)
             </span>
-            {paymentNoteTouched &&
-              defaultPaymentNote(draft.event.eventName, draft.event.eventDate) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPaymentNoteTouched(false)
-                    setDraft((d) => ({
-                      ...d,
-                      paymentNote: defaultPaymentNote(d.event.eventName, d.event.eventDate),
-                    }))
-                  }}
-                  className="text-xs font-semibold text-brand hover:underline"
-                >
-                  ↺ Reset to default
-                </button>
-              )}
+            <div className="flex items-center gap-3">
+              {paymentNoteTouched &&
+                defaultPaymentNote(draft.event.eventName, draft.event.eventDate) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentNoteTouched(false)
+                      setDraft((d) => ({
+                        ...d,
+                        paymentNote: defaultPaymentNote(d.event.eventName, d.event.eventDate),
+                      }))
+                    }}
+                    className="text-xs font-semibold text-brand hover:underline"
+                  >
+                    ↺ Reset to default
+                  </button>
+                )}
+              <span
+                className={`text-xs ${
+                  (draft.paymentNote ?? '').length >= NOTE_MAX
+                    ? 'font-semibold text-red-500'
+                    : (draft.paymentNote ?? '').length >= NOTE_MAX - 25
+                      ? 'text-amber-600'
+                      : 'text-gray-400'
+                }`}
+              >
+                {(draft.paymentNote ?? '').length}/{NOTE_MAX}
+              </span>
+            </div>
           </div>
           <input
             placeholder="For {event} on {date}…"
+            maxLength={NOTE_MAX}
             value={draft.paymentNote ?? ''}
             onChange={(e) => {
               setPaymentNoteTouched(true)
-              setDraft((d) => ({ ...d, paymentNote: e.target.value }))
+              setDraft((d) => ({ ...d, paymentNote: e.target.value.slice(0, NOTE_MAX) }))
             }}
             className={`${inputCls} mt-1 w-full`}
           />
