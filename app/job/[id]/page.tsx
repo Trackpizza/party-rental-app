@@ -1,7 +1,9 @@
 import { headers } from 'next/headers'
 import { adminDb } from '@/lib/firebase/admin'
 import { Order, customerName, itemName } from '@/lib/types'
-import { formatTime, fullAddress, mapsHref, money } from '@/lib/orders'
+import { formatTime, fullAddress, mapsHref, money, amountOwed } from '@/lib/orders'
+import { isSquareConfigured } from '@/lib/square'
+import CrewCollect from '@/components/CrewCollect'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +30,8 @@ export default async function JobPage({ params }: { params: { id: string } }) {
   const items = (order.items || []).filter(
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
-  const balance = order.totals.balance
+  const owed = amountOwed(order)
+  const squareReady = isSquareConfigured()
 
   // "Text owner — payment collected": SMS to the business phone (the page itself
   // stays read-only; only the logged-in owner can actually mark it paid).
@@ -43,7 +46,7 @@ export default async function JobPage({ params }: { params: { id: string } }) {
   const adminUrl = host ? `${proto}://${host}/admin/orders/${order.id}` : ''
   const who = customerName(order.customer) || 'the customer'
   const paidMsg =
-    `Payment collected for ${who} — ${money(balance)} balance.` +
+    `Payment collected for ${who} — ${money(owed)}.` +
     (adminUrl ? ` Mark paid: ${adminUrl}` : '')
   const paidSmsHref = `sms:${ownerTel}?body=${encodeURIComponent(paidMsg)}`
 
@@ -142,29 +145,42 @@ export default async function JobPage({ params }: { params: { id: string } }) {
         {/* Money to collect */}
         <section className="mt-3 rounded-2xl bg-white p-5 shadow-sm">
           <h2 className="mb-2 font-semibold text-gray-800">Payment · Pago</h2>
-          {order.balancePaid || !balance ? (
+          {order.balancePaid || owed <= 0 ? (
             <p className="text-sm font-medium text-green-700">
-              ✓ Balance paid — nothing to collect · Saldo pagado
+              ✓ Paid in full — nothing to collect · Pagado
             </p>
           ) : (
             <>
               <p className="text-gray-700">
                 Collect on delivery · Cobrar a la entrega:{' '}
-                <span className="text-lg font-bold text-gray-900">{money(balance)}</span>
+                <span className="text-lg font-bold text-gray-900">{money(owed)}</span>
+                {!order.depositPaid && (
+                  <span className="block text-xs text-gray-400">Full amount — no deposit paid · Monto total</span>
+                )}
               </p>
+
+              {squareReady && (
+                <CrewCollect
+                  orderId={order.id}
+                  initialLink={order.squareBalanceLink}
+                  owed={owed}
+                  phone={order.customer.phone || ''}
+                />
+              )}
+
               {ownerTel && (
-                <>
+                <div className="mt-4 border-t border-gray-100 pt-4">
                   <a
                     href={paidSmsHref}
-                    className="mt-3 inline-block rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white hover:opacity-90"
+                    className="inline-block rounded-lg bg-green-600 px-5 py-2.5 font-semibold text-white hover:opacity-90"
                   >
                     💬 Text owner: payment collected
                   </a>
                   <p className="mt-1 text-xs text-gray-400">
-                    Texts the office that you collected the balance · Avisa a la
-                    oficina. Only the office marks it paid.
+                    For cash/other — texts the office you collected · Para efectivo.
+                    Only the office marks it paid.
                   </p>
-                </>
+                </div>
               )}
             </>
           )}

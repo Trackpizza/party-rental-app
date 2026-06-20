@@ -48,31 +48,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ignored: true })
     }
 
-    const q = await adminDb
+    // The payment's Square order id matches either our deposit link or our
+    // balance/amount-owed link. Look up which.
+    const byDeposit = await adminDb
       .collection('orders')
       .where('squareDepositOrderId', '==', squareOrderId)
       .limit(1)
       .get()
-    if (q.empty) {
-      // Not one of our deposit links (or order deleted) — ack so Square stops retrying.
+    const byBalance = byDeposit.empty
+      ? await adminDb
+          .collection('orders')
+          .where('squareBalanceOrderId', '==', squareOrderId)
+          .limit(1)
+          .get()
+      : null
+
+    const doc = !byDeposit.empty ? byDeposit.docs[0] : byBalance && !byBalance.empty ? byBalance.docs[0] : null
+    if (!doc) {
+      // Not one of our links (or order deleted) — ack so Square stops retrying.
       return NextResponse.json({ ok: true, matched: false })
     }
-
-    const doc = q.docs[0]
+    const isBalance = byDeposit.empty
     const order = { id: doc.id, ...(doc.data() as Omit<Order, 'id'>) }
-    if (order.depositPaid) {
-      return NextResponse.json({ ok: true, alreadyPaid: true })
-    }
+    const now = new Date().toISOString()
 
-    const patch: Partial<Order> = {
-      depositPaid: true,
-      depositPaidAt: new Date().toISOString(),
-      depositPaidVia: 'square',
-      updatedAt: new Date().toISOString(),
+    let patch: Partial<Order>
+    if (isBalance) {
+      // The amount-owed link covers everything still outstanding — settle the
+      // whole order (also marks the deposit paid if it never was).
+      if (order.balancePaid) {
+        return NextResponse.json({ ok: true, alreadyPaid: true })
+      }
+      patch = {
+        balancePaid: true,
+        balancePaidAt: now,
+        balancePaidVia: 'square',
+        updatedAt: now,
+      }
+      if (!order.depositPaid) {
+        patch.depositPaid = true
+        patch.depositPaidAt = now
+        patch.depositPaidVia = 'square'
+      }
+    } else {
+      if (order.depositPaid) {
+        return NextResponse.json({ ok: true, alreadyPaid: true })
+      }
+      patch = {
+        depositPaid: true,
+        depositPaidAt: now,
+        depositPaidVia: 'square',
+        updatedAt: now,
+      }
     }
     await doc.ref.update({ ...patch, status: deriveStatus({ ...order, ...patch }) })
 
-    return NextResponse.json({ ok: true, marked: order.id })
+    return NextResponse.json({ ok: true, marked: order.id, kind: isBalance ? 'balance' : 'deposit' })
   } catch (e: any) {
     console.error('square webhook error', e)
     // 200 so Square doesn't hammer retries on a transient bug; we logged it.

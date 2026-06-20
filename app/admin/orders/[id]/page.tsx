@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
-import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref } from '@/lib/orders'
+import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
@@ -34,6 +34,8 @@ export default function OrderDetailPage() {
   const [dlMsg, setDlMsg] = useState('')
   const [sqLoading, setSqLoading] = useState(false)
   const [sqMsg, setSqMsg] = useState('')
+  const [sqBalLoading, setSqBalLoading] = useState(false)
+  const [sqBalMsg, setSqBalMsg] = useState('')
   const [rcptTo, setRcptTo] = useState('')
   const [rcptCc, setRcptCc] = useState('')
   const [rcptBcc, setRcptBcc] = useState('')
@@ -129,6 +131,22 @@ export default function OrderDetailPage() {
       setSqMsg(`Error: ${e.message}`)
     } finally {
       setSqLoading(false)
+    }
+  }
+
+  async function createSquareBalanceLink() {
+    if (!order) return
+    setSqBalLoading(true)
+    setSqBalMsg('')
+    try {
+      const res = await fetch(`/api/orders/${order.id}/square-balance-link`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setSqBalMsg(`✓ Payment link ready (${money(json.amount)})`)
+    } catch (e: any) {
+      setSqBalMsg(`Error: ${e.message}`)
+    } finally {
+      setSqBalLoading(false)
     }
   }
 
@@ -466,6 +484,65 @@ export default function OrderDetailPage() {
           {sqMsg && <p className="mt-2 text-sm text-gray-600">{sqMsg}</p>}
         </div>
 
+        {/* Square balance / amount-owed link — send to collect on/after delivery */}
+        {!order.balancePaid && amountOwed(order) > 0 && (
+          <div className="no-print mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium text-gray-700">
+                Collect {money(amountOwed(order))}
+                {!order.depositPaid && <span className="text-gray-400"> (full — no deposit paid)</span>}
+              </p>
+              <button
+                onClick={createSquareBalanceLink}
+                disabled={sqBalLoading}
+                className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {sqBalLoading ? 'Creating…' : order.squareBalanceLink ? '↻ Regenerate' : '＋ Create payment link'}
+              </button>
+            </div>
+            {order.squareBalanceLink ? (
+              <div className="mt-2 space-y-2">
+                <a
+                  href={order.squareBalanceLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block break-all text-sm text-brand underline"
+                >
+                  {order.squareBalanceLink}
+                </a>
+                {order.squareBalanceAmount != null &&
+                  order.squareBalanceAmount !== amountOwed(order) && (
+                    <p className="text-xs text-amber-600">
+                      ⚠️ Owed is now {money(amountOwed(order))} but this link is for{' '}
+                      {money(order.squareBalanceAmount)} — regenerate to update.
+                    </p>
+                  )}
+                <div className="flex flex-wrap items-center gap-3">
+                  <TextCustomer
+                    phone={order.customer.phone}
+                    url={order.squareBalanceLink}
+                    text="Here's your payment link for the balance due:"
+                    label="Text customer"
+                    className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+                  />
+                  <ShareButton
+                    url={order.squareBalanceLink}
+                    title={`${business} — payment due`}
+                    text="Here's your payment link for the balance due:"
+                    className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-gray-500">
+                Generates a Square link for what&apos;s still owed. Staff can also create &amp; send
+                it from the crew job ticket. It marks the order paid automatically once paid.
+              </p>
+            )}
+            {sqBalMsg && <p className="mt-2 text-sm text-gray-600">{sqBalMsg}</p>}
+          </div>
+        )}
+
         <div className="no-print mt-4 flex flex-wrap gap-3">
           <PaidToggle
             paid={order.depositPaid}
@@ -477,9 +554,9 @@ export default function OrderDetailPage() {
           <PaidToggle
             paid={order.balancePaid}
             label="Mark balance paid"
-            paidLabel={`Balance paid (${money(order.totals.balance)})`}
-            onMark={() => act({ balancePaid: true, balancePaidAt: new Date().toISOString() })}
-            onUndo={() => act({ balancePaid: false, balancePaidAt: null })}
+            paidLabel={`Balance paid (${money(order.totals.balance)})${order.balancePaidVia === 'square' ? ' · via Square' : ''}`}
+            onMark={() => act({ balancePaid: true, balancePaidAt: new Date().toISOString(), balancePaidVia: 'manual' })}
+            onUndo={() => act({ balancePaid: false, balancePaidAt: null, balancePaidVia: null })}
           />
         </div>
       </section>

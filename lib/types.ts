@@ -176,6 +176,11 @@ export interface Order {
   squareDepositLink: string | null
   squareDepositOrderId: string | null
   squareDepositAmount: number | null
+  // Square link for the amount currently owed (Phase 2). Full total if nothing's
+  // been paid (customer pays everything on delivery), else the remaining balance.
+  squareBalanceLink: string | null
+  squareBalanceOrderId: string | null
+  squareBalanceAmount: number | null
   depositPaid: boolean
   depositPaidAt: string | null
   // Set when the deposit was marked paid automatically by the Square webhook
@@ -183,6 +188,7 @@ export interface Order {
   depositPaidVia: 'square' | 'manual' | null
   balancePaid: boolean
   balancePaidAt: string | null
+  balancePaidVia: 'square' | 'manual' | null
 
   // fulfillment
   sentAt: string | null

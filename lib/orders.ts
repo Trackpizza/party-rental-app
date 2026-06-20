@@ -93,11 +93,15 @@ export function buildEmptyOrder(): OrderDraft {
     squareDepositLink: null,
     squareDepositOrderId: null,
     squareDepositAmount: null,
+    squareBalanceLink: null,
+    squareBalanceOrderId: null,
+    squareBalanceAmount: null,
     depositPaid: false,
     depositPaidAt: null,
     depositPaidVia: null,
     balancePaid: false,
     balancePaidAt: null,
+    balancePaidVia: null,
     sentAt: null,
     deliveredAt: null,
     pickedUpAt: null,
@@ -202,6 +206,16 @@ export function mapsHref(c: Partial<CustomerInfo>): string {
 
 // Derive the furthest-along lifecycle status purely from flags/timestamps.
 // signed + deposit auto-advances to "confirmed"; everything else is linear.
+// What the customer still owes right now: the full total if nothing's been paid
+// (they're paying everything on delivery), otherwise the remaining balance.
+export function amountOwed(o: Order): number {
+  const total = o.totals.total || 0
+  const deposit = o.totals.deposit || 0
+  const balance = o.totals.balance != null ? o.totals.balance : Math.max(0, total - deposit)
+  const paid = (o.depositPaid ? deposit : 0) + (o.balancePaid ? balance : 0)
+  return Math.max(0, Math.round((total - paid) * 100) / 100)
+}
+
 export function deriveStatus(o: Order): Order['status'] {
   if (o.completedAt) return 'completed'
   if (o.balancePaid) return 'balance_paid'
