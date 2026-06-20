@@ -6,10 +6,20 @@ import { deriveStatus } from '@/lib/orders'
 
 export const dynamic = 'force-dynamic'
 
-function notificationUrl(req: NextRequest): string {
+// Candidate notification URLs to verify the signature against. Square signs with
+// the EXACT URL configured in the subscription; behind App Hosting's proxy the
+// host header can differ, so we try the explicit configured URL first, then any
+// request-derived hosts.
+function candidateUrls(req: NextRequest): string[] {
+  const path = '/api/square/webhook'
   const proto = req.headers.get('x-forwarded-proto') || 'https'
-  const host = req.headers.get('x-forwarded-host') || req.headers.get('host')
-  return `${proto}://${host}/api/square/webhook`
+  const urls = new Set<string>()
+  if (process.env.SQUARE_WEBHOOK_URL) urls.add(process.env.SQUARE_WEBHOOK_URL)
+  const xfh = req.headers.get('x-forwarded-host')
+  if (xfh) urls.add(`${proto}://${xfh}${path}`)
+  const host = req.headers.get('host')
+  if (host) urls.add(`${proto}://${host}${path}`)
+  return Array.from(urls)
 }
 
 // Square webhook receiver. On a COMPLETED payment, match the Square order id to
@@ -19,7 +29,7 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text()
   const signature = req.headers.get('x-square-hmacsha256-signature')
 
-  if (!verifyWebhookSignature(rawBody, signature, notificationUrl(req))) {
+  if (!verifyWebhookSignature(rawBody, signature, candidateUrls(req))) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 })
   }
 

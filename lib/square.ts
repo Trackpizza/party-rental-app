@@ -78,18 +78,26 @@ export async function createPaymentLink(opts: {
 
 // Verify a Square webhook signature. Square signs HMAC-SHA256 over
 // (notificationUrl + rawBody) with the subscription's signature key, base64.
+// The notificationUrl must EXACTLY match the URL configured in Square — behind
+// a proxy (App Hosting) the request's host header may differ from the public
+// URL, so we accept any of several candidate URLs.
 export function verifyWebhookSignature(
   rawBody: string,
   signature: string | null,
-  notificationUrl: string,
+  notificationUrls: string | string[],
 ): boolean {
   const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY
   if (!key || !signature) return false
-  const hmac = crypto.createHmac('sha256', key)
-  hmac.update(notificationUrl + rawBody)
-  const expected = hmac.digest('base64')
-  // Constant-time compare to avoid timing leaks.
-  const a = Buffer.from(expected)
-  const b = Buffer.from(signature)
-  return a.length === b.length && crypto.timingSafeEqual(a, b)
+  const urls = Array.isArray(notificationUrls) ? notificationUrls : [notificationUrls]
+  const sig = Buffer.from(signature)
+  for (const url of urls) {
+    const expected = Buffer.from(
+      crypto.createHmac('sha256', key).update(url + rawBody).digest('base64'),
+    )
+    // Constant-time compare to avoid timing leaks.
+    if (expected.length === sig.length && crypto.timingSafeEqual(expected, sig)) {
+      return true
+    }
+  }
+  return false
 }

@@ -81,6 +81,11 @@ env:
   - variable: SQUARE_LOCATION_ID
     value: "L8JYNW6HKBYEZ"
     availability: [RUNTIME]
+  # Exact public webhook URL configured in Square — used to verify the signature
+  # (the proxied host header can't be trusted to rebuild it).
+  - variable: SQUARE_WEBHOOK_URL
+    value: "https://my.ezbookaparty.com/api/square/webhook"
+    availability: [RUNTIME]
   - variable: SQUARE_ACCESS_TOKEN
     secret: square-access-token
     availability: [RUNTIME]
