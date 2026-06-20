@@ -78,19 +78,12 @@ env:
   - variable: SQUARE_ENV
     value: "sandbox"
     availability: [RUNTIME]
-  # Location id from the client's Square account (not secret). Fill in once known.
   - variable: SQUARE_LOCATION_ID
-    value: ""
+    value: "L8JYNW6HKBYEZ"
     availability: [RUNTIME]
-  # The two secrets below must exist in Secret Manager BEFORE uncommenting them —
-  # an undefined secret reference fails the deploy. Until then the feature stays
-  # inert (the admin button reports "Square not configured", nothing breaks).
-  # Create them with:
-  #   firebase apphosting:secrets:set square-access-token
-  #   firebase apphosting:secrets:set square-webhook-signature-key
-  # - variable: SQUARE_ACCESS_TOKEN
-  #   secret: square-access-token
-  #   availability: [RUNTIME]
-  # - variable: SQUARE_WEBHOOK_SIGNATURE_KEY
-  #   secret: square-webhook-signature-key
-  #   availability: [RUNTIME]
+  - variable: SQUARE_ACCESS_TOKEN
+    secret: square-access-token
+    availability: [RUNTIME]
+  - variable: SQUARE_WEBHOOK_SIGNATURE_KEY
+    secret: square-webhook-signature-key
+    availability: [RUNTIME]
