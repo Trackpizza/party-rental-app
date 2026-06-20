@@ -168,6 +168,9 @@ export interface Order {
 
   // payments
   paymentMethod: PaymentMethod | null
+  // Optional free-text note the owner can add. Shown to staff and appended to the
+  // Square checkout title so the customer sees the specifics.
+  paymentNote: string
   squareLink: string | null
   // Auto-generated Square deposit payment link (Phase 1). squareDepositOrderId
   // is the Square order id we match incoming webhooks against; squareDepositAmount

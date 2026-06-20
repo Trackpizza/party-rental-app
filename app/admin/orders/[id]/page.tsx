@@ -433,6 +433,11 @@ export default function OrderDetailPage() {
           Method: <span className="font-medium capitalize text-gray-700">{order.paymentMethod || '—'}</span>
           {order.paymentMethod === 'zelle' && zelle && <> · Zelle: <span className="font-medium text-gray-700">{zelle}</span></>}
         </p>
+        {order.paymentNote && (
+          <p className="mt-1 text-sm text-gray-600">
+            📝 <span className="font-medium">Note:</span> {order.paymentNote}
+          </p>
+        )}
         {order.paymentMethod === 'square' && order.squareLink && !order.squareDepositLink && (
           <a href={order.squareLink} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-brand underline">
             Square payment link

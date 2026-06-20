@@ -89,6 +89,7 @@ export function buildEmptyOrder(): OrderDraft {
       miles: null,
     },
     paymentMethod: null,
+    paymentNote: '',
     squareLink: null,
     squareDepositLink: null,
     squareDepositOrderId: null,

@@ -756,6 +756,16 @@ export default function OrderForm({
             </Field>
           )}
         </div>
+        <div className="mt-4">
+          <Field label="Payment note (shows on the Square checkout & for staff)">
+            <input
+              placeholder="e.g. Weekend rate · delivery to backyard · balance due on pickup"
+              value={draft.paymentNote ?? ''}
+              onChange={(e) => patch((d) => ({ ...d, paymentNote: e.target.value }))}
+              className={`${inputCls} w-full`}
+            />
+          </Field>
+        </div>
       </section>
 
       {/* Totals */}
