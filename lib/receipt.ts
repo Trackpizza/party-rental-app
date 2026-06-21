@@ -69,8 +69,8 @@ export function buildReceiptHtml(order: Order, business: string, note?: string):
     </table>
 
     <table style="width:100%;margin-top:16px;font-size:14px;">
-      <tr><td style="color:#555;">Subtotal</td><td style="text-align:right;">${money(order.totals.subtotal)}</td></tr>
       <tr><td style="color:#555;">Delivery</td><td style="text-align:right;">${money(order.totals.deliveryFee)}</td></tr>
+      <tr><td style="color:#555;">Subtotal</td><td style="text-align:right;">${money(order.totals.subtotal)}</td></tr>
       <tr><td style="color:#555;">Tax</td><td style="text-align:right;">${money(order.totals.tax)}</td></tr>
       <tr><td style="font-weight:bold;padding-top:6px;">Total</td><td style="text-align:right;font-weight:bold;padding-top:6px;">${money(order.totals.total)}</td></tr>
       <tr><td style="color:#555;">Deposit paid${order.depositPaidAt ? ` (${fmtDate(order.depositPaidAt)})` : ''}</td><td style="text-align:right;">${money(order.totals.deposit)}</td></tr>

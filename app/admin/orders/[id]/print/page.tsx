@@ -135,8 +135,8 @@ export default function PrintContractPage() {
           <p className="mt-1"><b>Payment:</b> {order.paymentMethod || '—'}</p>
         </div>
         <div className="w-56 text-sm">
-          <Row l="Subtotal" v={money(t.subtotal)} />
           <Row l="Delivery" v={money(t.deliveryFee)} />
+          <Row l="Subtotal" v={money(t.subtotal)} />
           <Row l="Tax" v={money(t.tax)} />
           <Row l="Total" v={money(t.total)} bold />
           <Row l="Deposit" v={money(t.deposit)} />

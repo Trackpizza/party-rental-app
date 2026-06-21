@@ -415,8 +415,8 @@ export default function OrderDetailPage() {
         {order.event.notes && <p className="mt-2 text-sm text-gray-500">Notes: {order.event.notes}</p>}
 
         <div className="mt-4 ml-auto max-w-xs space-y-1 text-sm">
-          <Total label="Subtotal" value={money(order.totals.subtotal)} />
           <Total label="Delivery" value={money(order.totals.deliveryFee)} />
+          <Total label="Subtotal" value={money(order.totals.subtotal)} />
           <Total label="Tax" value={money(order.totals.tax)} />
           <Total label="Total" value={money(order.totals.total)} bold />
           <Total label="Deposit" value={money(order.totals.deposit)} />

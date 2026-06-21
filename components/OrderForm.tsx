@@ -81,6 +81,17 @@ function defaultPaymentNote(eventName?: string, eventDate?: string): string {
   return ''
 }
 
+// Simple US phone digit check. OK at 10 digits, or 11 with a leading 1 (so the
+// +1 country code is optional). Returns a warning string, or null if it's fine.
+function phoneWarning(phone: string): string | null {
+  const d = (phone || '').replace(/\D/g, '')
+  if (!d) return null
+  if (d.length === 10) return null
+  if (d.length === 11 && d.startsWith('1')) return null
+  if (d.length < 10) return 'Looks like too few digits — need 10.'
+  return 'Looks like too many digits — use 10 (or 11 with a leading 1).'
+}
+
 // Shared order form, used for both creating a new order and editing an existing
 // one. In edit mode it saves back to the same document (preserving signature,
 // photos, payment flags, etc. that aren't editable here) and shows a warning if
@@ -345,6 +356,13 @@ export default function OrderForm({
               }}
               className={`${inputCls} w-full`}
             />
+            {draft.event.eventDate &&
+              draft.todaysDate &&
+              draft.event.eventDate < draft.todaysDate && (
+                <p className="mt-1 text-xs font-medium text-red-500">
+                  ⚠️ Event date is in the past.
+                </p>
+              )}
           </Field>
           <Field label="Delivery Time">
             <TimeSelect
@@ -418,6 +436,11 @@ export default function OrderForm({
               }
               className={`${inputCls} w-full`}
             />
+            {phoneWarning(draft.customer.phone) && (
+              <p className="mt-1 text-xs font-medium text-amber-600">
+                ⚠️ {phoneWarning(draft.customer.phone)}
+              </p>
+            )}
           </Field>
           <Field label="Email">
             <input
