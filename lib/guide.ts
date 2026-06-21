@@ -1,4 +1,6 @@
-# Party Supplies La Poblanita 2 — Owner Walkthrough (Oscar)
+// Single source for the in-app Owner Guide (Admin → Guide), rendered by
+// components/Markdown.tsx. Edit here to update the guide everywhere.
+export const GUIDE_MD = `# Party Supplies La Poblanita 2 — Owner Guide
 
 A start-to-finish checklist for running an order, plus how every setting works.
 
@@ -83,7 +85,7 @@ On the order page → **Send signing link to customer**:
 
 ## 4. Delivery crew
 
-Each order has a **crew job ticket link** (`/job/...`) — send it to the driver. It shows:
+Each order has a **crew job ticket link** — send it to the driver. It shows:
 - [ ] **When**, **where** (with **Open in Maps**), **what to deliver** (items + variations + notes), surface & stairs.
 - [ ] **Pay by card** — crew taps **Card payment link ($X)**, then **texts it** to the customer or **Show QR** for them to scan & pay on the spot. Auto-marks paid.
 - [ ] **Text owner: payment collected** — for cash; tells the office, who marks it paid.
@@ -146,3 +148,4 @@ Open **Settings** (top nav).
 | Just recording what's going out, no per-item price | **Check the variations**, set qty, leave amounts blank |
 | One bundled/package price | **Other → "Full Amount"** with the total price |
 | Mix | Checkboxes for *what's going out* + "Full Amount" for *what they pay* |
+`

@@ -38,6 +38,9 @@ export default function AdminLayout({
             <Link href="/admin/settings" className="text-gray-600 hover:text-brand">
               Settings
             </Link>
+            <Link href="/admin/guide" className="text-gray-600 hover:text-brand">
+              Guide
+            </Link>
             <Link
               href="/admin/orders/new"
               className="rounded-lg bg-brand px-3 py-1.5 font-semibold text-white hover:opacity-90"
