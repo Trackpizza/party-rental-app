@@ -91,12 +91,30 @@ Each order has a **crew job ticket link** (`/job/...`) — send it to the driver
 
 ---
 
-## 5. After the event
+## 5. Marketing — setup photos, video, reviews & content
+
+> Everything below the purple **MARKETING** banner is for social media — **not** part of the rental contract. The banner shows the consent status: **🏞 public property** (no consent needed), **✅ customer approved social use**, or **⚠️ no consent — ask before posting**.
+
+### a) Capture on-site (crew)
+- [ ] In **Setup photos**, use the **Crew upload link** — **Copy** it and text it to the crew, or **email a team member**. They open it and upload **setup photos** + a short **walkthrough video** (≤1 min) from the event.
+- [ ] You can also add photos/video yourself right there.
+
+### b) Send the best shots to the customer (a few days after the event)
+- [ ] Look through the uploaded photos/videos and **select** your best.
+- [ ] **✉️ Send to customer + review** — emails them the selected photos & video **with your Google review link** (or **Share / Text** the gallery). It shows "Last sent…" so you know it went.
+- This is the **review funnel**: the happy customer sees their event photos and a one-tap **"Leave a review."** (The review link comes from **Settings → Google review link**.)
+
+### c) Send content to your producer
+- [ ] In **Content Creation**, **select** which photos & videos go to your content creator, then **Send** — it goes to the producer email(s) set in **Settings**.
+- [ ] Videos **auto-delete 20 days** after upload.
+
+---
+
+## 6. After the event
 
 On the order page:
 - [ ] **Mark delivered**, **Mark picked up**, **Mark completed**.
 - [ ] **Send receipt** (email, with optional CC/BCC/note).
-- [ ] **Setup photos / content / Send to producer** — for social-media content.
 - [ ] **Archive** when done; **Delete** to permanently remove (also deletes uploaded files).
 - DL photos **auto-delete 30 days after the event**.
 
@@ -104,7 +122,7 @@ Also: **Orders** list (search/filter) and **Calendar** view (see what's going ou
 
 ---
 
-## 6. Settings — what each one does
+## 7. Settings — what each one does
 
 Open **Settings** (top nav).
 
