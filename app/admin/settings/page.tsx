@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
   const [requireDl, setRequireDl] = useState(true)
+  const [squareAutoLinks, setSquareAutoLinks] = useState(false)
   const [producerEmails, setProducerEmails] = useState<string[]>([])
   const [videoRelease, setVideoRelease] = useState('')
   const [consentText, setConsentText] = useState('')
@@ -40,6 +41,7 @@ export default function SettingsPage() {
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setRequireDl(b.requireDl)
+      setSquareAutoLinks(b.squareAutoLinks)
       setProducerEmails(b.producerEmails)
       setVideoRelease(b.videoReleaseText)
       setConsentText(b.mediaConsentText)
@@ -54,6 +56,7 @@ export default function SettingsPage() {
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
       requireDl,
+      squareAutoLinks,
       producerEmails: producerEmails.map((e) => e.trim()).filter(Boolean),
       videoReleaseText: videoRelease,
       mediaConsentText: consentText,
@@ -162,6 +165,34 @@ export default function SettingsPage() {
         <p className="mb-3 text-sm text-gray-500">
           License photos are automatically deleted <strong>30 days after the
           event</strong> (keeps sensitive ID data from piling up).
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={saveBiz}
+            disabled={bizSaving}
+            className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {bizSaving ? 'Saving…' : 'Save'}
+          </button>
+          {bizSaved && <span className="text-sm text-green-600">✓ Saved</span>}
+        </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
+        <h2 className="mb-1 font-semibold text-gray-800">Square payments</h2>
+        <label className="mb-3 flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={squareAutoLinks}
+            onChange={(e) => setSquareAutoLinks(e.target.checked)}
+          />
+          Auto-generate Square payment links (deposit &amp; balance)
+        </label>
+        <p className="mb-3 text-sm text-gray-500">
+          <strong>Off</strong> (manual): paste your own Square link on the order and mark
+          deposit/balance paid by hand. <strong>On</strong>: the order page gets
+          &ldquo;Create deposit link&rdquo; / &ldquo;Collect&rdquo; buttons that build the link
+          for you and mark it paid automatically when the customer pays. You can switch anytime.
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <button

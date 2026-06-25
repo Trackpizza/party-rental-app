@@ -31,7 +31,9 @@ export default async function JobPage({ params }: { params: { id: string } }) {
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
   const owed = amountOwed(order)
-  const squareReady = isSquareConfigured()
+  const settingsSnap = await adminDb.collection('settings').doc('business').get()
+  const squareAuto = settingsSnap.exists && settingsSnap.data()?.squareAutoLinks === true
+  const squareReady = isSquareConfigured() && squareAuto
 
   // "Text owner — payment collected": SMS to the business phone (the page itself
   // stays read-only; only the logged-in owner can actually mark it paid).

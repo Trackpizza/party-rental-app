@@ -12,6 +12,7 @@ import OwnerContentCreation from '@/components/OwnerContentCreation'
 import ShareButton from '@/components/ShareButton'
 import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
+import { getBusinessSettings } from '@/lib/settings'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -44,6 +45,11 @@ export default function OrderDetailPage() {
   const [rcptMsg, setRcptMsg] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteMsg, setDeleteMsg] = useState('')
+  const [squareAuto, setSquareAuto] = useState(false)
+
+  useEffect(() => {
+    getBusinessSettings().then((b) => setSquareAuto(b.squareAutoLinks)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -444,7 +450,8 @@ export default function OrderDetailPage() {
           </a>
         )}
 
-        {/* Square deposit link (auto-generated) */}
+        {/* Square deposit link (auto-generated) — only when auto links are on */}
+        {squareAuto && (
         <div className="no-print mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-medium text-gray-700">
@@ -488,9 +495,10 @@ export default function OrderDetailPage() {
           )}
           {sqMsg && <p className="mt-2 text-sm text-gray-600">{sqMsg}</p>}
         </div>
+        )}
 
         {/* Square balance / amount-owed link — send to collect on/after delivery */}
-        {!order.balancePaid && amountOwed(order) > 0 && (
+        {squareAuto && !order.balancePaid && amountOwed(order) > 0 && (
           <div className="no-print mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium text-gray-700">

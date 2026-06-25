@@ -12,6 +12,7 @@ export interface BusinessSettings {
   taxRate: number // percent, e.g. 9.5
   staff: StaffMember[]
   requireDl: boolean // require a DL photo before the customer can sign
+  squareAutoLinks: boolean // auto-generate Square deposit/balance links (off = manual paste only)
   producerEmails: string[] // where "send content to producer" emails go (one or more)
   videoReleaseText: string // media release the customer agrees to before recording
   mediaConsentText: string // social-media consent checkbox shown in the signing flow
@@ -50,6 +51,7 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
       ? d.staff.map((s: any) => ({ name: s.name || '', email: s.email || '', phone: s.phone || '' }))
       : [],
     requireDl: typeof d.requireDl === 'boolean' ? d.requireDl : true,
+    squareAutoLinks: typeof d.squareAutoLinks === 'boolean' ? d.squareAutoLinks : false,
     producerEmails: producerRecipients(d),
     videoReleaseText: d.videoReleaseText || DEFAULT_VIDEO_RELEASE,
     mediaConsentText: d.mediaConsentText || DEFAULT_MEDIA_CONSENT,
