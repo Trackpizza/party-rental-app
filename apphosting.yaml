@@ -75,11 +75,26 @@ env:
 
   # --- Square payments (Phase 1: deposit link + auto-mark-paid webhook) ---
   # "sandbox" for safe testing (test cards), "production" for real charges.
+  #
+  # ===== GO-LIVE CHECKLIST (do in Oscar's Square account, on this computer) =====
+  # 1. developer.squareup.com (signed in as Oscar) -> Create/open the app -> flip to Production.
+  # 2. Set the two SECRETS to their PRODUCTION values, then grant + redeploy:
+  #      firebase apphosting:secrets:set square-access-token --data-file - --force
+  #      firebase apphosting:secrets:set square-webhook-signature-key --data-file - --force
+  #      firebase apphosting:secrets:grantaccess square-access-token --backend party-rental-app
+  #      firebase apphosting:secrets:grantaccess square-webhook-signature-key --backend party-rental-app
+  #    (square-access-token  = Production Access Token, Credentials tab)
+  #    (square-webhook-signature-key = Signature key of the prod webhook subscription)
+  # 3. In Square Webhooks, add endpoint https://my.ezbookaparty.com/api/square/webhook,
+  #    event payment.updated (URL below is already correct, do not change it).
+  # 4. Edit the two values below: SQUARE_ENV -> "production", SQUARE_LOCATION_ID -> prod Location ID.
+  # 5. Commit + push. App Hosting pins secret versions at build, so the push is what goes live.
+  # =============================================================================
   - variable: SQUARE_ENV
-    value: "sandbox"
+    value: "sandbox"                 # GO-LIVE: change to "production"
     availability: [RUNTIME]
   - variable: SQUARE_LOCATION_ID
-    value: "L8JYNW6HKBYEZ"
+    value: "L8JYNW6HKBYEZ"           # GO-LIVE: replace with Oscar's PRODUCTION Location ID
     availability: [RUNTIME]
   # Exact public webhook URL configured in Square — used to verify the signature
   # (the proxied host header can't be trusted to rebuild it).
