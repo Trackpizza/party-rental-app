@@ -12,11 +12,15 @@ export default function CrewCollect({
   initialLink,
   owed,
   phone,
+  allowCreate = true,
 }: {
   orderId: string
   initialLink: string | null
   owed: number
   phone: string
+  // When false (manual mode), the link is pre-set by the owner — crew can text /
+  // show the QR but can't generate one. Hides the "create link" button.
+  allowCreate?: boolean
 }) {
   const [link, setLink] = useState<string | null>(initialLink)
   const [loading, setLoading] = useState(false)
@@ -85,7 +89,7 @@ export default function CrewCollect({
             </div>
           )}
         </div>
-      ) : (
+      ) : allowCreate ? (
         <button
           onClick={createLink}
           disabled={loading}
@@ -93,6 +97,8 @@ export default function CrewCollect({
         >
           {loading ? 'Creating…' : `💳 Card payment link (${money(owed)})`}
         </button>
+      ) : (
+        <p className="mt-2 text-xs text-gray-500">No payment link yet · Sin enlace todavía</p>
       )}
       {msg && <p className="mt-2 text-sm text-red-600">{msg}</p>}
     </div>

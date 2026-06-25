@@ -12,6 +12,7 @@ import OwnerContentCreation from '@/components/OwnerContentCreation'
 import ShareButton from '@/components/ShareButton'
 import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
+import ManualBalanceLink from '@/components/ManualBalanceLink'
 import { getBusinessSettings } from '@/lib/settings'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
@@ -554,6 +555,17 @@ export default function OrderDetailPage() {
             )}
             {sqBalMsg && <p className="mt-2 text-sm text-gray-600">{sqBalMsg}</p>}
           </div>
+        )}
+
+        {/* Manual mode: paste the balance link made in Square; sends to customer + shows on crew ticket */}
+        {!squareAuto && !order.balancePaid && amountOwed(order) > 0 && (
+          <ManualBalanceLink
+            orderId={order.id}
+            initialLink={order.squareBalanceLinkManual}
+            owed={amountOwed(order)}
+            phone={order.customer.phone || ''}
+            business={business}
+          />
         )}
 
         <div className="no-print mt-4 flex flex-wrap gap-3">

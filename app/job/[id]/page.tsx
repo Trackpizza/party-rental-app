@@ -161,13 +161,23 @@ export default async function JobPage({ params }: { params: { id: string } }) {
                 )}
               </p>
 
-              {squareReady && (
+              {squareReady ? (
                 <CrewCollect
                   orderId={order.id}
                   initialLink={order.squareBalanceLink}
                   owed={owed}
                   phone={order.customer.phone || ''}
                 />
+              ) : (
+                order.squareBalanceLinkManual && (
+                  <CrewCollect
+                    orderId={order.id}
+                    initialLink={order.squareBalanceLinkManual}
+                    owed={owed}
+                    phone={order.customer.phone || ''}
+                    allowCreate={false}
+                  />
+                )
               )}
 
               {ownerTel && (

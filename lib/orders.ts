@@ -97,6 +97,7 @@ export function buildEmptyOrder(): OrderDraft {
     squareBalanceLink: null,
     squareBalanceOrderId: null,
     squareBalanceAmount: null,
+    squareBalanceLinkManual: null,
     depositPaid: false,
     depositPaidAt: null,
     depositPaidVia: null,

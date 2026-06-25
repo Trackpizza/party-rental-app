@@ -184,6 +184,9 @@ export interface Order {
   squareBalanceLink: string | null
   squareBalanceOrderId: string | null
   squareBalanceAmount: number | null
+  // Manually-pasted balance link (manual mode): owner makes the link in Square and
+  // pastes it here. Shown to the customer (Text/Share) and on the crew job ticket.
+  squareBalanceLinkManual: string | null
   depositPaid: boolean
   depositPaidAt: string | null
   // Set when the deposit was marked paid automatically by the Square webhook
