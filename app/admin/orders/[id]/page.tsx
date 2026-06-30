@@ -305,6 +305,19 @@ export default function OrderDetailPage() {
               <p className="font-medium text-gray-700">—</p>
             )}
           </div>
+          {(order.referralSource || order.referralComment) && (
+            <div>
+              <p className="text-xs text-gray-400">How they heard about us</p>
+              <p className="font-medium text-gray-700">
+                {order.referralSource === 'Other' && order.referralOtherDetail
+                  ? `Other — ${order.referralOtherDetail}`
+                  : order.referralSource || '—'}
+              </p>
+              {order.referralComment && (
+                <p className="text-sm text-gray-500">{order.referralComment}</p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

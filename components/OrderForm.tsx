@@ -16,6 +16,7 @@ import {
 import { getBusinessSettings } from '@/lib/settings'
 import TimeSelect from '@/components/TimeSelect'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
+import { REFERRAL_SOURCES } from '@/lib/referral-sources'
 import {
   ITEM_CATALOG,
   SURFACE_TYPES,
@@ -529,6 +530,48 @@ export default function OrderForm({
                 onChange={(e) =>
                   patch((d) => ({ ...d, customer: { ...d.customer, zip: e.target.value } }))
                 }
+                className={`${inputCls} w-full`}
+              />
+            </Field>
+          </div>
+
+          {/* Marketing / lead source */}
+          <div className="sm:col-span-2">
+            <Field label="How did they hear about us?">
+              <select
+                value={draft.referralSource ?? ''}
+                onChange={(e) => patch((d) => ({ ...d, referralSource: e.target.value }))}
+                className={`${inputCls} w-full`}
+              >
+                <option value="">Select…</option>
+                {REFERRAL_SOURCES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          {draft.referralSource === 'Other' && (
+            <div className="sm:col-span-2">
+              <Field label="Other — please describe">
+                <input
+                  value={draft.referralOtherDetail ?? ''}
+                  onChange={(e) =>
+                    patch((d) => ({ ...d, referralOtherDetail: e.target.value }))
+                  }
+                  placeholder="How did they find you?"
+                  className={`${inputCls} w-full`}
+                />
+              </Field>
+            </div>
+          )}
+          <div className="sm:col-span-2">
+            <Field label="Referral notes (optional)">
+              <input
+                value={draft.referralComment ?? ''}
+                onChange={(e) => patch((d) => ({ ...d, referralComment: e.target.value }))}
+                placeholder="e.g. Referred by Jane Smith · saw A-Frame on Main St."
                 className={`${inputCls} w-full`}
               />
             </Field>

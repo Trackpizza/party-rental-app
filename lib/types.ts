@@ -166,6 +166,11 @@ export interface Order {
   items: LineItem[]
   totals: Totals
 
+  // marketing / lead source — "how did they hear about us?"
+  referralSource: string       // one of REFERRAL_SOURCES, or '' if unset
+  referralOtherDetail: string  // free text when referralSource === 'Other'
+  referralComment: string      // optional notes (e.g. "referred by Jane Smith")
+
   // payments
   paymentMethod: PaymentMethod | null
   // Optional free-text note the owner can add. Shown to staff and appended to the
