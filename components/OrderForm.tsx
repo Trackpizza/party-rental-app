@@ -537,7 +537,7 @@ export default function OrderForm({
 
           {/* Marketing / lead source */}
           <div className="sm:col-span-2">
-            <Field label="How did they hear about us?">
+            <Field label="How did you hear about us?">
               <select
                 value={draft.referralSource ?? ''}
                 onChange={(e) => patch((d) => ({ ...d, referralSource: e.target.value }))}
