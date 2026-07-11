@@ -14,6 +14,7 @@ import {
   DL_RETENTION_DAYS,
 } from '@/lib/orders'
 import { getBusinessSettings } from '@/lib/settings'
+import { getInventory, getBookedQtys } from '@/lib/inventory'
 import TimeSelect from '@/components/TimeSelect'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
 import { REFERRAL_SOURCES } from '@/lib/referral-sources'
@@ -122,6 +123,9 @@ export default function OrderForm({
   // edits pickup directly, it stops auto-following (so we never clobber it).
   const [pickupDateTouched, setPickupDateTouched] = useState(!!initial.event.pickupDate)
   const [pickupTimeTouched, setPickupTimeTouched] = useState(!!initial.event.pickupTime)
+  // Inventory availability — loaded when event date is set.
+  const [invTotals, setInvTotals] = useState<Record<string, number>>({})
+  const [invBooked, setInvBooked] = useState<Record<string, number>>({})
   // Payment note auto-fills from the event until the owner edits it.
   const [paymentNoteTouched, setPaymentNoteTouched] = useState(
     mode === 'edit' ? !!initial.paymentNote : false,
@@ -152,6 +156,16 @@ export default function OrderForm({
     const def = defaultPaymentNote(draft.event.eventName, draft.event.eventDate)
     setDraft((d) => (d.paymentNote === def ? d : { ...d, paymentNote: def }))
   }, [draft.event.eventName, draft.event.eventDate, paymentNoteTouched])
+
+  // Load inventory totals + booked counts whenever the event date changes.
+  useEffect(() => {
+    const date = draft.event.eventDate
+    if (!date) { setInvBooked({}); return }
+    Promise.all([getInventory(), getBookedQtys(date, orderId)]).then(([totals, booked]) => {
+      setInvTotals(totals)
+      setInvBooked(booked)
+    })
+  }, [draft.event.eventDate, orderId])
 
   // Recompute totals, honoring manual tax / deposit overrides + tax rate.
   function withTotals(next: OrderDraft): OrderDraft {
@@ -590,6 +604,28 @@ export default function OrderForm({
             const isLastOfType = !nonOtherItems
               .slice(idx + 1)
               .some((x) => (x.catalogKey || x.key) === ck)
+            // Availability badge: show when date is set and item is inventory-tracked.
+            const checkedOpts = item.options?.filter(Boolean) ?? []
+            let availBadge: React.ReactNode = null
+            if (draft.event.eventDate) {
+              let invKey: string | null = null
+              if (catalog?.options && checkedOpts.length === 1) {
+                invKey = `${ck}:${checkedOpts[0]}`
+              } else if (!catalog?.options && ck === 'heaters') {
+                invKey = 'heaters'
+              }
+              if (invKey && invTotals[invKey] != null) {
+                const total = invTotals[invKey]
+                const booked = invBooked[invKey] ?? 0
+                const avail = total - booked
+                availBadge = (
+                  <span className={`text-xs font-medium ${avail > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {avail > 0 ? `${avail} of ${total} available` : `⚠ 0 of ${total} available`}
+                  </span>
+                )
+              }
+            }
+
             return (
               <div key={item.key} className="border-b border-gray-100 pb-3">
                 <div className="grid grid-cols-12 items-center gap-2">
@@ -616,7 +652,7 @@ export default function OrderForm({
                       className={`${inputCls} w-full`}
                     />
                   </div>
-                  <div className="col-span-9 sm:col-span-5 flex flex-wrap gap-x-3 gap-y-1">
+                  <div className="col-span-9 sm:col-span-5 flex flex-wrap gap-x-3 gap-y-1 items-center">
                     {catalog?.options?.map((opt) => (
                       <label
                         key={opt}
@@ -630,6 +666,7 @@ export default function OrderForm({
                         {opt}
                       </label>
                     ))}
+                    {availBadge}
                   </div>
                   <div className="col-span-12 sm:col-span-3">
                     <div className="flex items-center rounded-lg border border-gray-300 px-2">
