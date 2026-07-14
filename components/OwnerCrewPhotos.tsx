@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import PhotoCapture from './PhotoCapture'
 import VideoUpload from './VideoUpload'
+import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
 import TextStaffPicker from './TextStaffPicker'
 import { SetupPhoto, VideoClip } from '@/lib/types'
@@ -110,6 +111,19 @@ export default function OwnerCrewPhotos({
         <VideoUpload orderId={orderId} type="walkthrough" maxSeconds={60} label="Add walkthrough (≤1 min)" />
       </div>
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
+
+      {(nPhotos > 0 || nVids > 0) && (
+        <div className="mt-4">
+          <MediaGrid
+            orderId={orderId}
+            photos={photos}
+            videos={videos}
+            videoTypes={['walkthrough']}
+            field="selected"
+            readOnly
+          />
+        </div>
+      )}
 
       {/* Crew upload link */}
       <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">

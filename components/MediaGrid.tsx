@@ -16,12 +16,16 @@ export default function MediaGrid({
   videos,
   videoTypes,
   field,
+  readOnly = false,
 }: {
   orderId: string
   photos: SetupPhoto[]
   videos: VideoClip[]
   videoTypes: ('walkthrough' | 'testimonial')[]
   field: Field
+  // View-only: show thumbnails with download/delete, but no selection checkmark
+  // (used in the crew section where selecting-for-customer isn't the point).
+  readOnly?: boolean
 }) {
   const shownVideos = videos.filter((v) => videoTypes.includes(v.type))
   const [urls, setUrls] = useState<Record<string, string>>({})
@@ -123,10 +127,10 @@ export default function MediaGrid({
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {photos.map((p) => {
-            const on = !!(p as any)[field]
+            const on = !readOnly && !!(p as any)[field]
             return (
               <div key={p.storagePath} className={`relative overflow-hidden rounded-lg border-2 ${on ? 'border-brand' : 'border-gray-200'}`}>
-                <div role="button" onClick={() => togglePhoto(p.storagePath)} className="cursor-pointer">
+                <div role={readOnly ? undefined : 'button'} onClick={readOnly ? undefined : () => togglePhoto(p.storagePath)} className={readOnly ? '' : 'cursor-pointer'}>
                   {urls[p.storagePath] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={urls[p.storagePath]} alt="photo" className="aspect-square w-full object-cover" />
@@ -143,14 +147,18 @@ export default function MediaGrid({
       )}
 
       {shownVideos.map((v) => {
-        const on = !!(v as any)[field]
+        const on = !readOnly && !!(v as any)[field]
         return (
           <div key={v.storagePath} className={`relative rounded-lg border-2 p-2 ${on ? 'border-brand' : 'border-gray-200'}`}>
             <div className="mb-1 flex items-center justify-between text-xs text-gray-400">
-              <button onClick={() => toggleVideo(v.storagePath)} className="flex items-center gap-1 font-medium text-gray-600">
-                <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${on ? 'bg-brand text-white' : 'border border-gray-300'}`}>{on ? '✓' : ''}</span>
-                <span className="capitalize">{v.type}</span>
-              </button>
+              {readOnly ? (
+                <span className="font-medium capitalize text-gray-600">{v.type}</span>
+              ) : (
+                <button onClick={() => toggleVideo(v.storagePath)} className="flex items-center gap-1 font-medium text-gray-600">
+                  <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${on ? 'bg-brand text-white' : 'border border-gray-300'}`}>{on ? '✓' : ''}</span>
+                  <span className="capitalize">{v.type}</span>
+                </button>
+              )}
               <span>auto-deletes {new Date(v.purgeAfter).toLocaleDateString()}</span>
             </div>
             {urls[v.storagePath] ? (
