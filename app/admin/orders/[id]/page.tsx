@@ -7,8 +7,11 @@ import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
 import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
-import OwnerSetupPhotos from '@/components/OwnerSetupPhotos'
+import OwnerCrewPhotos from '@/components/OwnerCrewPhotos'
+import OwnerCustomerPhotos from '@/components/OwnerCustomerPhotos'
+import OwnerTestimonial from '@/components/OwnerTestimonial'
 import OwnerContentCreation from '@/components/OwnerContentCreation'
+import Collapsible from '@/components/Collapsible'
 import ShareButton from '@/components/ShareButton'
 import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
@@ -683,10 +686,9 @@ export default function OrderDetailPage() {
       <SectionDivider />
 
       {/* Crew job ticket */}
-      <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Crew job ticket</h2>
+      <Collapsible title="Crew Job" subtitle="Send crew directions, order & information">
         <OwnerSendJob orderId={order.id} />
-      </section>
+      </Collapsible>
 
       <SectionDivider />
 
@@ -787,35 +789,52 @@ export default function OrderDetailPage() {
         )}
       </div>
 
-      {/* Setup photos + review funnel */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Setup photos</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Share the crew link to capture setup photos on-site, then select your
-          best shots and send them to the customer with a review request.
-        </p>
-        <OwnerSetupPhotos
-          orderId={order.id}
-          photos={order.setupPhotos || []}
-          videos={order.videos || []}
-          customerEmail={order.customer.email}
-          customerPhone={order.customer.phone}
-          customerName={customerName(order.customer)}
-          photosSentAt={order.photosSentAt || null}
-        />
-      </section>
+      {/* Crew: capture before photos/videos */}
+      <div className="space-y-3">
+        <Collapsible
+          title="Crew Setup Photos/Videos"
+          subtitle="Send link to crew to capture before photos & videos"
+        >
+          <OwnerCrewPhotos
+            orderId={order.id}
+            photos={order.setupPhotos || []}
+            videos={order.videos || []}
+            customerName={customerName(order.customer)}
+          />
+        </Collapsible>
 
-      <SectionDivider />
+        {/* Customer: send photos/videos + review link */}
+        <Collapsible
+          title="Customer Photos/Videos"
+          subtitle="Send link to customer with photos/videos + Google review link"
+        >
+          <OwnerCustomerPhotos
+            orderId={order.id}
+            photos={order.setupPhotos || []}
+            videos={order.videos || []}
+            customerEmail={order.customer.email}
+            customerPhone={order.customer.phone}
+            photosSentAt={order.photosSentAt || null}
+            requestTestimonial={!!order.requestTestimonial}
+          />
+        </Collapsible>
 
-      {/* Content Creation (producer) */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Content Creation</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          Select which photos &amp; videos go to your content creator, then send.
-          Videos auto-delete 20 days after upload.
-        </p>
-        <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} customerPhone={order.customer.phone} />
-      </section>
+        {/* Content Creation (producer) */}
+        <Collapsible
+          title="Content Creation"
+          subtitle="Send content to your creator/editor (videos auto-delete after 20 days)"
+        >
+          <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
+        </Collapsible>
+
+        {/* Video testimonial */}
+        <Collapsible
+          title="Video Testimonial"
+          subtitle="Request a short video review from the customer"
+        >
+          <OwnerTestimonial orderId={order.id} customerPhone={order.customer.phone} />
+        </Collapsible>
+      </div>
 
       {/* Delete — unsigned orders only; signed orders are protected (archive them) */}
       {!order.signature && (

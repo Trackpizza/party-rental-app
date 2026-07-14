@@ -4,21 +4,17 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings } from '@/lib/settings'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
-import TextCustomer from './TextCustomer'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
-// Producer-facing: select which photos + videos go to the content creator,
-// plus the testimonial recording controls.
+// Producer-facing: select which photos + videos go to the content creator.
 export default function OwnerContentCreation({
   orderId,
   photos,
   videos,
-  customerPhone,
 }: {
   orderId: string
   photos: SetupPhoto[]
   videos: VideoClip[]
-  customerPhone: string
 }) {
   const [to, setTo] = useState('')
   const [cc, setCc] = useState('')
@@ -26,7 +22,6 @@ export default function OwnerContentCreation({
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
   const [msg, setMsg] = useState('')
-  const [tCopied, setTCopied] = useState(false)
 
   // Prefill To with the first producer and BCC with the rest, so multiple
   // producers stay hidden from each other by default. All fields stay editable.
@@ -36,12 +31,6 @@ export default function OwnerContentCreation({
       setBcc(b.producerEmails.slice(1).join(', '))
     })
   }, [])
-
-  async function copyTestimonialLink() {
-    await navigator.clipboard.writeText(`${window.location.origin}/testimonial/${orderId}`)
-    setTCopied(true)
-    setTimeout(() => setTCopied(false), 1500)
-  }
 
   async function sendToProducer() {
     setSending(true)
@@ -119,36 +108,6 @@ export default function OwnerContentCreation({
           {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
         </div>
       )}
-
-      <div className="no-print mt-3 rounded-lg border border-gray-200 p-3">
-        <p className="text-sm font-medium text-gray-700">Testimonial</p>
-        <p className="mb-2 text-xs text-gray-500">
-          Record on-site at pickup, or text the link to the customer (release +
-          ≤3 min). It lands here and notifies you.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <a href={`/testimonial/${orderId}`} target="_blank" rel="noreferrer" className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90">
-            Open recorder (on-site)
-          </a>
-          <button onClick={copyTestimonialLink} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
-            {tCopied ? 'Copied!' : 'Copy testimonial link'}
-          </button>
-          <ShareButton
-            url={`/testimonial/${orderId}`}
-            title="Quick video testimonial"
-            text="Would you record a quick video review of your event?"
-            label="Share link"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
-          />
-          <TextCustomer
-            phone={customerPhone}
-            url={`/testimonial/${orderId}`}
-            text="Would you record a quick video review of your event?"
-            label="Text link"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand"
-          />
-        </div>
-      </div>
     </div>
   )
 }

@@ -4,30 +4,22 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import PhotoCapture from './PhotoCapture'
 import VideoUpload from './VideoUpload'
-import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
-import TextCustomer from './TextCustomer'
 import TextStaffPicker from './TextStaffPicker'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
-// Customer-facing: select which photos + walkthrough videos the customer
-// receives (with the review request), plus upload + crew link.
-export default function OwnerSetupPhotos({
+// Crew-facing: send the crew a link to capture "before" setup photos & videos,
+// or the owner adds them directly. Shows a simple count of what's been captured.
+export default function OwnerCrewPhotos({
   orderId,
   photos,
   videos,
-  customerEmail,
-  customerPhone,
   customerName,
-  photosSentAt,
 }: {
   orderId: string
   photos: SetupPhoto[]
   videos: VideoClip[]
-  customerEmail: string
-  customerPhone: string
   customerName: string
-  photosSentAt: string | null
 }) {
   const crewText = `Setup photos for ${customerName || 'the event'}:`
   const [staff, setStaff] = useState<StaffMember[]>([])
@@ -40,13 +32,6 @@ export default function OwnerSetupPhotos({
   const [crewNote, setCrewNote] = useState('')
   const [sendingCrew, setSendingCrew] = useState(false)
   const [crewMsg, setCrewMsg] = useState('')
-
-  const [photoTo, setPhotoTo] = useState(customerEmail)
-  const [photoCc, setPhotoCc] = useState('')
-  const [photoBcc, setPhotoBcc] = useState('')
-  const [photoNote, setPhotoNote] = useState('')
-  const [sending, setSending] = useState(false)
-  const [photoMsg, setPhotoMsg] = useState('')
 
   useEffect(() => {
     getBusinessSettings().then((b) => setStaff(b.staff))
@@ -108,96 +93,23 @@ export default function OwnerSetupPhotos({
     }
   }
 
-  async function sendPhotos() {
-    setSending(true)
-    setPhotoMsg('')
-    try {
-      const res = await fetch(`/api/orders/${orderId}/send-photos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: photoTo, cc: photoCc, bcc: photoBcc, note: photoNote }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Failed')
-      setPhotoMsg(
-        `✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`,
-      )
-    } catch (e: any) {
-      setPhotoMsg(`Error: ${e.message}`)
-    } finally {
-      setSending(false)
-    }
-  }
-
   const walkthroughs = videos.filter((v) => v.type === 'walkthrough')
-  const selPhotos = photos.filter((p) => p.selected).length
-  const selVids = walkthroughs.filter((v) => v.selected).length
-  const hasMedia = photos.length > 0 || walkthroughs.length > 0
+  const nPhotos = photos.length
+  const nVids = walkthroughs.length
 
   return (
     <div>
-      <MediaGrid
-        orderId={orderId}
-        photos={photos}
-        videos={videos}
-        videoTypes={['walkthrough']}
-        field="selected"
-      />
+      <p className="mb-3 text-sm text-gray-500">
+        {nPhotos || nVids
+          ? `Captured so far: ${nPhotos} photo${nPhotos === 1 ? '' : 's'}, ${nVids} video${nVids === 1 ? '' : 's'}. Pick your best & send them to the customer in the “Customer Photos/Videos” section below.`
+          : 'No photos or videos captured yet. Send the crew the link below, or add them yourself.'}
+      </p>
 
-      {hasMedia && (
-        <p className="mt-2 text-xs text-gray-400">
-          Tap items to choose what the customer receives ({selPhotos} photo
-          {selPhotos === 1 ? '' : 's'}, {selVids} video{selVids === 1 ? '' : 's'} selected
-          {selPhotos === 0 && selVids === 0 ? ' — all will be sent' : ''}).
-        </p>
-      )}
-
-      <div className="no-print mt-3 flex flex-wrap items-center gap-3">
+      <div className="no-print flex flex-wrap items-center gap-3">
         <PhotoCapture onConfirm={addPhoto} label={uploading ? 'Uploading…' : 'Add photo'} />
         <VideoUpload orderId={orderId} type="walkthrough" maxSeconds={60} label="Add walkthrough (≤1 min)" />
       </div>
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
-
-      {hasMedia && (
-        <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">
-          <p className="text-sm font-medium text-gray-700">Send to customer + review request</p>
-          <p className="mb-2 text-xs text-gray-500">
-            {photosSentAt ? `Last sent ${new Date(photosSentAt).toLocaleString()}.` : 'Sends the selected photos & videos with the review link.'}
-          </p>
-          <input
-            type="email"
-            value={photoTo}
-            onChange={(e) => setPhotoTo(e.target.value)}
-            placeholder="Send to email"
-            className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
-          />
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            <input type="text" value={photoCc} onChange={(e) => setPhotoCc(e.target.value)} placeholder="CC (optional)" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-            <input type="text" value={photoBcc} onChange={(e) => setPhotoBcc(e.target.value)} placeholder="BCC (optional)" className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-          </div>
-          <textarea rows={2} value={photoNote} onChange={(e) => setPhotoNote(e.target.value)} placeholder="Add a personal note (optional) — appears in a green box in the email…" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-brand focus:outline-none" />
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button onClick={sendPhotos} disabled={!photoTo.trim() || sending} className="rounded-lg bg-brand px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-              {sending ? 'Sending…' : '✉️ Send to customer + review'}
-            </button>
-            <ShareButton
-              url={`/gallery/${orderId}`}
-              title="Your event photos"
-              text="Here are the photos from your event:"
-              label="Share photos"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
-            />
-            <TextCustomer
-              phone={customerPhone}
-              url={`/gallery/${orderId}`}
-              text="Here are the photos from your event:"
-              label="Text photos"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
-            />
-          </div>
-          {photoMsg && <p className="mt-2 text-sm text-gray-600">{photoMsg}</p>}
-        </div>
-      )}
 
       {/* Crew upload link */}
       <div className="no-print mt-4 rounded-lg border border-gray-200 p-3">

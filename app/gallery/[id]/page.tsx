@@ -117,6 +117,29 @@ export default async function GalleryPage({ params }: { params: { id: string } }
             </a>
           </div>
         )}
+
+        {order.requestTestimonial && (
+          <div className="mt-4 rounded-2xl bg-white p-6 text-center shadow-sm">
+            <p className="text-sm text-gray-500">
+              Loved your event? We&apos;d be grateful for a quick video shout-out.
+            </p>
+            <a
+              href={`/testimonial/${order.id}`}
+              className="mt-3 inline-block rounded-lg border-2 border-brand px-6 py-3 font-semibold text-brand hover:bg-brand hover:text-white"
+            >
+              🎥 Leave a quick video review
+            </a>
+            <p className="mt-4 text-sm text-gray-500">
+              ¿Le encantó su evento? Nos encantaría un breve saludo en video.
+            </p>
+            <a
+              href={`/testimonial/${order.id}`}
+              className="mt-3 inline-block rounded-lg border-2 border-brand px-6 py-3 font-semibold text-brand hover:bg-brand hover:text-white"
+            >
+              🎥 Deje una reseña en video
+            </a>
+          </div>
+        )}
       </div>
     </main>
   )

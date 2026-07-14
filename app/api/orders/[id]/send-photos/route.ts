@@ -35,9 +35,11 @@ export async function POST(
 
     const selected = (order.setupPhotos || []).filter((p) => p.selected)
     const count = selected.length || (order.setupPhotos || []).length
-    if (count === 0) {
-      return NextResponse.json({ error: 'No setup photos to send.' }, { status: 400 })
-    }
+    const selVideos = (order.videos || []).filter((v) => v.type === 'walkthrough' && v.selected)
+    const videoCount = selVideos.length || (order.videos || []).filter((v) => v.type === 'walkthrough').length
+    // No hard block: a review-only send (no media) is allowed — the email body
+    // switches to a thank-you + review request without any photo language.
+    const hasMedia = count > 0 || videoCount > 0
 
     const toClean = (to || '').trim() || order.customer?.email?.trim()
     if (!toClean) {
@@ -54,20 +56,38 @@ export async function POST(
     const noteBlock = (note || '').trim()
       ? `<div style="background:#f0fdf4;border-left:4px solid #15803d;padding:12px 16px;border-radius:8px;margin-bottom:18px;color:#166534;line-height:1.5;white-space:pre-wrap;">${esc((note || '').trim())}</div>`
       : ''
+
+    // Body + button copy switch depending on whether there's media to show.
+    const introEn = hasMedia
+      ? 'Thank you for choosing us for your event! We took some photos of your setup — view and download them below.'
+      : 'Thank you for choosing us for your event! We hope everything was perfect.'
+    const introEs = hasMedia
+      ? '¡Gracias por elegirnos para su evento! Tomamos algunas fotos de su montaje — véalas y descárguelas abajo.'
+      : '¡Gracias por elegirnos para su evento! Esperamos que todo haya sido perfecto.'
+    const btnLabel = hasMedia
+      ? '📸 View your event photos &nbsp;·&nbsp; Ver sus fotos'
+      : '⭐ Leave us a review &nbsp;·&nbsp; Déjenos una reseña'
+    const closeEn = hasMedia
+      ? "A quick review means others can find us — there's a button right on the photo page. Thank you!"
+      : 'A quick review means others can find us. Thank you!'
+    const closeEs = hasMedia
+      ? 'Una reseña rápida ayuda a que otros nos encuentren — hay un botón en la página de fotos. ¡Gracias!'
+      : 'Una reseña rápida ayuda a que otros nos encuentren. ¡Gracias!'
+
     const html = `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1a1a1a;line-height:1.5;">
       <h1 style="color:#7c2d91;font-size:20px;">${business}</h1>
       ${noteBlock}
       <p>${enGreet} &nbsp;/&nbsp; ${esGreet}</p>
-      <p>Thank you for choosing us for your event! We took some photos of your setup — view and download them below.</p>
-      <p>¡Gracias por elegirnos para su evento! Tomamos algunas fotos de su montaje — véalas y descárguelas abajo.</p>
+      <p>${introEn}</p>
+      <p>${introEs}</p>
       <p style="text-align:center;margin:24px 0;">
         <a href="${galleryUrl}" style="display:inline-block;background:#7c2d91;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;line-height:1.4;">
-          📸 View your event photos &nbsp;·&nbsp; Ver sus fotos
+          ${btnLabel}
         </a>
       </p>
-      <p style="color:#555;">A quick review means others can find us — there's a button right on the photo page. Thank you!</p>
-      <p style="color:#555;">Una reseña rápida ayuda a que otros nos encuentren — hay un botón en la página de fotos. ¡Gracias!</p>
+      <p style="color:#555;">${closeEn}</p>
+      <p style="color:#555;">${closeEs}</p>
       <p style="color:#999;font-size:12px;margin-top:20px;">${business}<br/>${process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''}</p>
     </div>`
 

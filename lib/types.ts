@@ -218,6 +218,10 @@ export interface Order {
   setupPhotos: SetupPhoto[]
   photosSentAt: string | null
 
+  // when true, the customer gallery page also shows a "leave a video review"
+  // button (links to the testimonial recorder). Owner opts in per customer.
+  requestTestimonial?: boolean
+
   // videos (walkthrough / testimonial) — 20-day auto-purge
   videos?: VideoClip[]
 
