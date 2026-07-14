@@ -38,6 +38,14 @@ function matchesStatus(o: Order, key: string): boolean {
   return f?.statuses ? f.statuses.includes(o.status) : true
 }
 
+// Flag orders that are committed and heading toward delivery but haven't had
+// their paper copy printed yet. Cleared once printed or delivered (moot after
+// that). Prevents the "forgot to print before delivery" miss.
+function needsPrint(o: Order): boolean {
+  if (o.printedAt || o.deliveredAt || o.archived) return false
+  return !!(o.signature || o.depositPaid)
+}
+
 function matchesSearch(o: Order, ql: string): boolean {
   if (!ql) return true
   const c = o.customer
@@ -148,11 +156,18 @@ export default function Dashboard() {
                       Event: {o.event.eventDate || '—'} · {money(o.totals.total)}
                     </p>
                   </div>
-                  <span
-                    className={`ml-2 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status]}`}
-                  >
-                    {STATUS_LABELS[o.status]}
-                  </span>
+                  <div className="ml-2 flex shrink-0 flex-col items-end gap-1">
+                    {needsPrint(o) && (
+                      <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                        ⚠ Not printed
+                      </span>
+                    )}
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status]}`}
+                    >
+                      {STATUS_LABELS[o.status]}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>

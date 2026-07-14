@@ -398,6 +398,7 @@ export default function OrderDetailPage() {
       {/* Order summary */}
       <Collapsible
         title="Order"
+        printable
         subtitle={`${activeItems.length} item${activeItems.length === 1 ? '' : 's'} · ${money(order.totals.total)}${order.totals.balance ? ` · balance ${money(order.totals.balance)}` : ''}`}
         badge={
           <>

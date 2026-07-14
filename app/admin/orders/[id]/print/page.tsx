@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { getOrder, money, formatTime } from '@/lib/orders'
+import { getOrder, updateOrder, money, formatTime } from '@/lib/orders'
 import { getWaiver } from '@/lib/waiver'
 import { auth } from '@/lib/firebase/client'
 import { Order, customerName, itemName } from '@/lib/types'
@@ -63,7 +63,12 @@ export default function PrintContractPage() {
       {/* toolbar (screen only) */}
       <div className="no-print mb-4 flex justify-end">
         <button
-          onClick={() => window.print()}
+          onClick={() => {
+            // Record that this order's paper copy was printed, so the orders
+            // list stops flagging it as "Not printed". Fire-and-forget.
+            updateOrder(id, { printedAt: new Date().toISOString() }).catch(() => {})
+            window.print()
+          }}
           className="rounded-lg bg-brand px-5 py-2 font-semibold text-white hover:opacity-90"
         >
           🖨️ Print / Save PDF

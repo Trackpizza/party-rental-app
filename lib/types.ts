@@ -227,6 +227,10 @@ export interface Order {
 
   receiptSentAt?: string | null
 
+  // set when the owner prints/saves the paper contract from the print page, so
+  // the orders list can flag orders that haven't been printed before delivery.
+  printedAt?: string | null
+
   // social-media consent captured at signing (optional; doesn't block signing)
   mediaConsent?: boolean
   mediaConsentAt?: string | null
