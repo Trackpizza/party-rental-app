@@ -409,6 +409,13 @@ export default function OrderDetailPage() {
                 tone={(order.dlPhotos?.length ?? 0) > 0 ? 'good' : 'warn'}
               />
             )}
+            {order.balancePaid ? (
+              <StatusChip label="Paid in full" tone="good" />
+            ) : order.depositPaid ? (
+              <StatusChip label="Deposit paid" tone="good" />
+            ) : (
+              <StatusChip label="Unpaid" tone="warn" />
+            )}
           </>
         }
       >
@@ -470,12 +477,10 @@ export default function OrderDetailPage() {
           <Total label="Deposit" value={money(order.totals.deposit)} />
           <Total label="Balance" value={money(order.totals.balance)} />
         </div>
-      </Collapsible>
-
-      <SectionDivider />
+        <hr className="my-6 border-gray-200" />
 
       {/* Payment */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div>
         <h2 className="mb-3 font-semibold text-gray-800">Payment</h2>
         <p className="text-sm text-gray-500">
           Method: <span className="font-medium capitalize text-gray-700">{order.paymentMethod || '—'}</span>
@@ -625,12 +630,12 @@ export default function OrderDetailPage() {
             onUndo={() => act({ balancePaid: false, balancePaidAt: null, balancePaidVia: null })}
           />
         </div>
-      </section>
+      </div>
 
-      <SectionDivider />
+        <hr className="my-6 border-gray-200" />
 
       {/* Signature */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div>
         <h2 className="mb-3 font-semibold text-gray-800">Signature</h2>
         {order.signature ? (
           <div>
@@ -642,12 +647,12 @@ export default function OrderDetailPage() {
         ) : (
           <p className="text-sm text-gray-400">Not signed yet — share the link above to collect the signature.</p>
         )}
-      </section>
+      </div>
 
-      <SectionDivider />
+        <hr className="my-6 border-gray-200" />
 
       {/* Driver's license */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div>
         <h2 className="mb-3 font-semibold text-gray-800">Driver&apos;s license</h2>
         <OwnerDLPhotos orderId={order.id} photos={order.dlPhotos || []} />
         {order.dlPurgeAfter && (order.dlPhotos?.length || 0) > 0 && (
@@ -706,7 +711,8 @@ export default function OrderDetailPage() {
             {dlMsg && <p className="mt-2 text-sm text-gray-600">{dlMsg}</p>}
           </div>
         )}
-      </section>
+      </div>
+      </Collapsible>
 
       <SectionDivider />
 
