@@ -80,6 +80,9 @@ export default function OwnerCustomerPhotos({
             {selPhotos === 1 ? '' : 's'}, {selVids} video{selVids === 1 ? '' : 's'} selected
             {selPhotos === 0 && selVids === 0 ? ' — all will be sent' : ''}).
           </p>
+          <p className="mt-1 text-xs text-amber-700">
+            ⚠ Download anything you want to keep — photos auto-delete 60 days after upload, videos after 20 days.
+          </p>
         </>
       ) : (
         <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">

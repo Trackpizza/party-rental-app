@@ -50,9 +50,15 @@ export default function OrderDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteMsg, setDeleteMsg] = useState('')
   const [squareAuto, setSquareAuto] = useState(false)
+  const [requireDl, setRequireDl] = useState(true)
 
   useEffect(() => {
-    getBusinessSettings().then((b) => setSquareAuto(b.squareAutoLinks)).catch(() => {})
+    getBusinessSettings()
+      .then((b) => {
+        setSquareAuto(b.squareAutoLinks)
+        setRequireDl(b.requireDl)
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -327,14 +333,19 @@ export default function OrderDetailPage() {
       <SectionDivider />
 
       {/* Send signing link */}
-      <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-1 font-semibold text-gray-800">Send signing link to customer</h2>
-        <p className="mb-3 text-sm text-gray-500">
-          {order.customer.email
-            ? <>Sends to <span className="font-medium text-gray-700">{order.customer.email}</span></>
-            : 'No email on file — add one to the order, or use Copy link below.'}
-        </p>
-
+      <Collapsible
+        title="Send signing link to customer"
+        subtitle={order.customer.email ? `Sends to ${order.customer.email}` : 'No email on file — use Copy link'}
+        badge={
+          order.signature ? (
+            <StatusChip label="Signed" tone="good" />
+          ) : order.sentAt ? (
+            <StatusChip label="Sent — awaiting signature" tone="warn" />
+          ) : (
+            <StatusChip label="Not sent" tone="neutral" />
+          )
+        }
+      >
         <textarea
           rows={2}
           value={note}
@@ -380,13 +391,27 @@ export default function OrderDetailPage() {
         </div>
         {sendMsg && <p className="mt-2 text-sm text-gray-600">{sendMsg}</p>}
         <p className="mt-2 break-all text-xs text-gray-400">{link}</p>
-      </section>
+      </Collapsible>
 
       <SectionDivider />
 
       {/* Order summary */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h2 className="mb-3 font-semibold text-gray-800">Order</h2>
+      <Collapsible
+        title="Order"
+        subtitle={`${activeItems.length} item${activeItems.length === 1 ? '' : 's'} · ${money(order.totals.total)}${order.totals.balance ? ` · balance ${money(order.totals.balance)}` : ''}`}
+        badge={
+          <>
+            {order.completedAt && <StatusChip label="Completed" tone="good" />}
+            <StatusChip label={order.signature ? 'Has signature' : 'Need signature'} tone={order.signature ? 'good' : 'warn'} />
+            {requireDl && (
+              <StatusChip
+                label={(order.dlPhotos?.length ?? 0) > 0 ? 'Has license' : 'Need license'}
+                tone={(order.dlPhotos?.length ?? 0) > 0 ? 'good' : 'warn'}
+              />
+            )}
+          </>
+        }
+      >
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <Info label="Event start" value={order.event.eventDate || '—'} />
           <Info label="Delivery time" value={formatTime(order.event.deliveryTime) || '—'} />
@@ -445,7 +470,7 @@ export default function OrderDetailPage() {
           <Total label="Deposit" value={money(order.totals.deposit)} />
           <Total label="Balance" value={money(order.totals.balance)} />
         </div>
-      </section>
+      </Collapsible>
 
       <SectionDivider />
 
@@ -864,6 +889,24 @@ export default function OrderDetailPage() {
 
 function SectionDivider() {
   return <hr className="no-print -my-1 border-t border-purple-200" />
+}
+
+// Small pill used in collapsible banners to summarize status at a glance.
+// tone: 'good' (green ✓), 'warn' (amber ⚠), or 'neutral' (gray).
+function StatusChip({ label, tone }: { label: string; tone: 'good' | 'warn' | 'neutral' }) {
+  const cls =
+    tone === 'good'
+      ? 'bg-green-50 text-green-700'
+      : tone === 'warn'
+        ? 'bg-amber-50 text-amber-700'
+        : 'bg-gray-100 text-gray-600'
+  const icon = tone === 'good' ? '✓ ' : tone === 'warn' ? '⚠ ' : ''
+  return (
+    <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>
+      {icon}
+      {label}
+    </span>
+  )
 }
 
 function Info({ label, value }: { label: string; value: string }) {

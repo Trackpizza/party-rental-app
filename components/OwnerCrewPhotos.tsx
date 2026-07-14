@@ -122,6 +122,9 @@ export default function OwnerCrewPhotos({
             field="selected"
             readOnly
           />
+          <p className="mt-2 text-xs text-amber-700">
+            ⚠ Download anything you want to keep — photos auto-delete 60 days after upload, videos after 20 days.
+          </p>
         </div>
       )}
 
