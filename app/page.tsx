@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import StandaloneRedirect from '@/components/StandaloneRedirect'
 
 export default function Home() {
   const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
@@ -12,6 +13,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
+      <StandaloneRedirect to="/admin" />
       <h1 className="text-3xl font-bold text-brand">{business}</h1>
       <p className="mt-2 text-gray-500">
         Party rentals · Renta para fiestas 🎉
