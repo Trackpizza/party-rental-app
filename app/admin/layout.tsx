@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/client'
 import AuthGuard from '@/components/AuthGuard'
+import InstallButton from '@/components/InstallButton'
 
 export default function AdminLayout({
   children,
@@ -53,6 +54,7 @@ export default function AdminLayout({
             >
               + New Order
             </Link>
+            <InstallButton />
             <button
               onClick={async () => {
                 await signOut(auth)
