@@ -34,10 +34,20 @@ const Ctx = createContext<InstallState>({
   promptInstall: async () => null,
 });
 
+/** A "where did it go?" message shown right after a desktop/Android install. */
+function postInstallMessage(): string {
+  const ua = navigator.userAgent;
+  const name = document.title || "the app";
+  if (/android|iphone|ipad|ipod/i.test(ua)) return "✅ Installed — find it on your home screen.";
+  if (/mac/i.test(ua)) return `✅ Installed! Find “${name}” in Launchpad or Applications, and keep it in your Dock.`;
+  return `✅ Installed! Find it in your Start menu (search “${name}”), then right-click it in the taskbar to pin it.`;
+}
+
 export function InstallProvider({ children }: { children: ReactNode }) {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [installedMsg, setInstalledMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -66,6 +76,8 @@ export function InstallProvider({ children }: { children: ReactNode }) {
     const onInstalled = () => {
       setDeferred(null);
       setIsStandalone(true);
+      setInstalledMsg(postInstallMessage());
+      window.setTimeout(() => setInstalledMsg(null), 12000);
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -87,6 +99,20 @@ export function InstallProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={{ canInstall: !!deferred, isIOS, isStandalone, promptInstall }}>
       {children}
+      {installedMsg && (
+        <div className="fixed inset-x-0 bottom-4 z-[60] flex justify-center px-4">
+          <div className="flex max-w-md items-start gap-3 rounded-xl bg-gray-900 px-4 py-3 text-sm text-white shadow-lg">
+            <span>{installedMsg}</span>
+            <button
+              onClick={() => setInstalledMsg(null)}
+              className="-mr-1 text-gray-400 hover:text-white"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </Ctx.Provider>
   );
 }
