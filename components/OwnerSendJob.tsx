@@ -69,6 +69,10 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
       <button onClick={copyLink} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
         {copied ? 'Copied!' : '📋 Copy link'}
       </button>
+
+      {/* Texting (QR) first — the owner's main way to send this to crew. */}
+      <TextStaffPicker staff={staff} url={`/job/${orderId}`} text="Delivery job ticket:" />
+
       <div className="mt-3">
         {staff.length > 0 && (
           <select
@@ -76,7 +80,7 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
             onChange={(e) => e.target.value && pickStaff(e.target.value)}
             className="mb-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand focus:outline-none"
           >
-            <option value="">Pick team member…</option>
+            <option value="">✉️ Email team members…</option>
             {staff.map((s, i) => (
               <option key={i} value={s.email}>{s.name || s.email}</option>
             ))}
@@ -136,7 +140,6 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
           className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
         />
       </div>
-      <TextStaffPicker staff={staff} url={`/job/${orderId}`} text="Delivery job ticket:" />
       {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
     </div>
   )

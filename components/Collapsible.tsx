@@ -31,7 +31,7 @@ export default function Collapsible({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-3 p-5 text-left hover:bg-gray-50"
+        className={`flex w-full items-center justify-between gap-3 p-5 text-left hover:bg-gray-50 ${open ? 'bg-gray-50' : ''}`}
         aria-expanded={open}
       >
         <span className="min-w-0">

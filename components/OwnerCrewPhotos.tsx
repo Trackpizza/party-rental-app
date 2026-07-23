@@ -135,10 +135,14 @@ export default function OwnerCrewPhotos({
         <button onClick={copyCrewLink} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
           {copied ? 'Copied!' : '📋 Copy link'}
         </button>
+
+        {/* Texting (QR) first — the owner's main way to send this to crew. */}
+        <TextStaffPicker staff={staff} url={`/setup/${orderId}`} text={crewText} />
+
         <div className="mt-3">
           {staff.length > 0 && (
             <select value="" onChange={(e) => e.target.value && pickStaff(e.target.value)} className="mb-2 rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-brand focus:outline-none">
-              <option value="">Pick team member…</option>
+              <option value="">✉️ Email team members…</option>
               {staff.map((s, i) => (
                 <option key={i} value={s.email}>{s.name || s.email}</option>
               ))}
@@ -168,7 +172,6 @@ export default function OwnerCrewPhotos({
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
           />
         </div>
-        <TextStaffPicker staff={staff} url={`/setup/${orderId}`} text={crewText} />
         {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
     </div>

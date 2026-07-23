@@ -835,6 +835,8 @@ export default function OrderDetailPage() {
           />
         </Collapsible>
 
+        <SectionDivider />
+
         {/* Customer: send photos/videos + review link */}
         <Collapsible
           title="Customer Photos/Videos"
@@ -851,6 +853,8 @@ export default function OrderDetailPage() {
           />
         </Collapsible>
 
+        <SectionDivider />
+
         {/* Content Creation (producer) */}
         <Collapsible
           title="Content Creation"
@@ -858,6 +862,8 @@ export default function OrderDetailPage() {
         >
           <OwnerContentCreation orderId={order.id} photos={order.setupPhotos || []} videos={order.videos || []} />
         </Collapsible>
+
+        <SectionDivider />
 
         {/* Video testimonial */}
         <Collapsible
