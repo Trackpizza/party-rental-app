@@ -901,7 +901,7 @@ export default function OrderDetailPage() {
 }
 
 function SectionDivider() {
-  return <hr className="no-print -my-1 border-t border-purple-200" />
+  return <hr className="no-print -my-1 border-t-4 border-purple-300" />
 }
 
 // Small pill used in collapsible banners to summarize status at a glance.
