@@ -3,26 +3,30 @@
 import { useState } from 'react'
 import QRCode from 'qrcode'
 
-// Desktop-friendly "text the customer" helper.
+// "Text the customer" helper.
 //
-// Builds an `sms:<number>?body=<link>` URI. On the owner's Windows PC (with
-// Phone Link set up) clicking it opens Phone Link pre-filled with the
-// customer's number + the link — he just hits Send. The "Show QR" panel renders
-// the same sms: URI as a QR code, generated locally (no third-party service, so
-// the customer's number never leaves the app), so he can scan it with his phone
-// if Phone Link isn't configured.
+// Builds an `sms:<number>?body=<link>` URI and renders it as a QR code, generated
+// locally (no third-party service, so the customer's number never leaves the app).
+// The owner scans it with his phone and Messages opens with the number + link
+// ready to send — no Windows Phone Link setup required.
+//
+// `onPhone` is for the crew-facing pages, where the person is already holding a
+// phone: there a direct sms: link is correct (scanning a QR with the same phone
+// you're holding makes no sense), so it renders a plain tap-to-text link instead.
 export default function TextCustomer({
   phone,
   url,
   text,
   label = 'Text customer',
   className = 'rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand',
+  onPhone = false,
 }: {
   phone: string
   url: string
   text?: string
   label?: string
   className?: string
+  onPhone?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [qr, setQr] = useState('')
@@ -44,24 +48,27 @@ export default function TextCustomer({
       try {
         setQr(await QRCode.toDataURL(smsHref(), { width: 240, margin: 1 }))
       } catch {
-        /* QR generation failed — the Phone Link button still works */
+        /* QR generation failed — nothing to show */
       }
     }
   }
 
   const hasPhone = !!(phone || '').replace(/[^\d]/g, '')
 
+  // Crew on their own phone — tap to open Messages directly.
+  if (onPhone) {
+    return (
+      <a href={smsHref()} className={className}>
+        💬 {label}
+      </a>
+    )
+  }
+
   return (
     <span className="inline-flex flex-col items-start gap-2">
-      <span className="inline-flex items-center gap-2">
-        {/* Anchor (not window.location) so the OS handler opens reliably. */}
-        <a href={smsHref()} className={className}>
-          💬 {label}
-        </a>
-        <button type="button" onClick={toggle} className="text-sm text-gray-400 underline">
-          {open ? 'Hide QR' : 'Show QR'}
-        </button>
-      </span>
+      <button type="button" onClick={toggle} className={className}>
+        📱 {open ? 'Hide QR' : `${label} — scan QR`}
+      </button>
 
       {open && (
         <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
@@ -78,7 +85,7 @@ export default function TextCustomer({
             <p className="text-sm text-gray-400">Generating QR…</p>
           )}
           <p className="mt-2 max-w-[240px] text-xs text-gray-500">
-            Scan with your phone to open Messages with the number and link ready.
+            Scan with your phone — Messages opens with the number and link ready to send.
           </p>
         </div>
       )}

@@ -76,6 +76,7 @@ export default function CrewCollect({
               text="Here's your payment link:"
               label="Text customer · Enviar"
               className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
+              onPhone
             />
             <button type="button" onClick={toggleQr} className="text-sm text-gray-500 underline">
               {qr ? 'Hide QR' : 'Show QR to scan'}
