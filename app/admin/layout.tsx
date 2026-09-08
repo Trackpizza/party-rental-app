@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/client'
 import AuthGuard from '@/components/AuthGuard'
 import InstallButton from '@/components/InstallButton'
+import { ToastProvider } from '@/components/Toast'
 
 export default function AdminLayout({
   children,
@@ -24,6 +25,7 @@ export default function AdminLayout({
 
   return (
     <AuthGuard>
+      <ToastProvider>
       <div className="min-h-screen">
         <header className="no-print sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
           <Link href="/admin" className="font-bold text-brand">
@@ -68,6 +70,7 @@ export default function AdminLayout({
         </header>
         <div className="mx-auto max-w-5xl p-4">{children}</div>
       </div>
+      </ToastProvider>
     </AuthGuard>
   )
 }

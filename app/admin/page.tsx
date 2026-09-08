@@ -117,19 +117,33 @@ export default function Dashboard() {
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
-            {FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setStatusFilter(f.key)}
-                className={`rounded-full px-3 py-1 text-sm ${
-                  statusFilter === f.key
-                    ? 'bg-brand text-white'
-                    : 'border border-gray-200 bg-white text-gray-600 hover:border-brand'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
+            {FILTERS.map((f) => {
+              const count = orders.filter((o) => {
+                if (f.key === 'archived') return !!o.archived
+                if (o.archived) return false
+                return matchesStatus(o, f.key)
+              }).length
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${
+                    statusFilter === f.key
+                      ? 'bg-brand text-white'
+                      : 'border border-gray-200 bg-white text-gray-600 hover:border-brand'
+                  }`}
+                >
+                  {f.label}
+                  {count > 0 && (
+                    <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${
+                      statusFilter === f.key ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
 
           {filtered.length === 0 ? (

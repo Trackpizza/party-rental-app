@@ -85,36 +85,38 @@ export default async function GalleryPage({ params }: { params: { id: string } }
         )}
 
         {reviewUrl && (
-          <div className="mt-8 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="font-semibold text-gray-800">
-              Thank you for choosing us for your event!
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              A quick review means others can find us. Thank you!
-            </p>
-            <a
-              href={reviewUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-block rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:opacity-90"
-            >
-              ⭐ Leave a Google Review
-            </a>
-
-            <p className="mt-6 border-t border-gray-100 pt-5 font-semibold text-gray-800">
-              ¡Gracias por elegirnos para su evento!
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              Una reseña rápida ayuda a que otros nos encuentren. ¡Gracias!
-            </p>
-            <a
-              href={reviewUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-block rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:opacity-90"
-            >
-              ⭐ Deja una reseña en Google
-            </a>
+          <div className="mt-8 overflow-hidden rounded-2xl shadow-md">
+            <div className="bg-gradient-to-br from-yellow-400 to-amber-500 px-6 pt-7 pb-2 text-center">
+              <div className="text-4xl">⭐⭐⭐⭐⭐</div>
+              <p className="mt-3 text-xl font-bold text-white">
+                Loved your event? Tell others!
+              </p>
+              <p className="mt-1 text-sm text-yellow-100">
+                A quick Google review helps your neighbors find us — and means the world to our small business.
+              </p>
+              <a
+                href={reviewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-block rounded-xl bg-white px-8 py-3 font-bold text-amber-600 shadow hover:bg-yellow-50"
+              >
+                Leave a Google Review →
+              </a>
+            </div>
+            <div className="bg-amber-50 px-6 py-5 text-center">
+              <p className="font-semibold text-amber-900">¿Le encantó su evento?</p>
+              <p className="mt-1 text-sm text-amber-700">
+                Una reseña rápida ayuda a que otros vecinos nos encuentren. ¡Le agradecemos mucho!
+              </p>
+              <a
+                href={reviewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-block rounded-xl bg-amber-500 px-8 py-3 font-bold text-white hover:bg-amber-600"
+              >
+                ⭐ Deja una reseña en Google
+              </a>
+            </div>
           </div>
         )}
 

@@ -33,9 +33,24 @@ export default function CrewSetupUpload({
   }
 
   return (
-    <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-      <h2 className="font-bold text-brand">Take setup photos</h2>
-      <p className="mt-1 text-sm text-gray-500">Capture the finished setup on-site.</p>
+    <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <h2 className="text-center font-bold text-brand">Take setup photos</h2>
+      <p className="mt-1 text-center text-sm text-gray-500">
+        Capture the finished setup on-site · Fotos del montaje terminado
+      </p>
+
+      <div className="mt-4 rounded-xl bg-gray-50 p-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Shot guide · Guía de fotos
+        </p>
+        <ol className="space-y-1 text-sm text-gray-600">
+          <li>1. Full setup from the front · Vista frontal completa</li>
+          <li>2. Close-up of each item · Detalle de cada artículo</li>
+          <li>3. Left side · Lado izquierdo</li>
+          <li>4. Right side · Lado derecho</li>
+          <li>5. House/venue number visible · Número de la casa</li>
+        </ol>
+      </div>
 
       <div className="mt-5 flex justify-center">
         <PhotoCapture onConfirm={upload} label="Take setup photo" />

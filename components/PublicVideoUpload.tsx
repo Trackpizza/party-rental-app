@@ -99,9 +99,9 @@ export default function PublicVideoUpload({
   }
 
   return (
-    <div>
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand px-5 py-3 font-semibold text-white hover:opacity-90">
-        {progress !== null ? `Uploading… ${progress}%` : `🎥 ${label}`}
+    <div className="w-full">
+      <label className={`inline-flex cursor-pointer items-center gap-2 rounded-lg px-5 py-3 font-semibold text-white ${progress !== null ? 'bg-brand/60 cursor-not-allowed' : 'bg-brand hover:opacity-90'}`}>
+        🎥 {label}
         <input
           type="file"
           accept="video/*"
@@ -111,6 +111,20 @@ export default function PublicVideoUpload({
           onChange={handle}
         />
       </label>
+      {progress !== null && (
+        <div className="mt-3">
+          <div className="mb-1 flex justify-between text-xs text-gray-500">
+            <span>Uploading… please don&apos;t close this page</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-2 rounded-full bg-brand transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   )

@@ -103,14 +103,47 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
 
   if (done) {
     return (
-      <div className="mx-auto max-w-lg p-6 text-center">
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <div className="text-4xl">✅</div>
-          <h1 className="mt-3 text-xl font-bold text-green-700">Thank you!</h1>
-          <p className="mt-2 text-gray-600">
-            Your order is signed. {data.business} will be in touch about your
-            deposit and delivery.
-          </p>
+      <div className="mx-auto max-w-lg space-y-4 p-6">
+        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="text-5xl">✅</div>
+          <h1 className="mt-4 text-xl font-bold text-green-700">You&apos;re all set!</h1>
+          <p className="mt-2 text-gray-600">Your rental agreement is signed and on file.</p>
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <h2 className="mb-3 font-semibold text-gray-800">What happens next</h2>
+          <div className="space-y-3 text-sm text-gray-600">
+            {data.payment.method === 'zelle' && data.payment.zelle && data.totals.deposit != null && (
+              <div className="rounded-xl bg-amber-50 p-4">
+                <p className="font-semibold text-amber-800">
+                  Pay your deposit · {money(data.totals.deposit)}
+                </p>
+                <p className="mt-1 text-amber-700">
+                  Send via Zelle to <strong>{data.payment.zelle}</strong>
+                </p>
+              </div>
+            )}
+            {data.payment.method === 'square' && data.payment.squareLink && data.totals.deposit != null && (
+              <a
+                href={data.payment.squareLink}
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded-xl bg-brand py-3 text-center font-semibold text-white hover:opacity-90"
+              >
+                Pay Deposit ({money(data.totals.deposit)}) →
+              </a>
+            )}
+            {data.payment.method === 'cash' && data.totals.deposit != null && (
+              <div className="rounded-xl bg-gray-50 p-4">
+                <p className="font-semibold text-gray-700">Deposit due at delivery</p>
+                <p className="mt-1 text-gray-600">
+                  Cash deposit of <strong>{money(data.totals.deposit)}</strong> is due when we arrive.
+                </p>
+              </div>
+            )}
+            <p>📦 We&apos;ll confirm your delivery time closer to your event date.</p>
+            <p>💬 Questions? Contact <strong>{data.business}</strong> directly.</p>
+          </div>
         </div>
       </div>
     )
@@ -188,12 +221,14 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
           Driver&apos;s license{data.requireDl && <span className="text-red-500"> *</span>}
         </h2>
         <p className="mb-3 text-sm text-gray-500">
-          {data.requireDl
-            ? 'A photo is required to sign. '
-            : ''}
-          Take a photo of your driver&apos;s license for the rental record — it
-          uploads directly and is not saved to your phone.
+          {data.requireDl ? 'Required to sign. ' : ''}
+          A photo of your license is kept on file for the rental record and automatically deleted 30 days after your event.
         </p>
+        <ul className="mb-3 space-y-1 text-xs text-gray-400">
+          <li>📄 Front side only — all 4 corners visible</li>
+          <li>💡 Good lighting, no glare or flash reflections</li>
+          <li>📐 Lay it flat — hold the phone directly above it</li>
+        </ul>
         {dlThumb ? (
           <div className="flex flex-wrap items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}

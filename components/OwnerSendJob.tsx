@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings, StaffMember } from '@/lib/settings'
 import ShareButton from './ShareButton'
 import TextStaffPicker from './TextStaffPicker'
+import { useToast } from './Toast'
 
 // Owner action: send the crew a job ticket (/job/{id}) — address, equipment,
 // and balance to collect, with no ID/contract/signature. Email a team member
@@ -14,8 +15,8 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
   const [bcc, setBcc] = useState('')
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
-  const [msg, setMsg] = useState('')
   const [copied, setCopied] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     getBusinessSettings().then((b) => setStaff(b.staff))
@@ -43,7 +44,6 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
   async function send() {
     const to = tos.map((s) => s.trim()).filter(Boolean).join(', ')
     setSending(true)
-    setMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/send-job`, {
         method: 'POST',
@@ -52,9 +52,9 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setMsg(`✓ Job sent to ${json.to}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
+      toast(`Job sent to ${json.to}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
     } catch (e: any) {
-      setMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSending(false)
     }
@@ -140,7 +140,6 @@ export default function OwnerSendJob({ orderId }: { orderId: string }) {
           className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
         />
       </div>
-      {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
     </div>
   )
 }

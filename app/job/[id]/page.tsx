@@ -102,6 +102,24 @@ export default async function JobPage({ params }: { params: { id: string } }) {
           )}
         </section>
 
+        {/* Setup alerts — show prominent callout when stairs or non-standard surface */}
+        {(order.event.stairs || order.event.notes || order.event.surfaces.some(s => s !== 'grass')) && (
+          <div className="mt-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4">
+            <p className="font-bold text-amber-800">⚠️ Setup Notes · Notas de instalación</p>
+            <ul className="mt-2 space-y-1 text-sm text-amber-800">
+              {order.event.stairs && (
+                <li className="font-semibold">🪜 Stairs present — use extra care · Hay escaleras</li>
+              )}
+              {order.event.surfaces.length > 0 && (
+                <li>Surface · Superficie: <span className="font-medium capitalize">{order.event.surfaces.join(', ')}</span></li>
+              )}
+              {order.event.notes && (
+                <li>Notes · Notas: <span className="font-medium">{order.event.notes}</span></li>
+              )}
+            </ul>
+          </div>
+        )}
+
         {/* What */}
         <section className="mt-3 rounded-2xl bg-white p-5 shadow-sm">
           <h2 className="mb-3 font-semibold text-gray-800">Equipment · Equipo</h2>
@@ -131,16 +149,6 @@ export default async function JobPage({ params }: { params: { id: string } }) {
                 ))}
               </tbody>
             </table>
-          )}
-
-          {(order.event.surfaces.length > 0 || order.event.stairs) && (
-            <p className="mt-3 text-sm text-gray-600">
-              Surface: {order.event.surfaces.join(', ') || '—'}
-              {order.event.stairs && ' · ⚠️ Stairs / Escaleras'}
-            </p>
-          )}
-          {order.event.notes && (
-            <p className="mt-2 text-sm text-gray-600">Notes: {order.event.notes}</p>
           )}
         </section>
 

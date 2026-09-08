@@ -17,6 +17,7 @@ import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
 import ManualBalanceLink from '@/components/ManualBalanceLink'
 import { getBusinessSettings } from '@/lib/settings'
+import { useToast } from '@/components/Toast'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
@@ -27,30 +28,24 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  const [completeMsg, setCompleteMsg] = useState('')
   const [completing, setCompleting] = useState(false)
   const [note, setNote] = useState('')
   const [cc, setCc] = useState('')
   const [sendingLink, setSendingLink] = useState(false)
-  const [sendMsg, setSendMsg] = useState('')
   const [dlNote, setDlNote] = useState('')
   const [dlCc, setDlCc] = useState('')
   const [sendingDl, setSendingDl] = useState(false)
-  const [dlMsg, setDlMsg] = useState('')
   const [sqLoading, setSqLoading] = useState(false)
-  const [sqMsg, setSqMsg] = useState('')
   const [sqBalLoading, setSqBalLoading] = useState(false)
-  const [sqBalMsg, setSqBalMsg] = useState('')
   const [rcptTo, setRcptTo] = useState('')
   const [rcptCc, setRcptCc] = useState('')
   const [rcptBcc, setRcptBcc] = useState('')
   const [rcptNote, setRcptNote] = useState('')
   const [sendingRcpt, setSendingRcpt] = useState(false)
-  const [rcptMsg, setRcptMsg] = useState('')
   const [deleting, setDeleting] = useState(false)
-  const [deleteMsg, setDeleteMsg] = useState('')
   const [squareAuto, setSquareAuto] = useState(false)
   const [requireDl, setRequireDl] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     getBusinessSettings()
@@ -95,7 +90,6 @@ export default function OrderDetailPage() {
   async function sendSigningLink() {
     if (!order) return
     setSendingLink(true)
-    setSendMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/send-signing-link`, {
         method: 'POST',
@@ -104,10 +98,10 @@ export default function OrderDetailPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setSendMsg(`✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
+      toast(`Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
       setNote('')
     } catch (e: any) {
-      setSendMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSendingLink(false)
     }
@@ -116,7 +110,6 @@ export default function OrderDetailPage() {
   async function sendDlRetake() {
     if (!order) return
     setSendingDl(true)
-    setDlMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/send-dl-retake`, {
         method: 'POST',
@@ -125,10 +118,10 @@ export default function OrderDetailPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setDlMsg(`✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
+      toast(`Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}`)
       setDlNote('')
     } catch (e: any) {
-      setDlMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSendingDl(false)
     }
@@ -137,14 +130,13 @@ export default function OrderDetailPage() {
   async function createSquareDepositLink() {
     if (!order) return
     setSqLoading(true)
-    setSqMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/square-link`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setSqMsg(`✓ Deposit link ready (${money(json.amount)})`)
+      toast(`Deposit link ready (${money(json.amount)})`)
     } catch (e: any) {
-      setSqMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSqLoading(false)
     }
@@ -153,14 +145,13 @@ export default function OrderDetailPage() {
   async function createSquareBalanceLink() {
     if (!order) return
     setSqBalLoading(true)
-    setSqBalMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/square-balance-link`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setSqBalMsg(`✓ Payment link ready (${money(json.amount)})`)
+      toast(`Payment link ready (${money(json.amount)})`)
     } catch (e: any) {
-      setSqBalMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSqBalLoading(false)
     }
@@ -188,14 +179,13 @@ export default function OrderDetailPage() {
     if (!order) return
     if (!window.confirm('Permanently delete this order and any uploaded files? This cannot be undone.')) return
     setDeleting(true)
-    setDeleteMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/delete`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
       router.push('/admin')
     } catch (e: any) {
-      setDeleteMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
       setDeleting(false)
     }
   }
@@ -203,14 +193,13 @@ export default function OrderDetailPage() {
   async function markCompleted() {
     if (!order) return
     setCompleting(true)
-    setCompleteMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/complete`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setCompleteMsg('✓ Marked completed')
+      toast('Marked completed')
     } catch (e: any) {
-      setCompleteMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setCompleting(false)
     }
@@ -219,7 +208,6 @@ export default function OrderDetailPage() {
   async function sendReceipt() {
     if (!order) return
     setSendingRcpt(true)
-    setRcptMsg('')
     try {
       const res = await fetch(`/api/orders/${order.id}/send-receipt`, {
         method: 'POST',
@@ -228,11 +216,9 @@ export default function OrderDetailPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setRcptMsg(
-        `✓ Receipt sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`,
-      )
+      toast(`Receipt sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
     } catch (e: any) {
-      setRcptMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSendingRcpt(false)
     }
@@ -240,6 +226,17 @@ export default function OrderDetailPage() {
   const activeItems = order.items.filter(
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
+
+  // Status timeline steps — each step is "done" once the relevant milestone is reached.
+  const timelineSteps = [
+    { label: 'Contract Sent', done: !!(order.sentAt || order.signature) },
+    { label: 'Signed', done: !!order.signature },
+    { label: 'Deposit Paid', done: !!order.depositPaid },
+    { label: 'Delivered', done: !!order.deliveredAt },
+    { label: 'Picked Up', done: !!order.pickedUpAt },
+    { label: 'Complete', done: !!order.completedAt },
+  ]
+  const currentStep = timelineSteps.reduce((last, s, i) => (s.done ? i : last), -1)
 
   return (
     <div className="space-y-5 pb-10">
@@ -252,9 +249,6 @@ export default function OrderDetailPage() {
           <h1 className="text-xl font-bold">{customerName(order.customer) || 'Unnamed customer'}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <span className="rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-white">
-            {STATUS_LABELS[order.status]}
-          </span>
           <button onClick={() => router.push(`/admin/orders/${order.id}/edit`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Edit
           </button>
@@ -264,6 +258,37 @@ export default function OrderDetailPage() {
           <button onClick={() => router.push(`/admin/orders/${order.id}/print`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Print / PDF
           </button>
+        </div>
+      </div>
+
+      {/* Status timeline */}
+      <div className="no-print rounded-2xl bg-white px-4 py-4 shadow-sm">
+        <div className="relative flex items-start justify-between">
+          {/* connecting line */}
+          <div className="absolute top-3 left-0 right-0 h-0.5 bg-gray-200" aria-hidden="true" />
+          <div
+            className="absolute top-3 left-0 h-0.5 bg-brand transition-all"
+            style={{ width: currentStep < 0 ? '0%' : `${(currentStep / (timelineSteps.length - 1)) * 100}%` }}
+            aria-hidden="true"
+          />
+          {timelineSteps.map((step, i) => (
+            <div key={step.label} className="relative flex flex-1 flex-col items-center gap-1.5">
+              <div className={`z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                step.done
+                  ? 'border-brand bg-brand text-white'
+                  : i === currentStep + 1
+                    ? 'border-brand bg-white text-brand'
+                    : 'border-gray-300 bg-white text-gray-300'
+              }`}>
+                {step.done ? '✓' : i + 1}
+              </div>
+              <p className={`text-center text-[10px] leading-tight ${
+                step.done ? 'font-semibold text-brand' : i === currentStep + 1 ? 'text-gray-600' : 'text-gray-300'
+              }`}>
+                {step.label}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -389,7 +414,6 @@ export default function OrderDetailPage() {
             Preview customer view
           </a>
         </div>
-        {sendMsg && <p className="mt-2 text-sm text-gray-600">{sendMsg}</p>}
         <p className="mt-2 break-all text-xs text-gray-400">{link}</p>
       </Collapsible>
 
@@ -541,7 +565,6 @@ export default function OrderDetailPage() {
               marks the deposit paid automatically once the customer pays.
             </p>
           )}
-          {sqMsg && <p className="mt-2 text-sm text-gray-600">{sqMsg}</p>}
         </div>
         )}
 
@@ -600,7 +623,6 @@ export default function OrderDetailPage() {
                 it from the crew job ticket. It marks the order paid automatically once paid.
               </p>
             )}
-            {sqBalMsg && <p className="mt-2 text-sm text-gray-600">{sqBalMsg}</p>}
           </div>
         )}
 
@@ -709,7 +731,6 @@ export default function OrderDetailPage() {
                 className="rounded-lg border border-gray-300 px-4 py-2.5 hover:border-brand"
               />
             </div>
-            {dlMsg && <p className="mt-2 text-sm text-gray-600">{dlMsg}</p>}
           </div>
         )}
       </div>
@@ -717,14 +738,7 @@ export default function OrderDetailPage() {
 
       <SectionDivider />
 
-      {/* Crew job ticket */}
-      <Collapsible title="Crew Job" subtitle="Send crew directions, order & information">
-        <OwnerSendJob orderId={order.id} />
-      </Collapsible>
-
-      <SectionDivider />
-
-      {/* Lifecycle */}
+      {/* Fulfillment — moved above Crew Job so delivery actions are easy to find */}
       <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Fulfillment</h2>
         <div className="flex flex-wrap gap-3">
@@ -744,8 +758,14 @@ export default function OrderDetailPage() {
             </button>
           )}
         </div>
-        {completeMsg && <p className="mt-2 text-sm text-gray-500">{completeMsg}</p>}
       </section>
+
+      <SectionDivider />
+
+      {/* Crew job ticket */}
+      <Collapsible title="Crew Job" subtitle="Send crew directions, order & information">
+        <OwnerSendJob orderId={order.id} />
+      </Collapsible>
 
       {/* Final receipt — available once the balance is paid */}
       {order.balancePaid && (
@@ -795,7 +815,6 @@ export default function OrderDetailPage() {
             >
               {sendingRcpt ? 'Sending…' : '✉️ Send final receipt'}
             </button>
-            {rcptMsg && <p className="mt-2 text-sm text-gray-600">{rcptMsg}</p>}
           </section>
         </>
       )}
@@ -892,7 +911,6 @@ export default function OrderDetailPage() {
             >
               {deleting ? 'Deleting…' : 'Delete this order'}
             </button>
-            {deleteMsg && <p className="mt-2 text-sm text-red-600">{deleteMsg}</p>}
           </section>
         </>
       )}

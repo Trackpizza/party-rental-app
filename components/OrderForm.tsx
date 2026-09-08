@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   OrderDraft,
@@ -83,6 +83,17 @@ function defaultPaymentNote(eventName?: string, eventDate?: string): string {
   return ''
 }
 
+// Format a phone number as (###) ###-#### while typing. Strips non-digits,
+// caps at 10 (or 11 with leading 1), then applies the mask.
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 11)
+  if (d.length === 0) return ''
+  if (d.length <= 3) return `(${d}`
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`
+  if (d.length <= 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`
+  return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`
+}
+
 // Simple US phone digit check. OK at 10 digits, or 11 with a leading 1 (so the
 // +1 country code is optional). Returns a warning string, or null if it's fine.
 function phoneWarning(phone: string): string | null {
@@ -114,11 +125,15 @@ export default function OrderForm({
   const [depositManual, setDepositManual] = useState(mode === 'edit')
   const [taxManual, setTaxManual] = useState(mode === 'edit')
   const [taxRate, setTaxRate] = useState(0)
+  const [savedDraft, setSavedDraft] = useState('')
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const draftKey = mode === 'create' ? 'party-draft-new' : `party-draft-edit-${orderId}`
   // Google Places suggestions on the Address field. Off on every new form; the
   // owner flips it on per-order from the toggle above the Address field.
   const [addressAutocomplete, setAddressAutocomplete] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [attempted, setAttempted] = useState(false)
   // Pickup defaults to the next day at the same time as delivery. Once the owner
   // edits pickup directly, it stops auto-following (so we never clobber it).
   const [pickupDateTouched, setPickupDateTouched] = useState(!!initial.event.pickupDate)
@@ -130,6 +145,24 @@ export default function OrderForm({
   const [paymentNoteTouched, setPaymentNoteTouched] = useState(
     mode === 'edit' ? !!initial.paymentNote : false,
   )
+
+  // On mount: check localStorage for a saved draft.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey)
+      if (raw) setSavedDraft(raw)
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Debounced autosave — writes draft to localStorage 600ms after the last change.
+  useEffect(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      try { localStorage.setItem(draftKey, JSON.stringify(draft)) } catch {}
+    }, 600)
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
+  }, [draft, draftKey])
 
   // Load the saved tax rate + DL purge window. For a brand-new order, also apply
   // the auto tax to the (empty) order; for edits, leave the saved totals alone.
@@ -289,10 +322,28 @@ export default function OrderForm({
     return isNaN(n) ? null : n
   }
 
+  function restoreDraft() {
+    try {
+      const parsed: OrderDraft = JSON.parse(savedDraft)
+      setDraft(parsed)
+      setSavedDraft('')
+    } catch {}
+  }
+
+  function discardDraft() {
+    try { localStorage.removeItem(draftKey) } catch {}
+    setSavedDraft('')
+  }
+
   async function handleSave() {
+    setAttempted(true)
     setError('')
     if (!draft.customer.firstName.trim() && !draft.customer.lastName.trim()) {
-      setError('Customer name is required.')
+      setError('Please enter the customer name before saving.')
+      return
+    }
+    if (!draft.event.eventDate) {
+      setError('Please enter the event date before saving.')
       return
     }
     setSaving(true)
@@ -302,9 +353,11 @@ export default function OrderForm({
           ...draft,
           dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, DL_RETENTION_DAYS),
         })
+        try { localStorage.removeItem(draftKey) } catch {}
         router.push(`/admin/orders/${orderId}`)
       } else {
         const id = await createOrder(draft, DL_RETENTION_DAYS)
+        try { localStorage.removeItem(draftKey) } catch {}
         router.push(`/admin/orders/${id}`)
       }
     } catch (err: any) {
@@ -326,6 +379,20 @@ export default function OrderForm({
           ⚠️ This order is already signed. Editing items or prices here won&apos;t
           change the agreement the customer signed — that copy is frozen. Use
           edits to fix delivery details, contact info, or logistics.
+        </div>
+      )}
+
+      {savedDraft && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
+          <span className="text-amber-800">📋 You have an unsaved draft — restore it?</span>
+          <div className="flex gap-4">
+            <button onClick={restoreDraft} className="font-semibold text-brand hover:underline">
+              Restore
+            </button>
+            <button onClick={discardDraft} className="text-gray-400 hover:text-gray-600">
+              Discard
+            </button>
+          </div>
         </div>
       )}
 
@@ -353,7 +420,7 @@ export default function OrderForm({
           </Field>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Event Start Date">
+          <Field label="Event Start Date *">
             <input
               type="date"
               value={draft.event.eventDate}
@@ -369,12 +436,17 @@ export default function OrderForm({
                   },
                 }))
               }}
-              className={`${inputCls} w-full`}
+              className={`${inputCls} w-full ${
+                attempted && !draft.event.eventDate ? 'border-red-400' : ''
+              }`}
             />
+            {attempted && !draft.event.eventDate && (
+              <p className="mt-1 text-xs text-red-500">Event date is required.</p>
+            )}
             {draft.event.eventDate &&
               draft.todaysDate &&
               draft.event.eventDate < draft.todaysDate && (
-                <p className="mt-1 text-xs font-medium text-red-500">
+                <p className="mt-1 text-xs font-medium text-amber-600">
                   ⚠️ Event date is in the past.
                 </p>
               )}
@@ -430,8 +502,15 @@ export default function OrderForm({
               onChange={(e) =>
                 patch((d) => ({ ...d, customer: { ...d.customer, firstName: e.target.value } }))
               }
-              className={`${inputCls} w-full`}
+              className={`${inputCls} w-full ${
+                attempted && !draft.customer.firstName.trim() && !draft.customer.lastName.trim()
+                  ? 'border-red-400'
+                  : ''
+              }`}
             />
+            {attempted && !draft.customer.firstName.trim() && !draft.customer.lastName.trim() && (
+              <p className="mt-1 text-xs text-red-500">Customer name is required.</p>
+            )}
           </Field>
           <Field label="Last Name">
             <input
@@ -447,8 +526,9 @@ export default function OrderForm({
               type="tel"
               value={draft.customer.phone}
               onChange={(e) =>
-                patch((d) => ({ ...d, customer: { ...d.customer, phone: e.target.value } }))
+                patch((d) => ({ ...d, customer: { ...d.customer, phone: formatPhone(e.target.value) } }))
               }
+              placeholder="(323) 555-1234"
               className={`${inputCls} w-full`}
             />
             {phoneWarning(draft.customer.phone) && (
