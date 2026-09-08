@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
-import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed } from '@/lib/orders'
+import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed, buildEmptyOrder } from '@/lib/orders'
+import type { OrderDraft } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerCrewPhotos from '@/components/OwnerCrewPhotos'
 import OwnerCustomerPhotos from '@/components/OwnerCustomerPhotos'
@@ -73,7 +74,22 @@ export default function OrderDetailPage() {
     if (order?.customer.email && !rcptTo) setRcptTo(order.customer.email)
   }, [order, rcptTo])
 
-  if (loading) return <p className="text-gray-400">Loading order…</p>
+  if (loading) return (
+    <div className="space-y-4 animate-pulse">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <div className="h-3 w-16 rounded bg-gray-200" />
+          <div className="h-6 w-52 rounded bg-gray-300" />
+        </div>
+        <div className="flex gap-2">
+          {[1, 2, 3].map((n) => <div key={n} className="h-8 w-16 rounded-lg bg-gray-200" />)}
+        </div>
+      </div>
+      <div className="h-16 rounded-2xl bg-white shadow-sm" />
+      <div className="h-48 rounded-2xl bg-white shadow-sm" />
+      <div className="h-32 rounded-2xl bg-white shadow-sm" />
+    </div>
+  )
   if (!order)
     return (
       <div className="text-center">
@@ -165,6 +181,24 @@ export default function OrderDetailPage() {
 
   const act = (patch: Partial<Order>) => order && applyOrderAction(order, patch)
 
+  function cloneOrder() {
+    if (!order) return
+    const cloned: OrderDraft = {
+      ...buildEmptyOrder(),
+      customer: { ...order.customer },
+      event: { ...order.event, eventDate: '', pickupDate: '', deliveryTime: '', pickupTime: '' },
+      items: order.items.map((i) => ({ ...i })),
+      totals: { ...order.totals },
+      paymentMethod: order.paymentMethod,
+      paymentNote: '',
+      referralSource: order.referralSource || '',
+      referralOtherDetail: order.referralOtherDetail || '',
+      referralComment: order.referralComment || '',
+    }
+    try { localStorage.setItem('party-draft-new', JSON.stringify(cloned)) } catch {}
+    router.push('/admin/orders/new')
+  }
+
   async function toggleArchive() {
     if (!order) return
     await updateOrder(
@@ -251,6 +285,9 @@ export default function OrderDetailPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => router.push(`/admin/orders/${order.id}/edit`)} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             Edit
+          </button>
+          <button onClick={cloneOrder} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand" title="Clone this order as a new draft">
+            Clone
           </button>
           <button onClick={toggleArchive} className="no-print rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:border-brand">
             {order.archived ? 'Unarchive' : 'Archive'}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import SignaturePad from './SignaturePad'
 import PhotoCapture from './PhotoCapture'
 import Markdown from './Markdown'
@@ -45,6 +45,13 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const waiverRef = useRef<HTMLDivElement>(null)
+
+  // If the waiver is short enough to fit without scrolling, unlock immediately.
+  useEffect(() => {
+    const el = waiverRef.current
+    if (!el) return
+    if (el.scrollHeight <= el.clientHeight + 4) setScrolled(true)
+  }, [])
 
   // Driver's license capture
   const [dlThumb, setDlThumb] = useState<string | null>(null)

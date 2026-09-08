@@ -7,6 +7,7 @@ import VideoUpload from './VideoUpload'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
 import TextStaffPicker from './TextStaffPicker'
+import { useToast } from './Toast'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Crew-facing: send the crew a link to capture "before" setup photos & videos,
@@ -23,16 +24,14 @@ export default function OwnerCrewPhotos({
   customerName: string
 }) {
   const crewText = `Setup photos for ${customerName || 'the event'}:`
+  const { toast } = useToast()
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [uploading, setUploading] = useState(false)
-  const [msg, setMsg] = useState('')
-
   const [copied, setCopied] = useState(false)
   const [crewTos, setCrewTos] = useState<string[]>([''])
   const [crewBcc, setCrewBcc] = useState('')
   const [crewNote, setCrewNote] = useState('')
   const [sendingCrew, setSendingCrew] = useState(false)
-  const [crewMsg, setCrewMsg] = useState('')
 
   useEffect(() => {
     getBusinessSettings().then((b) => setStaff(b.staff))
@@ -40,7 +39,6 @@ export default function OwnerCrewPhotos({
 
   async function addPhoto(dataUrl: string) {
     setUploading(true)
-    setMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/setup`, {
         method: 'POST',
@@ -49,7 +47,7 @@ export default function OwnerCrewPhotos({
       })
       if (!res.ok) throw new Error((await res.json()).error || 'Upload failed')
     } catch (e: any) {
-      setMsg(e.message)
+      toast(e.message, 'error')
     } finally {
       setUploading(false)
     }
@@ -77,7 +75,6 @@ export default function OwnerCrewPhotos({
   async function sendCrewLink() {
     const to = crewTos.map((s) => s.trim()).filter(Boolean).join(', ')
     setSendingCrew(true)
-    setCrewMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/send-crew-link`, {
         method: 'POST',
@@ -86,9 +83,9 @@ export default function OwnerCrewPhotos({
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setCrewMsg(`✓ Crew link sent to ${json.to}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
+      toast(`Crew link sent to ${json.to}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
     } catch (e: any) {
-      setCrewMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSendingCrew(false)
     }
@@ -110,7 +107,6 @@ export default function OwnerCrewPhotos({
         <PhotoCapture onConfirm={addPhoto} label={uploading ? 'Uploading…' : 'Add photo'} />
         <VideoUpload orderId={orderId} type="walkthrough" maxSeconds={60} label="Add walkthrough (≤1 min)" />
       </div>
-      {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
 
       {(nPhotos > 0 || nVids > 0) && (
         <div className="mt-4">
@@ -172,7 +168,6 @@ export default function OwnerCrewPhotos({
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-sm hover:border-brand"
           />
         </div>
-        {crewMsg && <p className="mt-2 text-sm text-gray-600">{crewMsg}</p>}
       </div>
     </div>
   )

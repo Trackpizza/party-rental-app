@@ -57,11 +57,22 @@ function matchesSearch(o: Order, ql: string): boolean {
   return false
 }
 
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'event_asc', label: 'Event ↑' },
+  { value: 'event_desc', label: 'Event ↓' },
+  { value: 'name_az', label: 'Name A→Z' },
+  { value: 'total_desc', label: 'Total ↓' },
+] as const
+type SortKey = typeof SORT_OPTIONS[number]['value']
+
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('')
+  const [sort, setSort] = useState<SortKey>('newest')
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
@@ -81,10 +92,25 @@ export default function Dashboard() {
   const ql = search.toLowerCase().trim()
   const filtered = orders.filter((o) => {
     if (!matchesSearch(o, ql)) return false
-    // The "Archived" chip shows only archived orders; every other view hides them.
+    if (dateFilter && o.event.eventDate !== dateFilter) return false
     if (statusFilter === 'archived') return !!o.archived
     if (o.archived) return false
     return matchesStatus(o, statusFilter)
+  })
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sort) {
+      case 'event_asc':
+        return (a.event.eventDate || '').localeCompare(b.event.eventDate || '')
+      case 'event_desc':
+        return (b.event.eventDate || '').localeCompare(a.event.eventDate || '')
+      case 'name_az':
+        return customerName(a.customer).localeCompare(customerName(b.customer))
+      case 'total_desc':
+        return (b.totals.total ?? 0) - (a.totals.total ?? 0)
+      default:
+        return 0
+    }
   })
 
   return (
@@ -92,7 +118,17 @@ export default function Dashboard() {
       <h1 className="mb-4 text-xl font-bold">Orders</h1>
 
       {loading ? (
-        <p className="text-gray-400">Loading orders…</p>
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <div key={n} className="flex animate-pulse items-center justify-between rounded-xl border border-gray-100 bg-white px-4 py-3">
+              <div className="space-y-2">
+                <div className="h-4 w-40 rounded bg-gray-200" />
+                <div className="h-3 w-64 rounded bg-gray-100" />
+              </div>
+              <div className="h-6 w-20 rounded-full bg-gray-100" />
+            </div>
+          ))}
+        </div>
       ) : orders.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 p-10 text-center">
           <p className="text-gray-500">No orders yet.</p>
@@ -105,15 +141,41 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <div className="relative mb-4">
+          <div className="mb-4 flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-48">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, phone, or email…"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 focus:border-brand focus:outline-none"
+              />
+              <span className="pointer-events-none absolute left-3 top-3 text-gray-400">🔍</span>
+            </div>
             <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, phone, or email…"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 pl-10 focus:border-brand focus:outline-none"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              title="Filter by event date"
+              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
             />
-            <span className="pointer-events-none absolute left-3 top-3 text-gray-400">🔍</span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            {(dateFilter || sort !== 'newest') && (
+              <button
+                onClick={() => { setDateFilter(''); setSort('newest') }}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-400 hover:text-gray-600"
+              >
+                ✕ Clear
+              </button>
+            )}
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
@@ -146,13 +208,13 @@ export default function Dashboard() {
             })}
           </div>
 
-          {filtered.length === 0 ? (
+          {sorted.length === 0 ? (
             <p className="py-8 text-center text-gray-400">
-              No orders match &ldquo;{search}&rdquo;.
+              No orders match your filters.
             </p>
           ) : (
             <div className="space-y-2">
-              {filtered.map((o) => (
+              {sorted.map((o) => (
                 <Link
                   key={o.id}
                   href={`/admin/orders/${o.id}`}

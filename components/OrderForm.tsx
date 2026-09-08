@@ -156,13 +156,15 @@ export default function OrderForm({
   }, [])
 
   // Debounced autosave — writes draft to localStorage 600ms after the last change.
+  // Skipped while the restore banner is showing to avoid overwriting the found draft.
   useEffect(() => {
+    if (savedDraft) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
       try { localStorage.setItem(draftKey, JSON.stringify(draft)) } catch {}
     }, 600)
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
-  }, [draft, draftKey])
+  }, [draft, draftKey, savedDraft])
 
   // Load the saved tax rate + DL purge window. For a brand-new order, also apply
   // the auto tax to the (empty) order; for edits, leave the saved totals alone.
@@ -1034,8 +1036,8 @@ export default function OrderForm({
           <div className="flex items-center justify-between">
             <span className="text-gray-600">
               Tax{' '}
-              <span className="text-xs text-gray-400">
-                {taxManual ? '(manual)' : `(${taxRate}% auto)`}
+              <span className={`text-xs ${taxManual ? 'font-medium text-amber-600' : 'text-gray-400'}`}>
+                {taxManual ? '(manual override)' : `(${taxRate}% auto)`}
               </span>
             </span>
             <div className="flex items-center rounded-lg border border-gray-300 px-2">

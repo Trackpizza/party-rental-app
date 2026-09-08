@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { updateOrder } from '@/lib/orders'
 import TextCustomer from '@/components/TextCustomer'
 import ShareButton from '@/components/ShareButton'
+import { useToast } from '@/components/Toast'
 
 // Manual-mode balance collection: the owner creates the balance payment link in
 // Square, pastes it here, and saves it on the order. Once saved it can be texted
@@ -22,23 +23,22 @@ export default function ManualBalanceLink({
   phone: string
   business: string
 }) {
+  const { toast } = useToast()
   const [link, setLink] = useState(initialLink ?? '')
   const [saved, setSaved] = useState(initialLink ?? '')
   const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
 
   const money = (n: number) => `$${n.toFixed(2)}`
 
   async function save() {
     setSaving(true)
-    setMsg('')
     try {
       const v = link.trim() || null
       await updateOrder(orderId, { squareBalanceLinkManual: v })
       setSaved(v ?? '')
-      setMsg(v ? '✓ Saved' : 'Cleared')
+      toast(v ? 'Balance link saved' : 'Balance link cleared')
     } catch (e: any) {
-      setMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSaving(false)
     }
@@ -95,7 +95,6 @@ export default function ManualBalanceLink({
           </div>
         </div>
       )}
-      {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getBusinessSettings } from '@/lib/settings'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
+import { useToast } from './Toast'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Producer-facing: select which photos + videos go to the content creator.
@@ -20,8 +21,8 @@ export default function OwnerContentCreation({
   const [cc, setCc] = useState('')
   const [bcc, setBcc] = useState('')
   const [note, setNote] = useState('')
+  const { toast } = useToast()
   const [sending, setSending] = useState(false)
-  const [msg, setMsg] = useState('')
 
   // Prefill To with the first producer and BCC with the rest, so multiple
   // producers stay hidden from each other by default. All fields stay editable.
@@ -34,7 +35,6 @@ export default function OwnerContentCreation({
 
   async function sendToProducer() {
     setSending(true)
-    setMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/send-producer`, {
         method: 'POST',
@@ -43,11 +43,9 @@ export default function OwnerContentCreation({
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setMsg(
-        `✓ Sent to producer (${json.to})${json.cc ? ` · cc ${json.cc}` : ''}${json.bcc ? ` · bcc ${json.bcc}` : ''}`,
-      )
+      toast(`Sent to producer (${json.to})${json.cc ? ` · cc ${json.cc}` : ''}${json.bcc ? ` · bcc ${json.bcc}` : ''}`)
     } catch (e: any) {
-      setMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSending(false)
     }
@@ -105,7 +103,6 @@ export default function OwnerContentCreation({
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
             />
           </div>
-          {msg && <p className="mt-2 text-sm text-gray-600">{msg}</p>}
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { adminDb, adminStorage } from '@/lib/firebase/admin'
 import type { Order } from '@/lib/types'
+import GalleryActions from '@/components/GalleryActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,8 @@ export default async function GalleryPage({ params }: { params: { id: string } }
             ))}
           </div>
         )}
+
+        <GalleryActions photoUrls={urls} />
 
         {urls.length > 0 && (
           <p className="mt-3 text-center text-xs text-gray-400">

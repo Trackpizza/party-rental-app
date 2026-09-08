@@ -13,6 +13,7 @@ export default function SignaturePad({
   const drawing = useRef(false)
   const hasDrawn = useRef(false)
   const [empty, setEmpty] = useState(true)
+  const [tooSimple, setTooSimple] = useState(false)
 
   // Size the canvas to its container, accounting for device pixel ratio.
   useEffect(() => {
@@ -58,8 +59,20 @@ export default function SignaturePad({
     if (!drawing.current) return
     drawing.current = false
     if (hasDrawn.current) {
+      const canvas = canvasRef.current!
+      const ctx = canvas.getContext('2d')!
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      let filledPx = 0
+      for (let i = 3; i < imgData.length; i += 4) {
+        if (imgData[i] > 10) filledPx++
+      }
+      if (filledPx < 80) {
+        setTooSimple(true)
+        return
+      }
+      setTooSimple(false)
       setEmpty(false)
-      onChange(canvasRef.current!.toDataURL('image/png'))
+      onChange(canvas.toDataURL('image/png'))
     }
   }
 
@@ -69,6 +82,7 @@ export default function SignaturePad({
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     hasDrawn.current = false
     setEmpty(true)
+    setTooSimple(false)
     onChange(null)
   }
 
@@ -94,13 +108,18 @@ export default function SignaturePad({
           </span>
         )}
       </div>
+      {tooSimple && (
+        <p className="mt-2 text-sm text-amber-600">
+          Signature looks too simple — please sign with your full name or initials.
+        </p>
+      )}
       <button
         type="button"
         onClick={clear}
-        disabled={disabled || empty}
+        disabled={disabled || (empty && !tooSimple)}
         className="mt-2 text-sm text-gray-400 hover:text-gray-600 disabled:opacity-40"
       >
-        Clear signature
+        Clear &amp; retry
       </button>
     </div>
   )

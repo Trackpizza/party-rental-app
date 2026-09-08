@@ -5,6 +5,7 @@ import { updateOrder } from '@/lib/orders'
 import MediaGrid from './MediaGrid'
 import ShareButton from './ShareButton'
 import TextCustomer from './TextCustomer'
+import { useToast } from './Toast'
 import { SetupPhoto, VideoClip } from '@/lib/types'
 
 // Customer-facing: pick the best photos/videos and send the customer their
@@ -27,12 +28,12 @@ export default function OwnerCustomerPhotos({
   photosSentAt: string | null
   requestTestimonial: boolean
 }) {
+  const { toast } = useToast()
   const [photoTo, setPhotoTo] = useState(customerEmail)
   const [photoCc, setPhotoCc] = useState('')
   const [photoBcc, setPhotoBcc] = useState('')
   const [photoNote, setPhotoNote] = useState('')
   const [sending, setSending] = useState(false)
-  const [photoMsg, setPhotoMsg] = useState('')
 
   async function toggleTestimonial(next: boolean) {
     await updateOrder(orderId, { requestTestimonial: next })
@@ -40,7 +41,6 @@ export default function OwnerCustomerPhotos({
 
   async function sendPhotos() {
     setSending(true)
-    setPhotoMsg('')
     try {
       const res = await fetch(`/api/orders/${orderId}/send-photos`, {
         method: 'POST',
@@ -49,11 +49,9 @@ export default function OwnerCustomerPhotos({
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed')
-      setPhotoMsg(
-        `✓ Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`,
-      )
+      toast(`Sent to ${json.to}${json.cc ? ` (cc ${json.cc})` : ''}${json.bcc ? ` (bcc ${json.bcc})` : ''}`)
     } catch (e: any) {
-      setPhotoMsg(`Error: ${e.message}`)
+      toast(e.message, 'error')
     } finally {
       setSending(false)
     }
@@ -144,7 +142,6 @@ export default function OwnerCustomerPhotos({
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:border-brand"
           />
         </div>
-        {photoMsg && <p className="mt-2 text-sm text-gray-600">{photoMsg}</p>}
       </div>
     </div>
   )
