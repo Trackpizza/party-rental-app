@@ -93,9 +93,12 @@ export default function Dashboard() {
   }, [])
 
   const ql = search.toLowerCase().trim()
-  const filtered = orders.filter((o) => {
-    if (!matchesSearch(o, ql)) return false
-    if (dateFilter && o.event.eventDate !== dateFilter) return false
+  // Everything except the status chip. The chip counts are drawn from this too,
+  // so a count always matches what clicking that chip actually shows.
+  const searchable = orders.filter(
+    (o) => matchesSearch(o, ql) && (!dateFilter || o.event.eventDate === dateFilter),
+  )
+  const filtered = searchable.filter((o) => {
     // The "Archived" chip shows only archived orders; every other view hides them.
     if (statusFilter === 'archived') return !!o.archived
     if (o.archived) return false
@@ -186,7 +189,7 @@ export default function Dashboard() {
 
           <div className="mb-4 flex flex-wrap gap-2">
             {FILTERS.map((f) => {
-              const count = orders.filter((o) => {
+              const count = searchable.filter((o) => {
                 if (f.key === 'archived') return !!o.archived
                 if (o.archived) return false
                 return matchesStatus(o, f.key)

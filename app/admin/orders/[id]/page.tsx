@@ -266,12 +266,20 @@ export default function OrderDetailPage() {
   const timelineSteps = [
     { label: 'Contract Sent', done: !!(order.sentAt || order.signature) },
     { label: 'Signed', done: !!order.signature },
-    { label: 'Deposit Paid', done: !!order.depositPaid },
+    // Paying the balance in full satisfies the deposit — cash jobs often skip
+    // the deposit entirely and settle on delivery.
+    { label: 'Deposit Paid', done: !!(order.depositPaid || order.balancePaid) },
     { label: 'Delivered', done: !!order.deliveredAt },
     { label: 'Picked Up', done: !!order.pickedUpAt },
     { label: 'Complete', done: !!order.completedAt },
   ]
-  const currentStep = timelineSteps.reduce((last, s, i) => (s.done ? i : last), -1)
+  // Progress runs to the last *consecutively* completed step, not the highest one
+  // that happens to be done. Milestones do complete out of order (delivered before
+  // any payment lands), and taking the max would draw a filled bar straight through
+  // a step still showing as incomplete.
+  const firstIncomplete = timelineSteps.findIndex((s) => !s.done)
+  const currentStep =
+    firstIncomplete === -1 ? timelineSteps.length - 1 : firstIncomplete - 1
 
   return (
     <div className="space-y-5 pb-10">
@@ -303,10 +311,20 @@ export default function OrderDetailPage() {
       <div className="no-print rounded-2xl bg-white px-4 py-4 shadow-sm">
         <div className="relative flex items-start justify-between">
           {/* connecting line */}
-          <div className="absolute top-3 left-0 right-0 h-0.5 bg-gray-200" aria-hidden="true" />
+          {/* Steps are evenly spaced flex cells, so node i sits at
+              ((i + 0.5) / n) of the width. Both rails start and end on a node
+              centre rather than the container edge. */}
           <div
-            className="absolute top-3 left-0 h-0.5 bg-brand transition-all"
-            style={{ width: currentStep < 0 ? '0%' : `${(currentStep / (timelineSteps.length - 1)) * 100}%` }}
+            className="absolute top-3 h-0.5 bg-gray-200"
+            style={{ left: `${50 / timelineSteps.length}%`, right: `${50 / timelineSteps.length}%` }}
+            aria-hidden="true"
+          />
+          <div
+            className="absolute top-3 h-0.5 bg-brand transition-all"
+            style={{
+              left: `${50 / timelineSteps.length}%`,
+              width: currentStep < 0 ? '0%' : `${(currentStep / timelineSteps.length) * 100}%`,
+            }}
             aria-hidden="true"
           />
           {timelineSteps.map((step, i) => (

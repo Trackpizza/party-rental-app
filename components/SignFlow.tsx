@@ -108,6 +108,16 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
     }
   }
 
+  // Which payment instruction the confirmation screen can actually give. If none
+  // of them apply (method not set yet, or a Square deposit link not generated
+  // before the link went out) we still owe the customer an answer about the
+  // deposit rather than silence.
+  const dep = data.totals.deposit
+  const showZelle = data.payment.method === 'zelle' && !!data.payment.zelle && dep != null
+  const showSquare = data.payment.method === 'square' && !!data.payment.squareLink && dep != null
+  const showCash = data.payment.method === 'cash' && dep != null
+  const showDepositFallback = !showZelle && !showSquare && !showCash && dep != null && dep > 0
+
   if (done) {
     return (
       <div className="mx-auto max-w-lg space-y-4 p-6">
@@ -145,6 +155,16 @@ export default function SignFlow({ data }: { data: SignFlowData }) {
                 <p className="font-semibold text-gray-700">Deposit due at delivery</p>
                 <p className="mt-1 text-gray-600">
                   Cash deposit of <strong>{money(data.totals.deposit)}</strong> is due when we arrive.
+                </p>
+              </div>
+            )}
+            {showDepositFallback && (
+              <div className="rounded-xl bg-amber-50 p-4">
+                <p className="font-semibold text-amber-800">
+                  Deposit due · {money(dep)}
+                </p>
+                <p className="mt-1 text-amber-700">
+                  {data.business} will contact you shortly with payment details.
                 </p>
               </div>
             )}
