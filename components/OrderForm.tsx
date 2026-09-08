@@ -33,6 +33,9 @@ const inputCls =
 // event prefix, so we limit the note itself so it stays visible, not truncated.
 const NOTE_MAX = 175
 
+// Where "Clone" on the order page hands a prefilled draft to a new order form.
+export const CLONE_KEY = 'party-clone-new'
+
 function Field({
   label,
   children,
@@ -127,6 +130,10 @@ export default function OrderForm({
   const [taxRate, setTaxRate] = useState(0)
   const [savedDraft, setSavedDraft] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Autosave only after a real edit. Mount-time effects (tax rate, payment-note
+  // sync) also change `draft`, and without this a form the owner merely opened
+  // would be saved and then offered back as an "unsaved draft" next visit.
+  const dirty = useRef(false)
   const draftKey = mode === 'create' ? 'party-draft-new' : `party-draft-edit-${orderId}`
   // Google Places suggestions on the Address field. Off on every new form; the
   // owner flips it on per-order from the toggle above the Address field.
@@ -146,19 +153,30 @@ export default function OrderForm({
     mode === 'edit' ? !!initial.paymentNote : false,
   )
 
-  // On mount: check localStorage for a saved draft.
+  // On mount: a pending clone loads straight in (the owner just asked for it, so
+  // there's nothing to confirm). Otherwise offer to restore an unsaved draft.
   useEffect(() => {
     try {
+      if (mode === 'create') {
+        const clone = localStorage.getItem(CLONE_KEY)
+        if (clone) {
+          localStorage.removeItem(CLONE_KEY)
+          setDraft(JSON.parse(clone))
+          dirty.current = true
+          return
+        }
+      }
       const raw = localStorage.getItem(draftKey)
       if (raw) setSavedDraft(raw)
     } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Debounced autosave — writes draft to localStorage 600ms after the last change.
-  // Skipped while the restore banner is showing to avoid overwriting the found draft.
+  // Debounced autosave — writes draft to localStorage 600ms after the last edit.
+  // Skipped while the restore banner is showing so it can't clobber the draft
+  // being offered, and before the first real edit so we never save a pristine form.
   useEffect(() => {
-    if (savedDraft) return
+    if (savedDraft || !dirty.current) return
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
       try { localStorage.setItem(draftKey, JSON.stringify(draft)) } catch {}
@@ -213,10 +231,12 @@ export default function OrderForm({
   }
 
   function patch(updater: (d: OrderDraft) => OrderDraft) {
+    dirty.current = true
     setDraft((d) => withTotals(updater(d)))
   }
 
   function changeTax(v: number | null) {
+    dirty.current = true
     setTaxManual(true)
     setDraft((d) => ({
       ...d,
@@ -229,6 +249,7 @@ export default function OrderForm({
   }
 
   function changeDeposit(v: number | null) {
+    dirty.current = true
     setDepositManual(true)
     setDraft((d) => ({
       ...d,
@@ -327,6 +348,7 @@ export default function OrderForm({
   function restoreDraft() {
     try {
       const parsed: OrderDraft = JSON.parse(savedDraft)
+      dirty.current = true
       setDraft(parsed)
       setSavedDraft('')
     } catch {}
@@ -335,6 +357,14 @@ export default function OrderForm({
   function discardDraft() {
     try { localStorage.removeItem(draftKey) } catch {}
     setSavedDraft('')
+  }
+
+  // Drop the local draft once it's safely in Firestore. Cancels any pending
+  // autosave first so it can't fire after the key is cleared and resurrect it.
+  function clearDraft() {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    dirty.current = false
+    try { localStorage.removeItem(draftKey) } catch {}
   }
 
   async function handleSave() {
@@ -355,11 +385,11 @@ export default function OrderForm({
           ...draft,
           dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, DL_RETENTION_DAYS),
         })
-        try { localStorage.removeItem(draftKey) } catch {}
+        clearDraft()
         router.push(`/admin/orders/${orderId}`)
       } else {
         const id = await createOrder(draft, DL_RETENTION_DAYS)
-        try { localStorage.removeItem(draftKey) } catch {}
+        clearDraft()
         router.push(`/admin/orders/${id}`)
       }
     } catch (err: any) {
@@ -991,6 +1021,7 @@ export default function OrderForm({
                   <button
                     type="button"
                     onClick={() => {
+                      dirty.current = true
                       setPaymentNoteTouched(false)
                       setDraft((d) => ({
                         ...d,
@@ -1020,6 +1051,7 @@ export default function OrderForm({
             maxLength={NOTE_MAX}
             value={draft.paymentNote ?? ''}
             onChange={(e) => {
+              dirty.current = true
               setPaymentNoteTouched(true)
               setDraft((d) => ({ ...d, paymentNote: e.target.value.slice(0, NOTE_MAX) }))
             }}

@@ -57,6 +57,9 @@ function matchesSearch(o: Order, ql: string): boolean {
   return false
 }
 
+// Sorts after any real YYYY-MM-DD, so undated orders fall to the end.
+const NO_DATE = '9999-12-31'
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'event_asc', label: 'Event ↑' },
@@ -93,6 +96,7 @@ export default function Dashboard() {
   const filtered = orders.filter((o) => {
     if (!matchesSearch(o, ql)) return false
     if (dateFilter && o.event.eventDate !== dateFilter) return false
+    // The "Archived" chip shows only archived orders; every other view hides them.
     if (statusFilter === 'archived') return !!o.archived
     if (o.archived) return false
     return matchesStatus(o, statusFilter)
@@ -100,8 +104,10 @@ export default function Dashboard() {
 
   const sorted = [...filtered].sort((a, b) => {
     switch (sort) {
+      // Soonest first, with undated orders parked at the end rather than the
+      // top — an order with no date yet isn't the next thing to deliver.
       case 'event_asc':
-        return (a.event.eventDate || '').localeCompare(b.event.eventDate || '')
+        return (a.event.eventDate || NO_DATE).localeCompare(b.event.eventDate || NO_DATE)
       case 'event_desc':
         return (b.event.eventDate || '').localeCompare(a.event.eventDate || '')
       case 'name_az':

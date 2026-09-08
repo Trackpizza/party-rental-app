@@ -2,14 +2,21 @@
 
 import { useState } from 'react'
 
+// Copy-link + save-all controls for the customer gallery.
+//
+// downloadUrls are signed Storage URLs carrying a Content-Disposition attachment
+// header, so clicking one saves the file. They can't be fetched into a blob
+// first — the bucket has no CORS config — which is why this navigates to each
+// URL instead of downloading the bytes itself.
 export default function GalleryActions({
-  photoUrls,
+  downloadUrls,
 }: {
-  photoUrls: string[]
+  downloadUrls: string[]
 }) {
   const [copied, setCopied] = useState(false)
-  const [downloading, setDownloading] = useState(false)
-  const [dlProgress, setDlProgress] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [done, setDone] = useState(0)
+  const total = downloadUrls.length
 
   async function copyLink() {
     try {
@@ -19,28 +26,23 @@ export default function GalleryActions({
     } catch {}
   }
 
-  async function downloadAll() {
-    if (!photoUrls.length || downloading) return
-    setDownloading(true)
-    setDlProgress(0)
-    for (let i = 0; i < photoUrls.length; i++) {
-      try {
-        const res = await fetch(photoUrls[i])
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `event-photo-${i + 1}.jpg`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        setDlProgress(i + 1)
-        // Small pause between files so the browser processes each download.
-        await new Promise((r) => setTimeout(r, 350))
-      } catch {}
+  async function saveAll() {
+    if (!total || saving) return
+    setSaving(true)
+    setDone(0)
+    for (let n = 0; n < total; n++) {
+      const a = document.createElement('a')
+      a.href = downloadUrls[n]
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setDone(n + 1)
+      // Space the clicks out so the browser queues each download instead of
+      // treating them as one runaway burst.
+      await new Promise((r) => setTimeout(r, 400))
     }
-    setDownloading(false)
+    setSaving(false)
   }
 
   return (
@@ -51,15 +53,13 @@ export default function GalleryActions({
       >
         {copied ? '✓ Link copied!' : '🔗 Copy share link'}
       </button>
-      {photoUrls.length > 0 && (
+      {total > 0 && (
         <button
-          onClick={downloadAll}
-          disabled={downloading}
+          onClick={saveAll}
+          disabled={saving}
           className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
         >
-          {downloading
-            ? `Saving ${dlProgress} / ${photoUrls.length}…`
-            : `⬇ Save all ${photoUrls.length} photo${photoUrls.length === 1 ? '' : 's'}`}
+          {saving ? `Saving ${done} / ${total}…` : `⬇ Save all ${total} photo${total === 1 ? '' : 's'}`}
         </button>
       )}
     </div>

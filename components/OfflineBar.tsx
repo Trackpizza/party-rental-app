@@ -19,7 +19,7 @@ export default function OfflineBar() {
 
   if (!offline) return null
   return (
-    <div className="sticky top-[57px] z-20 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
+    <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
       ⚠ No internet connection — changes may not save
     </div>
   )

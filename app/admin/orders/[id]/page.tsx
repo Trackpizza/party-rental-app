@@ -17,6 +17,7 @@ import ShareButton from '@/components/ShareButton'
 import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
 import ManualBalanceLink from '@/components/ManualBalanceLink'
+import { CLONE_KEY } from '@/components/OrderForm'
 import { getBusinessSettings } from '@/lib/settings'
 import { useToast } from '@/components/Toast'
 
@@ -195,7 +196,7 @@ export default function OrderDetailPage() {
       referralOtherDetail: order.referralOtherDetail || '',
       referralComment: order.referralComment || '',
     }
-    try { localStorage.setItem('party-draft-new', JSON.stringify(cloned)) } catch {}
+    try { localStorage.setItem(CLONE_KEY, JSON.stringify(cloned)) } catch {}
     router.push('/admin/orders/new')
   }
 

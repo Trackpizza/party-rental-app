@@ -6,12 +6,22 @@ export const dynamic = 'force-dynamic'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 
-async function signedUrl(path: string): Promise<string | null> {
+// Pass downloadAs to get a URL that GCS serves with a Content-Disposition
+// attachment header, so clicking it saves the file instead of opening it. The
+// bucket has no CORS config, so downloading has to happen this way rather than
+// by fetching the bytes in the browser.
+async function signedUrl(path: string, downloadAs?: string): Promise<string | null> {
   try {
     const [url] = await adminStorage
       .bucket()
       .file(path)
-      .getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 })
+      .getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 60 * 60 * 1000,
+        ...(downloadAs
+          ? { responseDisposition: `attachment; filename="${downloadAs}"` }
+          : {}),
+      })
     return url
   } catch {
     return null
@@ -35,8 +45,20 @@ export default async function GalleryPage({ params }: { params: { id: string } }
 
   const selected = (order.setupPhotos || []).filter((p) => p.selected)
   const photos = selected.length ? selected : order.setupPhotos || []
-  const urls = (await Promise.all(photos.map((p) => signedUrl(p.storagePath)))).filter(
-    (u): u is string => !!u,
+  // Each photo gets a view URL and a matching download URL, kept together so a
+  // photo whose signing failed drops out of both lists at once.
+  const signedPhotos = await Promise.all(
+    photos.map(async (p, i) => {
+      const ext = (p.storagePath.split('.').pop() || 'jpg').toLowerCase()
+      const [view, download] = await Promise.all([
+        signedUrl(p.storagePath),
+        signedUrl(p.storagePath, `event-photo-${i + 1}.${ext}`),
+      ])
+      return { view, download }
+    }),
+  )
+  const items = signedPhotos.filter(
+    (s): s is { view: string; download: string | null } => !!s.view,
   )
   const walkthroughs = (order.videos || []).filter((v) => v.type === 'walkthrough')
   const selWalk = walkthroughs.filter((v) => v.selected)
@@ -60,15 +82,15 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           </div>
         )}
 
-        {urls.length === 0 && videoUrls.length === 0 ? (
+        {items.length === 0 && videoUrls.length === 0 ? (
           <p className="text-center text-gray-400">No photos to show yet.</p>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {urls.map((u, i) => (
-              <a key={i} href={u} target="_blank" rel="noreferrer" download className="block">
+            {items.map((it, i) => (
+              <a key={i} href={it.view} target="_blank" rel="noreferrer" className="block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={u}
+                  src={it.view}
                   alt={`event photo ${i + 1}`}
                   className="aspect-square w-full rounded-xl border border-gray-200 object-cover"
                 />
@@ -77,9 +99,11 @@ export default async function GalleryPage({ params }: { params: { id: string } }
           </div>
         )}
 
-        <GalleryActions photoUrls={urls} />
+        <GalleryActions
+          downloadUrls={items.map((s) => s.download).filter((u): u is string => !!u)}
+        />
 
-        {urls.length > 0 && (
+        {items.length > 0 && (
           <p className="mt-3 text-center text-xs text-gray-400">
             Tap any photo to open it full size, then save it to your phone.
             <br />
