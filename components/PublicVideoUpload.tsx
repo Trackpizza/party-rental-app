@@ -5,6 +5,8 @@ import { useState } from 'react'
 // Uploads a video via a signed URL (works without login — for the customer
 // testimonial link and the crew walkthrough link). Checks duration, PUTs the
 // file straight to Storage with progress, then records it on the order.
+const MAX_BYTES = 200 * 1024 * 1024
+
 export default function PublicVideoUpload({
   orderId,
   type,
@@ -54,6 +56,18 @@ export default function PublicVideoUpload({
       /* allow if duration unreadable */
     }
 
+    // The signed upload URL is valid for 15 minutes. A very large clip on a weak
+    // connection will not finish in time and dies with an opaque 403, so refuse
+    // it up front with something the crew can act on.
+    if (file.size > MAX_BYTES) {
+      setError(
+        `That video is ${Math.round(file.size / 1024 / 1024)}MB — the max is ${Math.round(
+          MAX_BYTES / 1024 / 1024,
+        )}MB. Record a shorter clip, or lower your camera quality in Settings.`,
+      )
+      return
+    }
+
     const contentType = file.type || 'video/mp4'
     setProgress(0)
     try {
@@ -95,7 +109,21 @@ export default function PublicVideoUpload({
   }
 
   if (done) {
-    return <p className="text-sm font-semibold text-green-600">✓ Video uploaded — thank you!</p>
+    return (
+      <div className="text-center">
+        <p className="text-sm font-semibold text-green-600">✓ Video uploaded — thank you!</p>
+        <button
+          type="button"
+          onClick={() => {
+            setDone(false)
+            setError('')
+          }}
+          className="mt-1 text-sm text-gray-500 underline"
+        >
+          Upload another · Subir otro
+        </button>
+      </div>
+    )
   }
 
   return (

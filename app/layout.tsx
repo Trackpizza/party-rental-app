@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { InstallProvider } from '@/components/InstallProvider'
+import OfflineBar from '@/components/OfflineBar'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
 
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <OfflineBar />
         <InstallProvider>{children}</InstallProvider>
       </body>
     </html>

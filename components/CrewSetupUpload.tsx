@@ -6,10 +6,14 @@ import PublicVideoUpload from './PublicVideoUpload'
 
 export default function CrewSetupUpload({
   orderId,
+  alreadyUploaded = 0,
 }: {
   orderId: string
+  // Photos already on the order. Seeded from the server so a crew member who
+  // reloads on a flaky signal can see what landed instead of a reset counter.
+  alreadyUploaded?: number
 }) {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(alreadyUploaded)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
@@ -68,7 +72,8 @@ export default function CrewSetupUpload({
       {uploading && <p className="mt-3 text-sm text-gray-500">Uploading…</p>}
       {count > 0 && !uploading && (
         <p className="mt-3 text-sm font-medium text-green-600">
-          ✓ {count} photo{count > 1 ? 's' : ''} uploaded — take more or you&apos;re done!
+          ✓ {count} photo{count > 1 ? 's' : ''} uploaded · {count} foto
+          {count > 1 ? 's' : ''} subida{count > 1 ? 's' : ''} — take more or you&apos;re done!
         </p>
       )}
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

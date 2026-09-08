@@ -8,7 +8,8 @@ const MAX_BYTES = 8 * 1024 * 1024
 
 // Crew (via the shareable setup link) or owner uploads an event-setup photo.
 // Public write-only — can only append a photo to an existing order. Images
-// land in owner-locked Storage under setup/{orderId}/. Not purged (marketing).
+// land in owner-locked Storage under setup/{orderId}/, and the nightly cleanup
+// function deletes them 60 days after upload.
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } },

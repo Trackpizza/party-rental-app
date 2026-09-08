@@ -7,7 +7,6 @@ import { auth } from '@/lib/firebase/client'
 import AuthGuard from '@/components/AuthGuard'
 import InstallButton from '@/components/InstallButton'
 import { ToastProvider } from '@/components/Toast'
-import OfflineBar from '@/components/OfflineBar'
 
 export default function AdminLayout({
   children,
@@ -69,7 +68,6 @@ export default function AdminLayout({
             </button>
           </nav>
         </header>
-        <OfflineBar />
         <div className="mx-auto max-w-5xl p-4">{children}</div>
       </div>
       </ToastProvider>

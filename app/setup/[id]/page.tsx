@@ -80,7 +80,10 @@ export default async function SetupUploadPage({
         </section>
 
         <div className="mt-3">
-          <CrewSetupUpload orderId={params.id} />
+          <CrewSetupUpload
+            orderId={params.id}
+            alreadyUploaded={(order.setupPhotos || []).length}
+          />
         </div>
       </div>
     </main>
