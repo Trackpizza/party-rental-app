@@ -12,6 +12,9 @@ export interface BusinessSettings {
   businessPhone: string     // agreement header + email footers
   businessAddress: string   // agreement header
   zelleNumber: string       // shown to the customer when paying by Zelle
+  calendarId: string        // Google Calendar to write delivery/pickup events to
+  calendarSync: boolean     // master switch for Google Calendar syncing
+  calendarTimeZone: string  // IANA zone the event times are written in
   googleReviewUrl: string
   taxRate: number // percent, e.g. 9.5
   staff: StaffMember[]
@@ -70,6 +73,9 @@ export async function getBusinessSettings(): Promise<BusinessSettings> {
   const d = snap.exists() ? (snap.data() as any) : {}
   return {
     ...businessInfo(d),
+    calendarId: str(d.calendarId),
+    calendarSync: typeof d.calendarSync === 'boolean' ? d.calendarSync : false,
+    calendarTimeZone: str(d.calendarTimeZone) || 'America/Los_Angeles',
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
     staff: Array.isArray(d.staff)

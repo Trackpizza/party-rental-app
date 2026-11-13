@@ -14,6 +14,7 @@ import {
   DL_RETENTION_DAYS,
 } from '@/lib/orders'
 import { getBusinessSettings } from '@/lib/settings'
+import { syncOrderCalendar } from '@/lib/calendarClient'
 import { getInventory, getBookedQtys } from '@/lib/inventory'
 import TimeSelect from '@/components/TimeSelect'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
@@ -386,10 +387,15 @@ export default function OrderForm({
           dlPurgeAfter: purgeDateFromEvent(draft.event.eventDate, DL_RETENTION_DAYS),
         })
         clearDraft()
+        // Fire-and-forget: the order is already saved, and a calendar outage
+        // must not strand the owner on the form. The order page has a Sync
+        // button that reports failures properly.
+        void syncOrderCalendar(orderId)
         router.push(`/admin/orders/${orderId}`)
       } else {
         const id = await createOrder(draft, DL_RETENTION_DAYS)
         clearDraft()
+        void syncOrderCalendar(id)
         router.push(`/admin/orders/${id}`)
       }
     } catch (err: any) {

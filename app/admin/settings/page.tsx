@@ -19,6 +19,10 @@ export default function SettingsPage() {
   const [bizPhone, setBizPhone] = useState('')
   const [bizAddress, setBizAddress] = useState('')
   const [zelleNumber, setZelleNumber] = useState('')
+  const [calendarId, setCalendarId] = useState('')
+  const [calendarSync, setCalendarSync] = useState(false)
+  const [calendarTimeZone, setCalendarTimeZone] = useState('America/Los_Angeles')
+  const [calStatus, setCalStatus] = useState<any>(null)
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
   const [requireDl, setRequireDl] = useState(true)
@@ -38,6 +42,20 @@ export default function SettingsPage() {
   type Tab = typeof TABS[number]
   const [activeTab, setActiveTab] = useState<Tab>('General')
 
+  // Service-account address + whether it can actually reach the saved calendar.
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const token = await auth.currentUser?.getIdToken()
+        if (!token) return
+        const r = await fetch('/api/calendar/status', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setCalStatus(await r.json())
+      } catch {}
+    })()
+  }, [saving, bizSaving])
+
   useEffect(() => {
     getWaiver().then((w) => {
       setText(w.text)
@@ -49,6 +67,9 @@ export default function SettingsPage() {
       setBizPhone(b.businessPhone)
       setBizAddress(b.businessAddress)
       setZelleNumber(b.zelleNumber)
+      setCalendarId(b.calendarId)
+      setCalendarSync(b.calendarSync)
+      setCalendarTimeZone(b.calendarTimeZone)
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setRequireDl(b.requireDl)
@@ -67,6 +88,9 @@ export default function SettingsPage() {
       businessPhone: bizPhone.trim(),
       businessAddress: bizAddress.trim(),
       zelleNumber: zelleNumber.trim(),
+      calendarId: calendarId.trim(),
+      calendarSync,
+      calendarTimeZone: calendarTimeZone.trim() || 'America/Los_Angeles',
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
       requireDl,
@@ -212,6 +236,78 @@ export default function SettingsPage() {
                 />
               </label>
             </div>
+            <SaveBar />
+          </section>
+
+          <section className="rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="mb-1 font-semibold text-gray-800">Google Calendar</h2>
+            <p className="mb-3 text-sm text-gray-500">
+              Writes a Delivery and a Pickup event for every order onto one Google
+              Calendar, so jobs appear in your normal Calendar app. Give the crew
+              view-only access to that calendar and they will see the schedule too.
+            </p>
+
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={calendarSync}
+                onChange={(e) => setCalendarSync(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>Keep orders synced to Google Calendar</span>
+            </label>
+
+            <div className="mt-3 grid max-w-xl gap-3">
+              <label className="text-sm font-medium text-gray-700">
+                Calendar ID
+                <input
+                  type="text"
+                  value={calendarId}
+                  onChange={(e) => setCalendarId(e.target.value)}
+                  placeholder="something@group.calendar.google.com"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+                <span className="mt-1 block text-xs font-normal text-gray-400">
+                  In Google Calendar: Settings → your calendar → Integrate calendar → Calendar ID.
+                </span>
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Time zone
+                <input
+                  type="text"
+                  value={calendarTimeZone}
+                  onChange={(e) => setCalendarTimeZone(e.target.value)}
+                  placeholder="America/Los_Angeles"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+              </label>
+            </div>
+
+            {calStatus?.serviceAccount && (
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-xs font-medium text-gray-600">
+                  Share your calendar with this address, with{' '}
+                  <strong>Make changes to events</strong>:
+                </p>
+                <p className="mt-1 break-all font-mono text-xs text-gray-800">
+                  {calStatus.serviceAccount}
+                </p>
+                {calStatus.access === 'ok' && (
+                  <p className="mt-2 text-xs font-medium text-green-600">
+                    ✓ Connected — the calendar is reachable.
+                  </p>
+                )}
+                {calStatus.access === 'error' && (
+                  <p className="mt-2 text-xs font-medium text-red-600">{calStatus.reason}</p>
+                )}
+                {calStatus.access === 'unset' && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    Add a Calendar ID above and Save to test the connection.
+                  </p>
+                )}
+              </div>
+            )}
+
             <SaveBar />
           </section>
 

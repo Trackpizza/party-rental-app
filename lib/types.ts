@@ -213,6 +213,11 @@ export interface Order {
   // driver's license photos (owner-read only; auto-purged 30d after event)
   dlPhotos: DLPhoto[]
   dlPurgeAfter: string | null   // ISO; set to eventDate + 30 days
+  // Google Calendar event ids for this order, so a reschedule moves the existing
+  // events instead of leaving duplicates, and a delete can clean them up.
+  gcalDeliveryEventId?: string | null
+  gcalPickupEventId?: string | null
+  gcalSyncedAt?: string | null
 
   // setup photos + review funnel (kept; not purged)
   setupPhotos: SetupPhoto[]

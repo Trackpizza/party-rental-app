@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb, adminStorage } from '@/lib/firebase/admin'
 import { Order } from '@/lib/types'
+import { deleteEvent } from '@/lib/googleCalendar'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +44,19 @@ export async function POST(
           .catch(() => {}),
       ),
     )
+
+    // Best-effort calendar cleanup, same as storage: a stale Google event is
+    // worse than a failed delete, but neither should block removing the order.
+    const calSnap = await adminDb.collection('settings').doc('business').get()
+    const cal: any = calSnap.exists ? calSnap.data() : {}
+    const calendarId = (cal.calendarId || '').trim()
+    if (calendarId) {
+      await Promise.all(
+        [order.gcalDeliveryEventId, order.gcalPickupEventId]
+          .filter((id): id is string => !!id)
+          .map((id) => deleteEvent(calendarId, id).catch(() => {})),
+      )
+    }
 
     await ref.delete()
 

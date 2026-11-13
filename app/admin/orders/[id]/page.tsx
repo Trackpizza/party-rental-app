@@ -18,6 +18,7 @@ import OwnerSendJob from '@/components/OwnerSendJob'
 import TextCustomer from '@/components/TextCustomer'
 import ManualBalanceLink from '@/components/ManualBalanceLink'
 import { CLONE_KEY } from '@/components/OrderForm'
+import { syncOrderCalendar } from '@/lib/calendarClient'
 import { getBusinessSettings } from '@/lib/settings'
 import { useToast } from '@/components/Toast'
 
@@ -47,6 +48,8 @@ export default function OrderDetailPage() {
   const [squareAuto, setSquareAuto] = useState(false)
   const [requireDl, setRequireDl] = useState(true)
   const [zelle, setZelle] = useState('')
+  const [calendarSync, setCalendarSync] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -55,6 +58,7 @@ export default function OrderDetailPage() {
         setSquareAuto(b.squareAutoLinks)
         setRequireDl(b.requireDl)
         setZelle(b.zelleNumber)
+        setCalendarSync(b.calendarSync && !!b.calendarId)
       })
       .catch(() => {})
   }, [])
@@ -199,6 +203,15 @@ export default function OrderDetailPage() {
     }
     try { localStorage.setItem(CLONE_KEY, JSON.stringify(cloned)) } catch {}
     router.push('/admin/orders/new')
+  }
+
+  async function syncCalendar() {
+    if (!order) return
+    setSyncing(true)
+    const r = await syncOrderCalendar(order.id)
+    setSyncing(false)
+    if (r.ok) toast(r.skipped ? r.skipped : 'Calendar updated')
+    else toast(r.error || 'Calendar sync failed', 'error')
   }
 
   async function toggleArchive() {
@@ -798,6 +811,22 @@ export default function OrderDetailPage() {
       {/* Fulfillment — moved above Crew Job so delivery actions are easy to find */}
       <section className="no-print rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="mb-3 font-semibold text-gray-800">Fulfillment</h2>
+        {calendarSync && (
+          <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-gray-100 pb-3">
+            <button
+              onClick={syncCalendar}
+              disabled={syncing}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
+            >
+              {syncing ? 'Syncing…' : '📅 Sync to Google Calendar'}
+            </button>
+            <span className="text-xs text-gray-400">
+              {order.gcalSyncedAt
+                ? `Last synced ${new Date(order.gcalSyncedAt).toLocaleString()}`
+                : 'Not on the calendar yet'}
+            </span>
+          </div>
+        )}
         <div className="flex flex-wrap gap-3">
           <ActionButton done={!!order.deliveredAt} label="Mark delivered" doneLabel="Delivered" onClick={() => act({ deliveredAt: new Date().toISOString() })} />
           <ActionButton done={!!order.pickedUpAt} label="Mark picked up" doneLabel="Picked up" onClick={() => act({ pickedUpAt: new Date().toISOString() })} />
