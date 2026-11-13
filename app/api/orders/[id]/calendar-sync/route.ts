@@ -3,6 +3,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { upsertEvent, deleteEvent, CalendarError } from '@/lib/googleCalendar'
 import type { Order } from '@/lib/types'
 import { customerName, itemName } from '@/lib/types'
+import { calendarKey } from '@/lib/orders'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         gcalDeliveryEventId: null,
         gcalPickupEventId: null,
         gcalSyncedAt: null,
+        gcalSyncedKey: null,
         updatedAt: new Date().toISOString(),
       })
       return NextResponse.json({ ok: true, removed: true })
@@ -95,7 +97,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     const who = customerName(order.customer) || 'Customer'
     const location = addressOf(order)
-    const patch: Record<string, any> = { updatedAt: new Date().toISOString() }
+    const now = new Date().toISOString()
+    const patch: Record<string, any> = { updatedAt: now }
 
     // Delivery — anchored to the event date.
     if (order.event.eventDate) {
@@ -131,7 +134,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       patch.gcalPickupEventId = null
     }
 
-    patch.gcalSyncedAt = new Date().toISOString()
+    patch.gcalSyncedAt = now
+    // Record what was synced, so the order page can tell current from stale.
+    patch.gcalSyncedKey = calendarKey(order)
     await ref.update(patch)
 
     return NextResponse.json({

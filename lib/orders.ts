@@ -25,6 +25,27 @@ function todayISO(): string {
 }
 
 // "14:30" -> "2:30 PM" for friendly display.
+// Fingerprint of only the fields the calendar events are built from. Comparing
+// this against the value stored at sync time is what makes "needs re-sync"
+// trustworthy: marking an order delivered or paid bumps updatedAt without
+// touching anything on the calendar, so a plain timestamp comparison would cry
+// wolf on every unrelated save.
+export function calendarKey(o: Order | OrderDraft): string {
+  const c = o.customer
+  return [
+    o.event.eventDate,
+    o.event.deliveryTime,
+    o.event.pickupDate,
+    o.event.pickupTime,
+    [c.firstName, c.lastName].filter(Boolean).join(' ').trim(),
+    [c.address, c.address2, c.city, c.state, c.zip].filter(Boolean).join(', '),
+    o.items
+      .filter((i) => i.qty || i.amount)
+      .map((i) => `${i.key}:${i.qty ?? ''}`)
+      .join(','),
+  ].join('|')
+}
+
 export function formatTime(hhmm: string | null | undefined): string {
   if (!hhmm) return ''
   const [h, m] = hhmm.split(':').map(Number)

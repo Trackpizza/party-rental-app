@@ -218,6 +218,8 @@ export interface Order {
   gcalDeliveryEventId?: string | null
   gcalPickupEventId?: string | null
   gcalSyncedAt?: string | null
+  // calendarKey() as of the last successful sync — see that function.
+  gcalSyncedKey?: string | null
 
   // setup photos + review funnel (kept; not purged)
   setupPhotos: SetupPhoto[]

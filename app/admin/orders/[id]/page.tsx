@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, STATUS_LABELS, customerName, itemName } from '@/lib/types'
-import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed, buildEmptyOrder } from '@/lib/orders'
+import { money, applyOrderAction, updateOrder, customerLink, formatTime, fullAddress, mapsHref, amountOwed, buildEmptyOrder, calendarKey } from '@/lib/orders'
 import type { OrderDraft } from '@/lib/orders'
 import OwnerDLPhotos from '@/components/OwnerDLPhotos'
 import OwnerCrewPhotos from '@/components/OwnerCrewPhotos'
@@ -275,6 +275,13 @@ export default function OrderDetailPage() {
   const activeItems = order.items.filter(
     (i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note,
   )
+
+  // On the calendar at all, and whether what was synced still matches the order.
+  // The fingerprint — not updatedAt — decides staleness, so marking an order
+  // delivered or paid does not falsely flag the calendar as out of date.
+  const onCalendar = !!(order.gcalDeliveryEventId || order.gcalPickupEventId)
+  const calStale =
+    onCalendar && !!order.gcalSyncedKey && order.gcalSyncedKey !== calendarKey(order)
 
   // Status timeline steps — each step is "done" once the relevant milestone is reached.
   const timelineSteps = [
@@ -813,12 +820,25 @@ export default function OrderDetailPage() {
         <h2 className="mb-3 font-semibold text-gray-800">Fulfillment</h2>
         {calendarSync && (
           <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-gray-100 pb-3">
+            {calStale ? (
+              <span className="rounded-lg bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700">
+                ⚠ Order changed since last sync
+              </span>
+            ) : onCalendar ? (
+              <span className="rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+                ✓ On Google Calendar
+              </span>
+            ) : null}
             <button
               onClick={syncCalendar}
               disabled={syncing}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
             >
-              {syncing ? 'Syncing…' : '📅 Sync to Google Calendar'}
+              {syncing
+                ? 'Syncing…'
+                : onCalendar
+                  ? '📅 Re-sync'
+                  : '📅 Sync to Google Calendar'}
             </button>
             <span className="text-xs text-gray-400">
               {order.gcalSyncedAt
