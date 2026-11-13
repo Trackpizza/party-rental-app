@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { collection, onSnapshot, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase/client'
 import { Order, customerName, itemName } from '@/lib/types'
-import { money } from '@/lib/orders'
+import { money, formatTime } from '@/lib/orders'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -14,6 +14,17 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+// Compact time for the month grid, where each cell is a few characters wide:
+// "1p", "10:30a". The day panel below uses the full formatTime instead.
+function shortTime(hhmm: string): string {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.split(':').map(Number)
+  if (isNaN(h)) return ''
+  const hr = h % 12 || 12
+  const suffix = h < 12 ? 'a' : 'p'
+  return m ? `${hr}:${String(m).padStart(2, '0')}${suffix}` : `${hr}${suffix}`
+}
 
 export default function CalendarPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -100,6 +111,9 @@ export default function CalendarPage() {
               <div className={`text-xs ${isToday ? 'font-bold text-brand' : 'text-gray-500'}`}>{day}</div>
               {evs.slice(0, 2).map((e) => (
                 <div key={e.id} className="truncate text-[10px] text-gray-700">
+                  {e.event.deliveryTime && (
+                    <span className="text-gray-400">{shortTime(e.event.deliveryTime)} </span>
+                  )}
                   {customerName(e.customer) || '—'}
                 </div>
               ))}
@@ -142,6 +156,14 @@ export default function CalendarPage() {
                       <span className="font-normal text-gray-500"> · {o.event.eventName}</span>
                     )}
                     {' · '}{money(o.totals.total)}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Delivery {formatTime(o.event.deliveryTime) || '—'}
+                    {' · Pickup '}
+                    {o.event.pickupDate && o.event.pickupDate !== selected
+                      ? `${o.event.pickupDate} `
+                      : ''}
+                    {formatTime(o.event.pickupTime) || '—'}
                   </p>
                   <p className="text-sm text-gray-500">
                     {o.items.filter((i) => i.qty).map((i) => `${i.qty} ${itemName(i)}`).join(', ') ||
