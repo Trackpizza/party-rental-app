@@ -14,7 +14,7 @@ import 'server-only'
 import { JWT, GoogleAuth } from 'google-auth-library'
 
 const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
-const API = 'https://www.googleapis.com/calendar/v3/calendars'
+const API = 'https://www.googleapis.com/calendar/v3'
 
 /** A Calendar API failure, carrying the HTTP status so callers can map it. */
 export class CalendarError extends Error {
@@ -111,7 +111,7 @@ export async function upsertEvent(
   eventId: string | null,
   ev: EventInput,
 ): Promise<string> {
-  const cal = encodeURIComponent(calendarId)
+  const cal = `calendars/${encodeURIComponent(calendarId)}`
   if (eventId) {
     try {
       const updated = await call('PUT', `${cal}/events/${encodeURIComponent(eventId)}`, body(ev))
@@ -127,10 +127,34 @@ export async function upsertEvent(
 
 /** Remove an event. Safe to call for an id that is already gone. */
 export async function deleteEvent(calendarId: string, eventId: string): Promise<void> {
-  await call('DELETE', `${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`)
+  await call('DELETE', `calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`)
 }
 
-/** Confirm the calendar exists and the service account can reach it. */
-export async function checkCalendarAccess(calendarId: string): Promise<void> {
-  await call('GET', encodeURIComponent(calendarId))
+/**
+ * What the service account is actually allowed to do on this calendar.
+ *
+ * Reading the calendar resource only proves it was shared at all — a read-only
+ * share answers that call happily and then fails the first time the app tries to
+ * create an event. The grant level lives on the service account's own
+ * calendarList entry, so that is what gets checked.
+ *
+ * Returns the Google access role ("owner" | "writer" | "reader" |
+ * "freeBusyReader"), or null when the role could not be read but the calendar
+ * itself exists.
+ */
+export async function checkCalendarAccess(calendarId: string): Promise<string | null> {
+  // Throws 404 when the id is wrong or nothing was shared — the caller maps that.
+  await call('GET', `calendars/${encodeURIComponent(calendarId)}`)
+  try {
+    const entry = await call('GET', `users/me/calendarList/${encodeURIComponent(calendarId)}`)
+    return (entry?.accessRole as string) ?? null
+  } catch {
+    // Shared but absent from the list: existence is confirmed, level is not.
+    return null
+  }
+}
+
+/** Roles that can create, move and delete events. */
+export function canWrite(role: string | null): boolean {
+  return role === 'writer' || role === 'owner'
 }

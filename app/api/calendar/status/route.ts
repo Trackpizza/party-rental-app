@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { getServiceAccountEmail, checkCalendarAccess, CalendarError } from '@/lib/googleCalendar'
+import {
+  getServiceAccountEmail,
+  checkCalendarAccess,
+  canWrite,
+  CalendarError,
+} from '@/lib/googleCalendar'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,8 +31,20 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      await checkCalendarAccess(calendarId)
-      return NextResponse.json({ serviceAccount, calendarId, access: 'ok' })
+      const role = await checkCalendarAccess(calendarId)
+      // Shared, but read-only shares pass a plain reachability test and then fail
+      // the first write — so report the grant level, not merely "reachable".
+      if (role && !canWrite(role)) {
+        return NextResponse.json({
+          serviceAccount,
+          calendarId,
+          access: 'readonly',
+          role,
+          reason:
+            'Shared read-only, so the app cannot create events. Change it to "Make changes and see all event details".',
+        })
+      }
+      return NextResponse.json({ serviceAccount, calendarId, access: 'ok', role })
     } catch (e: any) {
       const reason =
         e instanceof CalendarError && e.status === 404

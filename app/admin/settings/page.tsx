@@ -294,8 +294,13 @@ export default function SettingsPage() {
                 </p>
                 {calStatus.access === 'ok' && (
                   <p className="mt-2 text-xs font-medium text-green-600">
-                    ✓ Connected — the calendar is reachable.
+                    {calStatus.role
+                      ? '✓ Connected — the app can create events on this calendar.'
+                      : '✓ Calendar found. Sync an order to confirm it can create events.'}
                   </p>
+                )}
+                {calStatus.access === 'readonly' && (
+                  <p className="mt-2 text-xs font-medium text-red-600">{calStatus.reason}</p>
                 )}
                 {calStatus.access === 'error' && (
                   <p className="mt-2 text-xs font-medium text-red-600">{calStatus.reason}</p>
