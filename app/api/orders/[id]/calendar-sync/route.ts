@@ -3,7 +3,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { upsertEvent, deleteEvent, CalendarError } from '@/lib/googleCalendar'
 import type { Order } from '@/lib/types'
 import { customerName, itemName } from '@/lib/types'
-import { calendarKey } from '@/lib/orders'
+import { calendarKey, formatTime } from '@/lib/orders'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +30,14 @@ function localDateTime(date: string, time: string): string {
   return `${date}T${(time || '09:00').padStart(5, '0')}:00`
 }
 
+// "Delivery 1:00 PM — Johana", or "Delivery — Johana" when no time is set.
+// The time leads the title because month view and phone notifications show the
+// title before anything else.
+function eventTitle(kind: 'Delivery' | 'Pickup', time: string, who: string): string {
+  const t = formatTime(time)
+  return t ? `${kind} ${t} — ${who}` : `${kind} — ${who}`
+}
+
 function addressOf(o: Order): string {
   const c = o.customer
   return [c.address, c.address2, c.city, c.state, c.zip].filter(Boolean).join(', ')
@@ -39,8 +47,13 @@ function describe(o: Order, kind: 'Delivery' | 'Pickup'): string {
   const items = o.items
     .filter((i) => i.qty || i.amount || (i.options && i.options.length) || i.description || i.note)
     .map((i) => `• ${itemName(i)}${i.qty ? ` ×${i.qty}` : ''}`)
+  const when =
+    kind === 'Delivery'
+      ? formatTime(o.event.deliveryTime)
+      : formatTime(o.event.pickupTime)
   const lines = [
     `${kind} — ${customerName(o.customer) || 'Customer'}`,
+    when ? `${kind} time: ${when}` : '',
     o.customer.phone ? `Phone: ${o.customer.phone}` : '',
     o.event.eventName ? `Event: ${o.event.eventName}` : '',
     '',
@@ -104,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (order.event.eventDate) {
       const t = order.event.deliveryTime || '09:00'
       patch.gcalDeliveryEventId = await upsertEvent(calendarId, existingDelivery, {
-        summary: `Delivery — ${who}`,
+        summary: eventTitle('Delivery', t, who),
         description: describe(order, 'Delivery'),
         location,
         start: localDateTime(order.event.eventDate, t),
@@ -122,7 +135,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (pickupDate) {
       const t = order.event.pickupTime || '09:00'
       patch.gcalPickupEventId = await upsertEvent(calendarId, existingPickup, {
-        summary: `Pickup — ${who}`,
+        summary: eventTitle('Pickup', t, who),
         description: describe(order, 'Pickup'),
         location,
         start: localDateTime(pickupDate, t),
