@@ -7,16 +7,21 @@ import { getWaiver } from '@/lib/waiver'
 import { auth } from '@/lib/firebase/client'
 import { Order, customerName, itemName } from '@/lib/types'
 import Markdown from '@/components/Markdown'
+import { getBusinessSettings } from '@/lib/settings'
 
-const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
-const phone = process.env.NEXT_PUBLIC_BUSINESS_PHONE || ''
-const address = process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || ''
 
 export default function PrintContractPage() {
   const { id } = useParams<{ id: string }>()
   const [order, setOrder] = useState<Order | null>(null)
   const [waiver, setWaiver] = useState('')
   const [dlUrls, setDlUrls] = useState<string[]>([])
+  // Header + Zelle come from Settings so the owner can change them without a deploy.
+  const [biz, setBiz] = useState({
+    businessName: '',
+    businessPhone: '',
+    businessAddress: '',
+    zelleNumber: '',
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,6 +32,16 @@ export default function PrintContractPage() {
         return
       }
       setOrder(o)
+      getBusinessSettings()
+        .then((b) =>
+          setBiz({
+            businessName: b.businessName,
+            businessPhone: b.businessPhone,
+            businessAddress: b.businessAddress,
+            zelleNumber: b.zelleNumber,
+          }),
+        )
+        .catch(() => {})
       setWaiver(o.signature?.waiverTextSnapshot || (await getWaiver()).text)
 
       const token = await auth.currentUser?.getIdToken()
@@ -77,8 +92,10 @@ export default function PrintContractPage() {
 
       {/* header */}
       <div className="border-b-2 border-ink pb-3 text-center">
-        <h1 className="text-2xl font-bold">{business}</h1>
-        <p className="text-sm text-gray-600">{phone} · {address}</p>
+        <h1 className="text-2xl font-bold">{biz.businessName}</h1>
+        <p className="text-sm text-gray-600">
+          {[biz.businessPhone, biz.businessAddress].filter(Boolean).join(' · ')}
+        </p>
         <p className="mt-1 text-sm font-semibold">RENTAL ORDER &amp; AGREEMENT</p>
       </div>
 
@@ -137,7 +154,12 @@ export default function PrintContractPage() {
           )}
           {order.totals.miles != null && <p><b>Miles:</b> {order.totals.miles}</p>}
           {order.event.notes && <p><b>Notes:</b> {order.event.notes}</p>}
-          <p className="mt-1"><b>Payment:</b> {order.paymentMethod || '—'}</p>
+          <p className="mt-1">
+            <b>Payment:</b> {order.paymentMethod || '—'}
+            {order.paymentMethod === 'zelle' && biz.zelleNumber && (
+              <> · <b>Zelle to:</b> {biz.zelleNumber}</>
+            )}
+          </p>
         </div>
         <div className="w-56 text-sm">
           <Row l="Delivery" v={money(t.deliveryFee)} />

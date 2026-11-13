@@ -8,6 +8,10 @@ export interface StaffMember {
 }
 
 export interface BusinessSettings {
+  businessName: string      // printed at the top of the rental agreement
+  businessPhone: string     // agreement header + email footers
+  businessAddress: string   // agreement header
+  zelleNumber: string       // shown to the customer when paying by Zelle
   googleReviewUrl: string
   taxRate: number // percent, e.g. 9.5
   staff: StaffMember[]
@@ -41,10 +45,31 @@ export function producerRecipients(d: any): string[] {
     .filter(Boolean)
 }
 
+function str(v: any): string {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+// Business identity shown on the agreement, the signing page and emails.
+// Saved settings win; the NEXT_PUBLIC_* values stay as the fallback so an
+// install that has not saved Settings yet keeps working exactly as before.
+// Takes a plain data object, so server components reading the doc through the
+// admin SDK can use it too.
+export function businessInfo(d: any) {
+  return {
+    businessName:
+      str(d?.businessName) || process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals',
+    businessPhone: str(d?.businessPhone) || process.env.NEXT_PUBLIC_BUSINESS_PHONE || '',
+    businessAddress:
+      str(d?.businessAddress) || process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || '',
+    zelleNumber: str(d?.zelleNumber) || process.env.NEXT_PUBLIC_ZELLE_NUMBER || '',
+  }
+}
+
 export async function getBusinessSettings(): Promise<BusinessSettings> {
   const snap = await getDoc(doc(db, 'settings', 'business'))
   const d = snap.exists() ? (snap.data() as any) : {}
   return {
+    ...businessInfo(d),
     googleReviewUrl: d.googleReviewUrl || '',
     taxRate: typeof d.taxRate === 'number' ? d.taxRate : 0,
     staff: Array.isArray(d.staff)

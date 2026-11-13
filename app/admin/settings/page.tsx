@@ -15,6 +15,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const [bizName, setBizName] = useState('')
+  const [bizPhone, setBizPhone] = useState('')
+  const [bizAddress, setBizAddress] = useState('')
+  const [zelleNumber, setZelleNumber] = useState('')
   const [reviewUrl, setReviewUrl] = useState('')
   const [taxRate, setTaxRate] = useState('')
   const [requireDl, setRequireDl] = useState(true)
@@ -41,6 +45,10 @@ export default function SettingsPage() {
       setLoading(false)
     })
     getBusinessSettings().then((b) => {
+      setBizName(b.businessName)
+      setBizPhone(b.businessPhone)
+      setBizAddress(b.businessAddress)
+      setZelleNumber(b.zelleNumber)
       setReviewUrl(b.googleReviewUrl)
       setTaxRate(b.taxRate ? String(b.taxRate) : '')
       setRequireDl(b.requireDl)
@@ -55,6 +63,10 @@ export default function SettingsPage() {
   async function saveBiz() {
     setBizSaving(true)
     await saveBusinessSettings({
+      businessName: bizName.trim(),
+      businessPhone: bizPhone.trim(),
+      businessAddress: bizAddress.trim(),
+      zelleNumber: zelleNumber.trim(),
       googleReviewUrl: reviewUrl.trim(),
       taxRate: parseFloat(taxRate) || 0,
       requireDl,
@@ -151,6 +163,58 @@ export default function SettingsPage() {
       {/* General */}
       {activeTab === 'General' && (
         <div className="space-y-4">
+          <section className="rounded-2xl bg-white p-5 shadow-sm">
+            <h2 className="mb-1 font-semibold text-gray-800">Business info</h2>
+            <p className="mb-3 text-sm text-gray-500">
+              Printed at the top of every rental agreement, and shown to customers on
+              the signing page. The Zelle number appears on the agreement when the
+              order is set to pay by Zelle.
+            </p>
+            <div className="grid max-w-xl gap-3">
+              <label className="text-sm font-medium text-gray-700">
+                Business name
+                <input
+                  type="text"
+                  value={bizName}
+                  onChange={(e) => setBizName(e.target.value)}
+                  placeholder="Party Supplies La Poblanita 2"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Phone
+                <input
+                  type="tel"
+                  value={bizPhone}
+                  onChange={(e) => setBizPhone(e.target.value)}
+                  placeholder="818.982.5234"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Address
+                <input
+                  type="text"
+                  value={bizAddress}
+                  onChange={(e) => setBizAddress(e.target.value)}
+                  placeholder="12034 Vanowen Street, North Hollywood, CA 91605"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Zelle number
+                <input
+                  type="tel"
+                  value={zelleNumber}
+                  onChange={(e) => setZelleNumber(e.target.value)}
+                  placeholder="747.389.8112"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-normal focus:border-brand focus:outline-none"
+                />
+              </label>
+            </div>
+            <SaveBar />
+          </section>
+
           <section className="rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="mb-1 font-semibold text-gray-800">Sales tax rate</h2>
             <p className="mb-3 text-sm text-gray-500">

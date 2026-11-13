@@ -1,14 +1,12 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { DEFAULT_WAIVER } from '@/lib/waiver'
-import { DEFAULT_MEDIA_CONSENT } from '@/lib/settings'
+import { DEFAULT_MEDIA_CONSENT, businessInfo } from '@/lib/settings'
 import SignFlow, { SignFlowData } from '@/components/SignFlow'
 import CustomerDLRetake from '@/components/CustomerDLRetake'
 import { customerName, itemName, type Order } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
-const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
 
 interface WaiverSettingsLike2 {
   text: string
@@ -47,6 +45,12 @@ export default async function OrderSignPage({
 }) {
   const order = await loadOrder(params.id)
 
+  // Read once up front: the not-found branch below needs the business name too.
+  const bizSnap = await adminDb.collection('settings').doc('business').get()
+  const bizData = bizSnap.exists ? (bizSnap.data() as any) : {}
+  // Settings first, env as fallback — same resolution the agreement uses.
+  const { businessName: business, zelleNumber: zelle } = businessInfo(bizData)
+
   if (!order) {
     return (
       <Centered>
@@ -73,8 +77,6 @@ export default async function OrderSignPage({
   }
 
   const waiver = await loadWaiver()
-  const bizSnap = await adminDb.collection('settings').doc('business').get()
-  const bizData = bizSnap.exists ? (bizSnap.data() as any) : {}
   const requireDl = bizData.requireDl !== false
   const mediaConsentText = bizData.mediaConsentText || DEFAULT_MEDIA_CONSENT
 

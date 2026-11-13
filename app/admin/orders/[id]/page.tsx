@@ -22,7 +22,6 @@ import { getBusinessSettings } from '@/lib/settings'
 import { useToast } from '@/components/Toast'
 
 const business = process.env.NEXT_PUBLIC_BUSINESS_NAME || 'Party Rentals'
-const zelle = process.env.NEXT_PUBLIC_ZELLE_NUMBER || ''
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -47,6 +46,7 @@ export default function OrderDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [squareAuto, setSquareAuto] = useState(false)
   const [requireDl, setRequireDl] = useState(true)
+  const [zelle, setZelle] = useState('')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -54,6 +54,7 @@ export default function OrderDetailPage() {
       .then((b) => {
         setSquareAuto(b.squareAutoLinks)
         setRequireDl(b.requireDl)
+        setZelle(b.zelleNumber)
       })
       .catch(() => {})
   }, [])
